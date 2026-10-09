@@ -76,12 +76,12 @@ Payload shapes follow OCPP 2.0.1 naming (`transactionInfo.transactionId`, `seqNo
 - **Scripted inputs.** Per window and group:
   - canary: 5 stations; control: 6 stations
   - before: canary 6 drops near unplug, control 5
-  - after: canary 5 drops near unplug, control 6
+  - after: canary 5 drops near unplug, control 6 (as planned; the lab computed 6 on the canary, see `lab/README.md`)
   - the late/lost/still-delivering/newer-transaction mix per drop
   - background normal sessions so the canary has about 2,140 sessions in the after window
 
   Keep the inputs in a versioned JSON file `lab/src/main/resources/experiment/inputs.json`, with comments in the README explaining each.
-- **Computed outputs.** Stuck sessions per group and window, reconciliations, late Ended applied once, duplicate charges (must be 0), false closures (must be 0), newer-transaction skips, invoices provisional/adjusted. Plus three gateway log excerpts captured from real traffic (one late-ended, two lost-ended), in the format `HH:MM:SS  actor  message`.
+- **Computed outputs.** Stuck sessions per group and window, reconciliations, late Ended applied once, duplicate charges (must be 0), false closures (must be 0), newer-transaction skips, invoices provisional/adjusted. Plus three gateway log excerpts captured from simulated charger traffic over real websockets, not production data (one late-ended, two lost-ended), in the format `HH:MM:SS  actor  message`.
 - **Expected story values** (the inputs are designed to produce these): canary stuck 5 before and 0 after; control 4 before and 4 after; 5 reconciliations; 3 late Ended applied once; 1 newer-transaction skip; 0 false closures; 0 duplicate charges.
   - If the computed outputs differ, **do not fudge them**. Report the difference; the story will follow the code.
 

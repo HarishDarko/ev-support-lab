@@ -7,4 +7,5 @@ services:
       POSTGRES_USER: lab
       POSTGRES_PASSWORD: lab
     ports:
-      - "5432:5432"
+      # Local demo only: listen on this machine, not on the network.
+      - "127.0.0.1:5432:5432"

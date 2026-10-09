@@ -46,6 +46,7 @@ Everything is synthetic. No real company, network, customer or person is describ
 cd desk
 npm ci
 npm test
+npx playwright install chromium   # once, before the first browser-test run
 npm run e2e
 ```
 
