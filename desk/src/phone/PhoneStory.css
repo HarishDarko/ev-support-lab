@@ -1,0 +1,33 @@
+.phone {
+  display: grid;
+  gap: var(--space-8);
+  padding-block: var(--space-6) var(--space-8);
+}
+.phone-beat {
+  scroll-margin-top: 128px;
+  min-width: 0;
+}
+.phone-claim {
+  margin: 0;
+  font-size: clamp(28px, 7.4vw, 40px);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-display);
+  line-height: 1.08;
+  text-wrap: balance;
+}
+.phone-board {
+  margin-top: var(--space-5);
+  min-width: 0;
+}
+.phone-desk {
+  margin: var(--space-3) 0 0;
+}
+.phone .node {
+  padding: var(--space-4);
+}
+.phone .facts dd {
+  font-size: var(--text-28);
+}
+.phone .numbers dd {
+  font-size: var(--text-36);
+}

@@ -1,0 +1,109 @@
+/* The desk sheet: a right-hand sheet, min(1120px, 94vw). Full screen under 1000 px. */
+
+.desk-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+.desk {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  width: var(--sheet-w);
+  background: var(--surface);
+  border-left: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-sheet);
+  color: var(--fg);
+  font-family: var(--font-ui);
+}
+.desk:focus {
+  outline: none;
+}
+
+.desk-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--gutter) var(--space-3);
+  padding-top: max(var(--space-4), env(safe-area-inset-top));
+}
+.desk-title {
+  margin: 0;
+  font-size: var(--text-22);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.desk-sub {
+  margin: var(--space-1) 0 0;
+  color: var(--fg-2);
+  font-size: var(--text-13);
+}
+.desk-close {
+  flex: none;
+}
+.desk-key {
+  padding: 0 var(--space-1);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-12);
+}
+
+.desk-tabs {
+  display: flex;
+  gap: var(--space-1);
+  padding: 0 var(--gutter);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.desk-tab {
+  flex: none;
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--fg-2);
+  font-size: var(--text-14);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition:
+    color var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease);
+}
+.desk-tab:hover {
+  color: var(--fg);
+}
+.desk-tab[aria-selected="true"] {
+  border-bottom-color: var(--fg);
+  color: var(--fg);
+}
+
+.desk-panel {
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-5) var(--gutter) var(--space-8);
+  padding-bottom: max(var(--space-8), env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.desk-panel:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (max-width: 999px) {
+  .desk {
+    width: 100vw;
+    border-left: 0;
+  }
+}

@@ -1,0 +1,56 @@
+/* Article body text is the one place Newsreader is used in the desk. */
+.kb-article {
+  max-width: 62ch;
+  padding: var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-node);
+  font-family: var(--font-read);
+  font-size: var(--text-18);
+  line-height: 1.55;
+}
+.kb-title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-28);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-display);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.kb-article h4 {
+  margin: var(--space-5) 0 var(--space-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-14);
+  font-weight: var(--weight-semibold);
+}
+.kb-article ul,
+.kb-article ol {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+.kb-article li + li {
+  margin-top: var(--space-1);
+}
+.kb-aside,
+.kb-status {
+  margin: var(--space-3) 0 0;
+  color: var(--fg-2);
+  font-size: var(--text-16);
+}
+.kb-aside {
+  font-family: var(--font-ui);
+  font-size: var(--text-13);
+}
+.kb-related {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-13);
+}
+.kb-id {
+  display: inline-block;
+  margin-bottom: var(--space-1);
+  margin-right: var(--space-2);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  white-space: nowrap;
+}

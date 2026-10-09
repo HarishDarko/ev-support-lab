@@ -1,0 +1,4 @@
+/* Self-hosted variable fonts (latin and latin-ext load on demand through unicode-range). */
+@import "@fontsource-variable/schibsted-grotesk";
+@import "@fontsource-variable/newsreader";
+@import "@fontsource-variable/jetbrains-mono";

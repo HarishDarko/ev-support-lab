@@ -1,0 +1,42 @@
+.dk-prov {
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-2);
+  font-size: var(--text-13);
+}
+.prov-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-height: 28px;
+  cursor: pointer;
+}
+.prov-model,
+.prov-when,
+.prov-cost {
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-12);
+  font-variant-numeric: tabular-nums;
+}
+.prov-title {
+  color: var(--fg-3);
+}
+.prov-body {
+  margin-top: var(--space-3);
+}
+.prov-reason {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--attn);
+  background: var(--attn-soft);
+  color: var(--fg);
+}
+.prov-checks {
+  margin-top: var(--space-3);
+  font-size: var(--text-13);
+}
+.prov-detail {
+  color: var(--fg-3);
+}

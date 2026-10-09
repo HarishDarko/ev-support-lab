@@ -1,0 +1,59 @@
+.inspector-text {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-16);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+.inspector-facts {
+  margin-bottom: var(--space-4);
+}
+.inspector-ai {
+  margin-bottom: var(--space-4);
+}
+.inspector-decision {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 0;
+}
+.inspector-summary {
+  margin: 0;
+  font-size: var(--text-14);
+  font-weight: var(--weight-semibold);
+}
+.inspector-reason {
+  margin-top: var(--space-1);
+}
+.inspector-flag {
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--attn);
+  background: var(--attn-soft);
+  font-size: var(--text-13);
+}
+.inspector-flag .dk-h4 {
+  margin-top: 0;
+  color: var(--attn);
+}
+.inspector-flag p {
+  margin: 0 0 var(--space-2);
+}
+.inspector-flag summary {
+  cursor: pointer;
+}
+.inspector-history {
+  margin-top: var(--space-2);
+  font-size: var(--text-12);
+}
+
+.inspector-meter {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: var(--text-14);
+  cursor: pointer;
+}
+.inspector-meter input {
+  margin-top: 3px;
+}

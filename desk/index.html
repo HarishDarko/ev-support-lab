@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="A walkthrough of one Eastern-time support shift. All data is synthetic." />
+    <title>Support Desk</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230c1016'/%3E%3Cpath d='M4 8h8M8 4v8' stroke='%23f3f5f8' stroke-width='2'/%3E%3C/svg%3E"
+    />
+    <script>
+      // Apply a saved theme before first paint so there is no flash. Without one, the system setting decides.
+      try {
+        var saved = localStorage.getItem("desk-theme");
+        if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+      } catch (e) {
+        /* storage can be blocked; the page works without it */
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

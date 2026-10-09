@@ -1,0 +1,17 @@
+.fleet-rate {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.fleet-track {
+  width: 96px;
+  height: 8px;
+  border-radius: 1px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.fleet-bar {
+  display: block;
+  height: 100%;
+  background: var(--fg-2);
+}

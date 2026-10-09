@@ -1,0 +1,19 @@
+.verify-table {
+  max-width: 640px;
+}
+.verify-verdict {
+  margin: 0 0 var(--space-2);
+}
+.verify-reading {
+  margin: 0;
+  font-size: var(--text-14);
+}
+.verify-doesnt {
+  margin-top: var(--space-4);
+  padding: var(--space-1) var(--space-4) var(--space-3);
+  border-left: 3px solid var(--attn);
+  background: var(--attn-soft);
+}
+.verify-doesnt .dk-h4 {
+  color: var(--attn);
+}

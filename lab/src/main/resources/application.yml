@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: ev-support-lab
+  datasource:
+    url: ${LAB_DB_URL:jdbc:postgresql://localhost:5432/lab}
+    username: ${LAB_DB_USER:lab}
+    password: ${LAB_DB_PASSWORD:lab}
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+
+lab:
+  fix:
+    # Default for stations without a per-station override (station.fix_enabled).
+    # Override on the command line with -Dlab.fix.enabled=false to see the bug.
+    enabled: true
+  reconciliation:
+    grace: 60s
+    max-queue-wait: 15m
+    epsilon-wh: 1.0
+    # Flat energy counts as "stopped" only if the last two samples are this far apart ...
+    min-sample-spacing: 60s
+    # ... and the last sample is no older than this when the decision is made.
+    max-meter-age: 30m
+    # ... and no more than this ahead of the backend's clock (a sample from the "future" is not trusted).
+    max-clock-skew: 2m
+    scheduler-enabled: true
+    sweep-interval: 5s

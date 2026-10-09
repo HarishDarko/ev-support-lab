@@ -1,0 +1,238 @@
+/* Shared pieces of the desk: headings, pills, tables, definition lists, notes. Tokens only. */
+
+.dk-section {
+  margin-top: var(--space-7);
+}
+.dk-section:first-child {
+  margin-top: 0;
+}
+.dk-h3 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-22);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.dk-h4 {
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: var(--text-14);
+  font-weight: var(--weight-semibold);
+}
+.dk-kicker {
+  margin: 0 0 var(--space-2);
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-12);
+  letter-spacing: var(--tracking-kicker);
+  text-transform: uppercase;
+}
+.dk-lede {
+  max-width: 68ch;
+  margin: 0 0 var(--space-3);
+  color: var(--fg-2);
+  font-size: var(--text-14);
+}
+.dk-note {
+  max-width: 68ch;
+  margin: var(--space-2) 0 0;
+  color: var(--fg-2);
+  font-size: var(--text-13);
+}
+.dk-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.dk-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ---- pills ---- */
+
+.dk-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 1px var(--space-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  color: var(--fg-2);
+  font-size: var(--text-12);
+  font-weight: var(--weight-medium);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.dk-pill--ai {
+  border-color: var(--ai);
+  background: var(--ai-soft);
+  color: var(--ai);
+}
+.dk-pill--attn {
+  border-color: var(--attn);
+  background: var(--attn-soft);
+  color: var(--attn);
+}
+.dk-pill--ok {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.dk-pill--bad {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+
+.dk-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+
+/* ---- tables ---- */
+
+.dk-scroll {
+  overflow-x: auto;
+}
+.dk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-13);
+}
+.dk-table caption {
+  padding: 0 0 var(--space-2);
+  color: var(--fg-3);
+  font-size: var(--text-12);
+  text-align: left;
+}
+.dk-table th {
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--fg-3);
+  font-size: var(--text-12);
+  font-weight: var(--weight-medium);
+  text-align: left;
+  white-space: nowrap;
+}
+.dk-table td,
+.dk-table tbody th {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.dk-table tbody th {
+  color: var(--fg);
+  font-size: var(--text-13);
+  font-weight: var(--weight-regular);
+}
+.dk-table .dk-num,
+.dk-table th.dk-num {
+  text-align: right;
+}
+
+/* ---- definition lists ---- */
+
+.dk-dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  font-size: var(--text-13);
+}
+.dk-dl dt {
+  color: var(--fg-3);
+}
+.dk-dl dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---- lists ---- */
+
+.dk-list {
+  margin: 0;
+  padding-left: var(--space-5);
+  font-size: var(--text-14);
+}
+.dk-list li + li {
+  margin-top: var(--space-1);
+}
+.dk-list--plain {
+  padding-left: 0;
+  list-style: none;
+}
+
+/* ---- AI output ---- */
+
+.dk-ai {
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--ai);
+  background: var(--ai-soft);
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+}
+.dk-rules {
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--line-strong);
+  background: var(--surface-2);
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+}
+.dk-rules > :first-child,
+.dk-ai > :first-child {
+  margin-top: 0;
+}
+.dk-rules > :last-child,
+.dk-ai > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---- buttons and links ---- */
+
+.dk-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: var(--text-14);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease);
+}
+.dk-button:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.dk-button:disabled {
+  color: var(--fg-3);
+  cursor: default;
+}
+.dk-link {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-strong);
+}
+.dk-link:hover {
+  text-decoration-color: var(--fg);
+}
+
+.dk-check {
+  display: inline-block;
+  min-width: 1.2em;
+  font-family: var(--font-mono);
+  font-weight: var(--weight-bold);
+}
+.dk-check--ok {
+  color: var(--ok);
+}
+.dk-check--bad {
+  color: var(--bad);
+}

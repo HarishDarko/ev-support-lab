@@ -1,0 +1,23 @@
+# secrets
+.dev.vars
+*.env
+.env*
+
+# deps and builds
+node_modules/
+dist/
+.wrangler/
+# Test coverage reports, not the desk's Coverage tab (desk/src/desk/coverage).
+/desk/coverage/
+/lab/coverage/
+playwright-report/
+test-results/
+.gradle/
+build/
+out/
+*.class
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

@@ -1,0 +1,10 @@
+# PostgreSQL for running the backend by hand (serve). Tests and the experiment start their own with Testcontainers.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: lab
+      POSTGRES_USER: lab
+      POSTGRES_PASSWORD: lab
+    ports:
+      - "5432:5432"

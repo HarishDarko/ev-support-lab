@@ -1,0 +1,192 @@
+{
+  "inputsVersion" : 1,
+  "seed" : 4471,
+  "note" : "Inputs are scripted (experiment/inputs.json). Every metric below was computed from the backend state after the run; none is hard-coded.",
+  "windows" : {
+    "before" : {
+      "canary" : {
+        "stations" : 5,
+        "sessions" : 2094,
+        "dropsNearUnplug" : 6,
+        "dropsElsewhere" : 1,
+        "stuck" : 5,
+        "openFlaggedForReview" : 0,
+        "reconciliations" : 0,
+        "lateEndedAppliedAfterProvisional" : 0,
+        "newerTransactionSkips" : 0,
+        "falseClosures" : 0,
+        "duplicateCharges" : 0,
+        "invoicesProvisionalIssued" : 0,
+        "invoicesStillProvisional" : 0,
+        "invoicesConfirmedAfterProvisional" : 0,
+        "invoicesAdjusted" : 0,
+        "flaggedByReason" : { },
+        "carriedOverReconciled" : 0,
+        "carriedOverFlagged" : 0
+      },
+      "control" : {
+        "stations" : 6,
+        "sessions" : 2270,
+        "dropsNearUnplug" : 5,
+        "dropsElsewhere" : 1,
+        "stuck" : 4,
+        "openFlaggedForReview" : 0,
+        "reconciliations" : 0,
+        "lateEndedAppliedAfterProvisional" : 0,
+        "newerTransactionSkips" : 0,
+        "falseClosures" : 0,
+        "duplicateCharges" : 0,
+        "invoicesProvisionalIssued" : 0,
+        "invoicesStillProvisional" : 0,
+        "invoicesConfirmedAfterProvisional" : 0,
+        "invoicesAdjusted" : 0,
+        "flaggedByReason" : { },
+        "carriedOverReconciled" : 0,
+        "carriedOverFlagged" : 0
+      }
+    },
+    "after" : {
+      "canary" : {
+        "stations" : 5,
+        "sessions" : 2140,
+        "dropsNearUnplug" : 6,
+        "dropsElsewhere" : 2,
+        "stuck" : 0,
+        "openFlaggedForReview" : 1,
+        "reconciliations" : 5,
+        "lateEndedAppliedAfterProvisional" : 3,
+        "newerTransactionSkips" : 1,
+        "falseClosures" : 0,
+        "duplicateCharges" : 0,
+        "invoicesProvisionalIssued" : 5,
+        "invoicesStillProvisional" : 2,
+        "invoicesConfirmedAfterProvisional" : 2,
+        "invoicesAdjusted" : 1,
+        "flaggedByReason" : {
+          "NEWER_TRANSACTION" : 1,
+          "ONGOING_NOT_REPORTED" : 1
+        },
+        "carriedOverReconciled" : 0,
+        "carriedOverFlagged" : 5
+      },
+      "control" : {
+        "stations" : 6,
+        "sessions" : 2308,
+        "dropsNearUnplug" : 6,
+        "dropsElsewhere" : 1,
+        "stuck" : 4,
+        "openFlaggedForReview" : 0,
+        "reconciliations" : 0,
+        "lateEndedAppliedAfterProvisional" : 0,
+        "newerTransactionSkips" : 0,
+        "falseClosures" : 0,
+        "duplicateCharges" : 0,
+        "invoicesProvisionalIssued" : 0,
+        "invoicesStillProvisional" : 0,
+        "invoicesConfirmedAfterProvisional" : 0,
+        "invoicesAdjusted" : 0,
+        "flaggedByReason" : { },
+        "carriedOverReconciled" : 0,
+        "carriedOverFlagged" : 0
+      }
+    }
+  },
+  "meters" : {
+    "endOf-after:ocpp.ended.late.applied{after=provisional_close}" : 3.0,
+    "endOf-after:ocpp.transactions.flagged{reason=newer_transaction}" : 6.0,
+    "endOf-after:ocpp.transactions.flagged{reason=ongoing_not_reported}" : 1.0,
+    "endOf-after:ocpp.transactions.reconciled" : 5.0
+  },
+  "gatewayLogs" : [ {
+    "label" : "lost-ended-1",
+    "title" : "S-014 · CP-014-02 · FW-B 4.2.1 · T-2041",
+    "scenario" : "lost-ended",
+    "lines" : [ [ "22:41:07", "CP-014-02 → TransactionEvent", "eventType=Updated  transactionId=88213  seqNo=40  meter=18.42 kWh" ], [ "22:41:52", "CP-014-02 → TransactionEvent", "eventType=Updated  transactionId=88213  seqNo=41  triggerReason=EVCommunicationLost" ], [ "22:42:43", "gateway", "connection lost (websocket 1006, no close frame)" ], [ "22:43:11", "gateway", "websocket opened  CP-014-02" ], [ "22:43:12", "CP-014-02 → StatusNotification", "evseId=1  connectorStatus=Available" ], [ "22:43:42", "CP-014-02 → Heartbeat", "" ], [ "22:43:42", "session-svc", "transactionId=88213 state=Charging  last_meter=18.42 kWh  (no TransactionEvent Ended received)" ], [ "06:10:00", "session-svc", "transactionId=88213 open 7h 29m, idle fee accruing" ] ]
+  }, {
+    "label" : "lost-ended-2",
+    "title" : "S-031 · CP-031-01 · FW-B 4.2.3 · T-2047",
+    "scenario" : "lost-ended",
+    "lines" : [ [ "23:58:30", "CP-031-01 → TransactionEvent", "eventType=Updated  transactionId=88177  seqNo=27  triggerReason=EVCommunicationLost" ], [ "23:58:55", "gateway", "connection lost (websocket 1006, no close frame)" ], [ "00:00:02", "gateway", "websocket opened  CP-031-01" ], [ "00:00:03", "CP-031-01 → StatusNotification", "evseId=1  connectorStatus=Available" ], [ "00:00:03", "session-svc", "transactionId=88177 state=Charging  (no TransactionEvent Ended received)" ], [ "13:18:00", "map-svc", "CP-031-01 shown 'In use' (derived from open session)" ] ]
+  }, {
+    "label" : "late-ended-1",
+    "title" : "S-022 · CP-022-04 · FW-A 3.9.0 · T-2058",
+    "scenario" : "late-ended",
+    "lines" : [ [ "07:41:40", "CP-022-04 → TransactionEvent", "eventType=Updated  transactionId=87640  seqNo=8  triggerReason=EVCommunicationLost" ], [ "07:41:47", "gateway", "connection lost (websocket 1006, no close frame)" ], [ "07:42:30", "gateway", "websocket opened  CP-022-04" ], [ "07:42:31", "CP-022-04 → StatusNotification", "evseId=2  connectorStatus=Available" ], [ "07:42:52", "CP-022-04 → TransactionEvent", "eventType=Ended  transactionId=87640  offline=true  seqNo=9  stoppedReason=EVDisconnected" ], [ "07:42:52", "session-svc", "TransactionEvent Ended transactionId=87640 ignored: connector already Available (out of order)" ], [ "07:42:52", "CP-022-04 ← TransactionEventResponse", "(empty payload)" ] ]
+  } ],
+  "storyComparison" : [ {
+    "metric" : "canaryStuckBefore",
+    "expected" : 5,
+    "computed" : 5,
+    "matches" : true
+  }, {
+    "metric" : "canaryStuckAfter",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "controlStuckBefore",
+    "expected" : 4,
+    "computed" : 4,
+    "matches" : true
+  }, {
+    "metric" : "controlStuckAfter",
+    "expected" : 4,
+    "computed" : 4,
+    "matches" : true
+  }, {
+    "metric" : "reconciliations",
+    "expected" : 5,
+    "computed" : 5,
+    "matches" : true
+  }, {
+    "metric" : "lateEndedAppliedOnce",
+    "expected" : 3,
+    "computed" : 3,
+    "matches" : true
+  }, {
+    "metric" : "newerTransactionSkips",
+    "expected" : 1,
+    "computed" : 1,
+    "matches" : true
+  }, {
+    "metric" : "falseClosures",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "duplicateCharges",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "invoicesAdjusted",
+    "expected" : 1,
+    "computed" : 1,
+    "matches" : true
+  }, {
+    "metric" : "canaryDropsBefore",
+    "expected" : 6,
+    "computed" : 6,
+    "matches" : true
+  }, {
+    "metric" : "canaryDropsAfter",
+    "expected" : 5,
+    "computed" : 6,
+    "matches" : false
+  }, {
+    "metric" : "controlDropsBefore",
+    "expected" : 5,
+    "computed" : 5,
+    "matches" : true
+  }, {
+    "metric" : "controlDropsAfter",
+    "expected" : 6,
+    "computed" : 6,
+    "matches" : true
+  }, {
+    "metric" : "canarySessionsAfter",
+    "expected" : 2140,
+    "computed" : 2140,
+    "matches" : true
+  } ]
+}

@@ -1,0 +1,47 @@
+name: lab
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "lab/**"
+      - "gradle/**"
+      - "gradlew"
+      - "settings.gradle.kts"
+      - ".github/workflows/lab.yml"
+  pull_request:
+    paths:
+      - "lab/**"
+      - "gradle/**"
+      - "gradlew"
+      - "settings.gradle.kts"
+      - ".github/workflows/lab.yml"
+
+concurrency:
+  group: lab-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      # Any JDK runs the wrapper; the build provisions Java 25 through its toolchain.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      # Docker is available on the runner, so Testcontainers starts PostgreSQL itself.
+      - name: Tests, including the experiment
+        run: ./gradlew :lab:test --console=plain
+      - name: The regression test fails without the fix
+        run: |
+          if ./gradlew :lab:test --tests '*StuckSessionRegressionTest' -Dlab.fix.enabled=false --console=plain; then
+            echo "StuckSessionRegressionTest passed with the fix off; it no longer proves the fix." >&2
+            exit 1
+          fi

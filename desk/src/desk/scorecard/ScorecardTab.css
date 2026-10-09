@@ -1,0 +1,20 @@
+.score-state {
+  max-width: 68ch;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--attn);
+  background: var(--attn-soft);
+  font-size: var(--text-16);
+}
+.score-model {
+  font-size: var(--text-12);
+}
+.dk-table tfoot th,
+.dk-table tfoot td {
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 0;
+  font-weight: var(--weight-semibold);
+}
+.score-total {
+  font-size: var(--text-14);
+}

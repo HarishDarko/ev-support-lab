@@ -1,0 +1,114 @@
+.cov {
+  --cov-label-w: 220px;
+}
+.cov-axis,
+.cov-track {
+  position: relative;
+  height: 22px;
+  margin-left: var(--cov-label-w);
+}
+.cov-axis {
+  height: 20px;
+}
+.cov-tick {
+  position: absolute;
+  transform: translateX(-50%);
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-12);
+  font-variant-numeric: tabular-nums;
+}
+.cov-tick:first-child {
+  transform: none;
+}
+.cov-tick:last-child {
+  transform: translateX(-100%);
+}
+
+.cov-rows {
+  display: grid;
+  gap: var(--space-4);
+}
+.cov-row {
+  position: relative;
+}
+.cov-name {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--cov-label-w) - var(--space-4));
+}
+.cov-label {
+  display: block;
+  font-size: var(--text-14);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+}
+.cov-range {
+  color: var(--fg-2);
+  font-size: var(--text-12);
+}
+.cov-track {
+  border-left: 1px solid var(--line-strong);
+  border-right: 1px solid var(--line-strong);
+  background: var(--surface-2);
+}
+.cov-grid {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+}
+.cov-bar {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  border-radius: 1px;
+  background: var(--fg-2);
+}
+.cov-bar--noc {
+  background: var(--line-strong);
+}
+.cov-bar--india {
+  background: var(--fg-3);
+}
+.cov-bar--shift {
+  background: var(--fg);
+}
+.cov-bar--overlap {
+  background: var(--ok);
+}
+.cov-bar--evening {
+  border: 1.5px dashed var(--fg-3);
+  background: transparent;
+}
+.cov-start {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--fg);
+}
+.cov-detail {
+  margin: var(--space-1) 0 0 var(--cov-label-w);
+  color: var(--fg-2);
+  font-size: var(--text-13);
+}
+
+@media (max-width: 759px) {
+  .cov {
+    --cov-label-w: 0px;
+  }
+  .cov-name {
+    position: static;
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    width: auto;
+    margin-bottom: var(--space-1);
+  }
+  .cov-detail {
+    margin-left: 0;
+  }
+}

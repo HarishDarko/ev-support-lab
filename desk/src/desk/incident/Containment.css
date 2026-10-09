@@ -1,0 +1,10 @@
+.detector-query {
+  display: block;
+  margin: var(--space-2) 0 var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  font-size: var(--text-12);
+  overflow-wrap: anywhere;
+}

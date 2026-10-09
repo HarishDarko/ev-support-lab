@@ -1,0 +1,54 @@
+.handoff-question {
+  font-size: var(--text-16);
+  line-height: 1.5;
+}
+.handoff-rules {
+  display: grid;
+  gap: var(--space-2);
+}
+.handoff-rule {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  color: var(--fg-2);
+}
+.handoff-rule--fired {
+  color: var(--fg);
+  font-weight: var(--weight-medium);
+}
+.handoff-box {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  font-size: var(--text-12);
+  line-height: 1;
+}
+.handoff-rule--fired .handoff-box {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+  color: var(--ok);
+  font-weight: var(--weight-bold);
+}
+.handoff-id {
+  display: inline-block;
+  margin-bottom: var(--space-1);
+  margin-right: var(--space-2);
+  white-space: nowrap;
+}
+.handoff-unconfirmed {
+  margin: var(--space-5) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--attn);
+  background: var(--attn-soft);
+  font-size: var(--text-14);
+}
+.handoff-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 0;
+}

@@ -1,0 +1,14 @@
+.timing {
+  max-width: 560px;
+}
+.timing-axis {
+  width: 50%;
+  min-width: 120px;
+  border-left: 1px solid var(--line-strong);
+}
+.timing-bar {
+  display: block;
+  height: 8px;
+  border-radius: 1px;
+  background: var(--fg-2);
+}

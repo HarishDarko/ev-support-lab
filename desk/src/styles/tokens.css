@@ -1,0 +1,130 @@
+/*
+ * Design tokens for the Support Desk. Source of truth: docs/design/direction.md.
+ * Light is the default on :root. Dark follows the system unless the page is forced light,
+ * and is also set explicitly with [data-theme="dark"] (the toggle).
+ * Keep the two dark blocks identical.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Colour: surfaces and text */
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-2: #e9edf2;
+  --line: #d8dde5;
+  --line-strong: #a9b2bf;
+  --fg: #0c1016;
+  --fg-2: #434c5a;
+  --fg-3: #5b6573;
+
+  /* Colour: meaning. --ai is only for things the AI produced. */
+  --ai: #2336c4;
+  --ai-soft: #e2e6fa;
+  --attn: #8a5200;
+  --attn-soft: #faeacb;
+  --ok: #16693b;
+  --ok-soft: #dcefe3;
+  --bad: #b1281d;
+  --bad-soft: #fae1de;
+
+  /* The only shadow in the system: the desk sheet. */
+  --shadow-sheet: 0 12px 40px rgb(12 16 22 / 0.18);
+
+  /* Type families */
+  --font-ui: "Schibsted Grotesk Variable", "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-read: "Newsreader Variable", "Newsreader", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* Type scale */
+  --text-12: 12px;
+  --text-13: 13px;
+  --text-14: 14px;
+  --text-16: 16px;
+  --text-18: 18px;
+  --text-22: 22px;
+  --text-28: 28px;
+  --text-36: 36px;
+  --text-48: 48px;
+  --text-claim: clamp(32px, 3.6vw, 60px);
+
+  --tracking-display: -0.03em;
+  --tracking-kicker: 0.08em;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* Radii */
+  --radius-control: 3px;
+  --radius-node: 6px;
+
+  /* Motion */
+  --dur-1: 150ms;
+  --dur-2: 250ms;
+  --dur-3: 350ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --stagger: 30ms;
+
+  /* Layout */
+  --strip-h: 52px;
+  --bar-h: 60px;
+  --sheet-w: min(1120px, 94vw);
+  --gutter: var(--space-4);
+  --focus: var(--fg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0a0e14;
+    --surface: #11161e;
+    --surface-2: #18202a;
+    --line: #222a36;
+    --line-strong: #3a4555;
+    --fg: #e8ecf2;
+    --fg-2: #b0b9c6;
+    --fg-3: #8d97a6;
+    --ai: #97a8ff;
+    --ai-soft: #1b2250;
+    --attn: #edb75f;
+    --attn-soft: #2a200e;
+    --ok: #66ce92;
+    --ok-soft: #10281b;
+    --bad: #ff9188;
+    --bad-soft: #331614;
+    --shadow-sheet: 0 12px 40px rgb(0 0 0 / 0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a0e14;
+  --surface: #11161e;
+  --surface-2: #18202a;
+  --line: #222a36;
+  --line-strong: #3a4555;
+  --fg: #e8ecf2;
+  --fg-2: #b0b9c6;
+  --fg-3: #8d97a6;
+  --ai: #97a8ff;
+  --ai-soft: #1b2250;
+  --attn: #edb75f;
+  --attn-soft: #2a200e;
+  --ok: #66ce92;
+  --ok-soft: #10281b;
+  --bad: #ff9188;
+  --bad-soft: #331614;
+  --shadow-sheet: 0 12px 40px rgb(0 0 0 / 0.6);
+}

@@ -1,0 +1,410 @@
+{
+  "version": 1,
+  "seed": 4471,
+  "unplugDropWindowSec": 90,
+  "stations": {
+    "canary": [
+      {
+        "id": "CP-014-02",
+        "site": "S-014",
+        "firmware": "FW-B 4.2.1"
+      },
+      {
+        "id": "CP-031-01",
+        "site": "S-031",
+        "firmware": "FW-B 4.2.3"
+      },
+      {
+        "id": "CP-047-02",
+        "site": "S-047",
+        "firmware": "FW-B 4.2.3"
+      },
+      {
+        "id": "CP-058-04",
+        "site": "S-058",
+        "firmware": "FW-B 4.2.1"
+      },
+      {
+        "id": "CP-063-02",
+        "site": "S-063",
+        "firmware": "FW-B 4.2.3"
+      }
+    ],
+    "control": [
+      {
+        "id": "CP-022-04",
+        "site": "S-022",
+        "firmware": "FW-A 3.9.0"
+      },
+      {
+        "id": "CP-027-01",
+        "site": "S-027",
+        "firmware": "FW-B 4.2.1"
+      },
+      {
+        "id": "CP-041-01",
+        "site": "S-041",
+        "firmware": "FW-B 4.2.3"
+      },
+      {
+        "id": "CP-052-01",
+        "site": "S-052",
+        "firmware": "FW-B 4.2.1"
+      },
+      {
+        "id": "CP-070-02",
+        "site": "S-070",
+        "firmware": "FW-B 4.2.3"
+      },
+      {
+        "id": "CP-019-01",
+        "site": "S-019",
+        "firmware": "FW-A 3.9.0"
+      }
+    ]
+  },
+  "windows": [
+    {
+      "name": "before",
+      "start": "2026-06-01T00:00:00Z",
+      "days": 14,
+      "fixOnCanary": false,
+      "backgroundSessions": {
+        "canary": 2087,
+        "control": 2264
+      },
+      "drops": [
+        {
+          "scenario": "lost-ended",
+          "station": "CP-014-02",
+          "day": 2,
+          "unplugTime": "22:41:52",
+          "transactionId": "88213",
+          "params": {
+            "updates": 40,
+            "updateIntervalSec": 60,
+            "energyWh": 18420,
+            "unplugToDropSec": 51,
+            "reconnectDelaySec": 28,
+            "heartbeatAfterStatusSec": 30
+          },
+          "capture": {
+            "label": "lost-ended-1",
+            "title": "S-014 · CP-014-02 · FW-B 4.2.1 · T-2041",
+            "fromSec": -45,
+            "untilSec": 26888,
+            "probes": [
+              {
+                "kind": "session-state",
+                "atSec": 110
+              },
+              {
+                "kind": "session-open",
+                "atSec": 26888
+              }
+            ]
+          }
+        },
+        {
+          "scenario": "lost-ended",
+          "station": "CP-031-01",
+          "day": 5,
+          "unplugTime": "23:58:30",
+          "transactionId": "88177",
+          "params": {
+            "updates": 26,
+            "updateIntervalSec": 60,
+            "energyWh": 14200,
+            "unplugToDropSec": 25,
+            "reconnectDelaySec": 67
+          },
+          "capture": {
+            "label": "lost-ended-2",
+            "title": "S-031 · CP-031-01 · FW-B 4.2.3 · T-2047",
+            "fromSec": 0,
+            "untilSec": 47970,
+            "probes": [
+              {
+                "kind": "session-state-brief",
+                "atSec": 93
+              },
+              {
+                "kind": "map",
+                "atSec": 47970
+              }
+            ]
+          }
+        },
+        {
+          "scenario": "lost-ended",
+          "station": "CP-058-04",
+          "day": 8,
+          "unplugTime": "21:32:00",
+          "params": {
+            "unplugToDropSec": 88
+          }
+        },
+        {
+          "scenario": "late-ended",
+          "station": "CP-063-02",
+          "day": 10,
+          "unplugTime": "14:05:00",
+          "params": {
+            "unplugToDropSec": 17
+          }
+        },
+        {
+          "scenario": "late-ended",
+          "station": "CP-047-02",
+          "day": 11,
+          "unplugTime": "09:20:00",
+          "params": {
+            "unplugToDropSec": 41
+          }
+        },
+        {
+          "scenario": "duplicate-ended",
+          "station": "CP-014-02",
+          "day": 12,
+          "unplugTime": "12:10:00",
+          "params": {
+            "unplugToDropSec": 3
+          }
+        },
+        {
+          "scenario": "still-delivering",
+          "station": "CP-063-02",
+          "day": 6,
+          "unplugTime": "11:00:00",
+          "params": {
+            "ongoingIndicator": true
+          }
+        },
+        {
+          "scenario": "late-ended",
+          "station": "CP-022-04",
+          "day": 4,
+          "unplugTime": "07:41:40",
+          "evse": 2,
+          "transactionId": "87640",
+          "params": {
+            "updates": 7,
+            "updateIntervalSec": 60,
+            "energyWh": 9300,
+            "unplugToDropSec": 7,
+            "reconnectDelaySec": 43,
+            "endedDelaySec": 21
+          },
+          "capture": {
+            "label": "late-ended-1",
+            "title": "S-022 · CP-022-04 · FW-A 3.9.0 · T-2058",
+            "fromSec": 0,
+            "untilSec": 73,
+            "probes": []
+          }
+        },
+        {
+          "scenario": "lost-ended",
+          "station": "CP-027-01",
+          "day": 2,
+          "unplugTime": "03:30:00",
+          "params": {
+            "unplugToDropSec": 18
+          }
+        },
+        {
+          "scenario": "lost-ended",
+          "station": "CP-070-02",
+          "day": 7,
+          "unplugTime": "18:15:00",
+          "params": {
+            "unplugToDropSec": 58
+          }
+        },
+        {
+          "scenario": "late-ended",
+          "station": "CP-052-01",
+          "day": 9,
+          "unplugTime": "10:40:00",
+          "params": {
+            "unplugToDropSec": 66
+          }
+        },
+        {
+          "scenario": "duplicate-ended",
+          "station": "CP-041-01",
+          "day": 11,
+          "unplugTime": "16:00:00",
+          "params": {
+            "unplugToDropSec": 12
+          }
+        },
+        {
+          "scenario": "still-delivering",
+          "station": "CP-019-01",
+          "day": 8,
+          "unplugTime": "13:00:00"
+        }
+      ]
+    },
+    {
+      "name": "after",
+      "start": "2026-06-15T00:00:00Z",
+      "days": 14,
+      "fixOnCanary": true,
+      "backgroundSessions": {
+        "canary": 2131,
+        "control": 2301
+      },
+      "drops": [
+        {
+          "scenario": "lost-ended",
+          "station": "CP-014-02",
+          "day": 1,
+          "unplugTime": "21:10:00",
+          "params": {
+            "unplugToDropSec": 22
+          }
+        },
+        {
+          "scenario": "lost-ended",
+          "station": "CP-058-04",
+          "day": 6,
+          "unplugTime": "04:50:00",
+          "params": {
+            "unplugToDropSec": 44
+          }
+        },
+        {
+          "scenario": "very-late-ended",
+          "station": "CP-031-01",
+          "day": 3,
+          "unplugTime": "19:25:00",
+          "params": {
+            "unplugToDropSec": 31,
+            "endExtraWh": 400
+          }
+        },
+        {
+          "scenario": "very-late-ended",
+          "station": "CP-047-02",
+          "day": 8,
+          "unplugTime": "08:05:00",
+          "params": {
+            "unplugToDropSec": 58
+          }
+        },
+        {
+          "scenario": "very-late-ended",
+          "station": "CP-063-02",
+          "day": 11,
+          "unplugTime": "23:40:00",
+          "params": {
+            "unplugToDropSec": 12
+          }
+        },
+        {
+          "scenario": "newer-transaction",
+          "station": "CP-058-04",
+          "day": 10,
+          "unplugTime": "17:30:00",
+          "params": {
+            "unplugToDropSec": 37
+          }
+        },
+        {
+          "scenario": "still-delivering",
+          "station": "CP-014-02",
+          "day": 4,
+          "unplugTime": "12:00:00",
+          "params": {
+            "ongoingIndicator": true
+          }
+        },
+        {
+          "scenario": "still-delivering",
+          "station": "CP-047-02",
+          "day": 9,
+          "unplugTime": "15:30:00"
+        },
+        {
+          "scenario": "late-ended",
+          "station": "CP-022-04",
+          "day": 3,
+          "unplugTime": "06:20:00",
+          "params": {
+            "unplugToDropSec": 9
+          }
+        },
+        {
+          "scenario": "late-ended",
+          "station": "CP-052-01",
+          "day": 6,
+          "unplugTime": "11:15:00",
+          "params": {
+            "unplugToDropSec": 27
+          }
+        },
+        {
+          "scenario": "lost-ended",
+          "station": "CP-027-01",
+          "day": 5,
+          "unplugTime": "20:05:00",
+          "params": {
+            "unplugToDropSec": 5
+          }
+        },
+        {
+          "scenario": "lost-ended",
+          "station": "CP-070-02",
+          "day": 9,
+          "unplugTime": "01:45:00",
+          "params": {
+            "unplugToDropSec": 60
+          }
+        },
+        {
+          "scenario": "duplicate-ended",
+          "station": "CP-041-01",
+          "day": 7,
+          "unplugTime": "15:50:00",
+          "params": {
+            "unplugToDropSec": 15
+          }
+        },
+        {
+          "scenario": "duplicate-ended",
+          "station": "CP-019-01",
+          "day": 10,
+          "unplugTime": "09:35:00",
+          "params": {
+            "unplugToDropSec": 33
+          }
+        },
+        {
+          "scenario": "still-delivering",
+          "station": "CP-041-01",
+          "day": 2,
+          "unplugTime": "10:00:00"
+        }
+      ]
+    }
+  ],
+  "expectedStory": {
+    "canaryStuckBefore": 5,
+    "canaryStuckAfter": 0,
+    "controlStuckBefore": 4,
+    "controlStuckAfter": 4,
+    "reconciliations": 5,
+    "lateEndedAppliedOnce": 3,
+    "newerTransactionSkips": 1,
+    "falseClosures": 0,
+    "duplicateCharges": 0,
+    "invoicesAdjusted": 1,
+    "canaryDropsBefore": 6,
+    "canaryDropsAfter": 5,
+    "controlDropsBefore": 5,
+    "controlDropsAfter": 6,
+    "canarySessionsAfter": 2140
+  }
+}

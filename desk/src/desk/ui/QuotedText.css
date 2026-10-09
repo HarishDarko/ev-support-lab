@@ -1,0 +1,12 @@
+/* The words the AI quoted, or for a rules result the words the rule matched. This is AI output, so it uses the AI colour. */
+.quote {
+  padding: 0 2px;
+  border-bottom: 2px solid var(--ai);
+  border-radius: 1px;
+  background: var(--ai-soft);
+  color: var(--fg);
+}
+.quote--rule {
+  border-bottom-color: var(--fg-3);
+  background: var(--surface-2);
+}

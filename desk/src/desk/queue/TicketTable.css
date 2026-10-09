@@ -1,0 +1,89 @@
+.tickets {
+  min-width: 520px;
+}
+.tickets th,
+.tickets td {
+  padding-inline: var(--space-1);
+}
+.tickets-site {
+  white-space: nowrap;
+}
+.tickets-row--selected td,
+.tickets-row--selected th {
+  background: var(--surface-2);
+}
+.tickets-id {
+  padding: var(--space-1) var(--space-2);
+  margin: calc(var(--space-1) * -1) calc(var(--space-2) * -1);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: var(--text-13);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.tickets-id[aria-pressed="true"] {
+  font-weight: var(--weight-bold);
+  text-decoration-color: var(--fg);
+}
+.tickets-from {
+  min-width: 96px;
+}
+.tickets-component {
+  font-size: var(--text-12);
+}
+
+.lane {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+.lane-mark {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--ai);
+  border-radius: 1px;
+  background: var(--ai);
+}
+.lane--person .lane-mark {
+  background: transparent;
+}
+.lane--escalate .lane-mark {
+  border-radius: 50%;
+}
+.lane--info .lane-mark {
+  border-color: var(--fg-3);
+  background: transparent;
+}
+.lane--held {
+  color: var(--attn);
+  font-weight: var(--weight-semibold);
+}
+.lane--held .lane-mark {
+  border-color: var(--attn);
+  background: var(--attn);
+}
+
+/* Narrow screens drop the columns the inspector repeats, so the table fits without sideways scrolling. */
+@media (max-width: 759px) {
+  .tickets {
+    min-width: 0;
+  }
+  .tickets-from,
+  .tickets-site,
+  .tickets-fw,
+  .tickets-component {
+    display: none;
+  }
+}
+
+@media (max-width: 479px) {
+  .lane {
+    white-space: normal;
+  }
+}

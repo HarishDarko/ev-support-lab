@@ -1,0 +1,20 @@
+name = "support-desk"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-06-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Rate-limit counters. Created with:
+#   npx wrangler kv namespace create DESK_KV
+# (namespace "DESK_KV").
+[[kv_namespaces]]
+binding = "DESK_KV"
+id = "8abcc4c3e61b4010853bd8ad50d8bccf"
+
+# Caps on live model calls. A full "Run it live" is 15 calls (about $0.13 at list price), so 120 a day is about
+# 8 live runs. The API key's spend limit in the Anthropic console is the real ceiling; these keep a busy day under it.
+[vars]
+RL_PER_IP_HOUR = "45"
+RL_GLOBAL_DAY = "120"
+# Optional model overrides (defaults: claude-haiku-4-5 and claude-sonnet-5-5):
+# FAST_MODEL = "claude-haiku-4-5"
+# DEEP_MODEL = "claude-sonnet-5-5"

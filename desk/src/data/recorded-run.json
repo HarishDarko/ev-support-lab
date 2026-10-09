@@ -1,0 +1,1116 @@
+{
+  "recordedAt": "2026-10-08T18:20:05.587Z",
+  "source": "ai",
+  "models": ["claude-haiku-4-5-20251001", "claude-sonnet-5-5"],
+  "totalCost": 0.132168,
+  "steps": {
+    "patterns": {
+      "data": {
+        "patterns": [
+          {
+            "name": "Stuck sessions showing Charging after driver left",
+            "ticket_ids": ["T-2041", "T-2047", "T-2053", "T-2058", "T-2066"],
+            "history_ids": ["H-1903", "H-1911", "H-1922", "H-1930", "H-1938", "H-1947", "H-1955", "H-1962", "H-1968"],
+            "recurring": true,
+            "why_grouped": "Session or port state stays active (Charging, In use, or active-session block) after the driver has left or energy has stopped, mostly on FW-B 4.2.x and FW-A 3.9.0.",
+            "next_step": "Apply RB-05 to each open session (T-2053 and T-2058 are triage needs_human, so check them first), and have engineering look at why session close is not registering, since earlier tickets were each closed as one-off."
+          },
+          {
+            "name": "Payment holds not released after failed or finished sessions",
+            "ticket_ids": ["T-2043", "T-2049", "T-2057", "T-2071", "T-2078"],
+            "history_ids": ["H-1914", "H-1940", "H-1970"],
+            "recurring": true,
+            "why_grouped": "Drivers have a pending pre-authorization hold ($25 to $50) that remained after a failed, short, completed or free session.",
+            "next_step": "Release each hold with RB-02 and ask engineering whether holds are failing to release automatically, which is a hypothesis only."
+          },
+          {
+            "name": "Hospital staff badges rejected after list update",
+            "ticket_ids": ["T-2042", "T-2045", "T-2050", "T-2055", "T-2061", "T-2069"],
+            "history_ids": ["H-1924", "H-1942"],
+            "recurring": true,
+            "why_grouped": "Badges are rejected on several ports at S-038 after the host changed the badge list, and the charger auth list is v211 while the portal expects v214.",
+            "next_step": "Re-push the local authorization list with RB-01 to all four S-038 chargers, confirm they reach v214, and check why the earlier push did not apply."
+          },
+          {
+            "name": "Chargers offline with no heartbeat",
+            "ticket_ids": ["T-2040", "T-2046", "T-2056", "T-2064", "T-2070", "T-2075", "T-2079"],
+            "history_ids": ["H-1905", "H-1919", "H-1932", "H-1944", "H-1959", "H-1972"],
+            "recurring": true,
+            "why_grouped": "NOC alerts show chargers with no heartbeat or offline for 35 to 63 minutes.",
+            "next_step": "Run RB-03 on each, dispatch field service for CP-070-02 (no response to soft reset) and look into the repeat offline events at S-052 (T-2064)."
+          },
+          {
+            "name": "Host portal large report exports failing",
+            "ticket_ids": ["T-2051", "T-2072", "T-2077"],
+            "history_ids": ["H-1957"],
+            "recurring": true,
+            "why_grouped": "Host portal exports over long date ranges time out or fail while smaller exports work.",
+            "next_step": "Send the hosts the RB-04 smaller-date-range workaround and raise the export timeout with engineering."
+          },
+          {
+            "name": "UK site shows prices in dollars",
+            "ticket_ids": ["T-2062", "T-2067"],
+            "history_ids": [],
+            "recurring": false,
+            "why_grouped": "Two drivers at S-077 report the app showing prices in dollars instead of pounds, while billing was correct in GBP in one case.",
+            "next_step": "Engineering should check the currency display config for S-077 on FW-A 3.9.0, as the cause is unknown."
+          }
+        ]
+      },
+      "trace": {
+        "step": "patterns",
+        "source": "ai",
+        "model": "claude-sonnet-5-5",
+        "attempts": 1,
+        "checks": [{ "name": "Ticket ids exist in the data", "passed": true, "detail": "all matched" }],
+        "tokens": { "input": 7453, "output": 1137 },
+        "cost": 0.026276,
+        "reliability": "high"
+      },
+      "ms": 9382
+    },
+    "investigate": {
+      "data": {
+        "symptom": "Drivers see 'Charging' and idle fees running hours after unplugging, and sometimes cannot start a new session. Hosts see 'In use' on the map for an empty bay, and NOC, billing and care get alerts and disputes.",
+        "impact": [
+          "14 tickets across 9 sites and two firmware lines in 21 days",
+          "Idle fees kept running on open sessions; drivers and a fleet manager dispute them",
+          "A driver was blocked from starting a new session at another site"
+        ],
+        "evidence": [
+          {
+            "point": "On CP-014-02 the connector reconnected and reported Available, but the backend still held the session as Charging with no Ended.",
+            "source": "Log CP-014-02",
+            "quote": "state=Charging  last_meter=18.42 kWh  (no TransactionEvent Ended received)",
+            "quote_verified": true
+          },
+          {
+            "point": "On CP-031-01 the same sequence appeared after an EVCommunicationLost update and a websocket drop, and the map then showed the charger in use.",
+            "source": "Log CP-031-01",
+            "quote": "CP-031-01 shown 'In use' (derived from open session)",
+            "quote_verified": true
+          },
+          {
+            "point": "On CP-022-04 an Ended did arrive after reconnect, but the backend ignored it because the connector was already Available.",
+            "source": "Log CP-022-04",
+            "quote": "ignored: connector already Available (out of order)",
+            "quote_verified": true
+          },
+          {
+            "point": "On FW-B 4.2.x, 12 of 19 drops within 90 s of unplug got stuck; 41 drops at other times got none stuck.",
+            "source": "Fleet view, 21 days",
+            "quote": "drops at other times: 41 (stuck afterwards: 0)",
+            "quote_verified": true
+          }
+        ],
+        "hypotheses": [
+          {
+            "statement": "The backend ignores a late Ended that arrives after the connector is already Available, leaving the session open. This mechanism is seen directly in one log.",
+            "status": "leading hypothesis",
+            "supports": [
+              "CP-022-04 log shows the backend ignoring a late Ended as out of order.",
+              "Stuck cases cluster on drops within 90 s of unplug, around the reconnect."
+            ],
+            "against_or_gaps": [
+              "Only one of three logs shows an Ended arriving and being ignored.",
+              "Not known whether the ignore rule is applied the same way for other firmware."
+            ]
+          },
+          {
+            "statement": "The charger never sends or never queues the Ended after an unplug-time drop, so the backend has nothing to close the session with.",
+            "status": "alternative hypothesis",
+            "supports": [
+              "CP-014-02 and CP-031-01 logs show no Ended after reconnect.",
+              "FW-B 4.2.x has the highest stuck rate: 12 of 19 drops."
+            ],
+            "against_or_gaps": [
+              "A missing line at the gateway could be a capture or logging gap.",
+              "CP-022-04 (FW-A) did send an Ended, so both mechanisms may coexist."
+            ]
+          }
+        ],
+        "ruled_out": [
+          "Payment provider fault is unlikely: no incidents logged and normal captures on unaffected sessions.",
+          "App display bug is unlikely: the session API itself returns state=Charging.",
+          "A single bad site or charger is unlikely: 14 tickets across 9 sites.",
+          "Driver behaviour is unlikely: every affected connector reported Available within 2 minutes of unplug."
+        ],
+        "open_questions": [
+          "Does the charger store and resend Ended after an unplug-time drop on FW-B 4.2.x?",
+          "Why does session-svc ignore an Ended once the connector is Available?",
+          "Could the gateway have missed Ended messages in the CP-014-02 and CP-031-01 logs?"
+        ]
+      },
+      "trace": {
+        "step": "investigate",
+        "source": "ai",
+        "model": "claude-sonnet-5-5",
+        "attempts": 1,
+        "checks": [
+          { "name": "Each quote found in the source it cites", "passed": true, "detail": "4 of 4" },
+          { "name": "Ids exist in the data", "passed": true, "detail": "0 referenced" },
+          { "name": "Numbers come from the input", "passed": true, "detail": "all matched" }
+        ],
+        "tokens": { "input": 5188, "output": 1138 },
+        "cost": 0.021756,
+        "reliability": "high"
+      },
+      "ms": 10810
+    },
+    "verify": {
+      "data": {
+        "verdict": "consistent with hypothesis",
+        "reading": "Canary stuck sessions fell from 5 to 0 while drops stayed at 6; control stayed at 4 stuck. Five were closed by reconciliation, none while energy was still flowing. Direction fits the backend-ignores-late-Ended hypothesis, but counts are tiny.",
+        "what_it_does_not_prove": [
+          "That FW-B fails to send queued Ended; 3 late Ended events arrived, so absence is only partial.",
+          "That the fix generalises beyond 5 canary sites on FW-B 4.2.x.",
+          "That 0 wrong closures is safe; with 5 reconciliations, a rare failure could be missed."
+        ],
+        "keep_watching": [
+          "Any closure while energy still rising; late Ended applied twice.",
+          "Provisional invoice adjustments: 1 of 5 so far."
+        ],
+        "next_decision": "Keep the canary running; do not widen yet. Bar: at least 28 more days and at least 10 further drops near unplug on canary with 0 early closures or duplicate charges. Any such event, or stuck sessions returning, reverses it."
+      },
+      "trace": {
+        "step": "verify",
+        "source": "ai",
+        "model": "claude-sonnet-5-5",
+        "attempts": 1,
+        "checks": [
+          { "name": "Ids exist in the data", "passed": true, "detail": "0 referenced" },
+          { "name": "Numbers come from the input", "passed": false, "detail": "derived or unmatched: 28, 10" }
+        ],
+        "tokens": { "input": 1623, "output": 368 },
+        "cost": 0.006926,
+        "reliability": "medium"
+      },
+      "ms": 4686
+    },
+    "handoff": {
+      "data": {
+        "title": "Sessions stay open after unplug-time websocket drop",
+        "severity": "S2",
+        "scope": "14 tickets (5 open, 9 closed earlier as one-offs) across 9 sites and two firmware lines (FW-B 4.2.x, FW-A 3.9.0) in 21 days.",
+        "rules_triggered": ["code", "spread", "billing"],
+        "reproduction": [
+          "Run the lab reproduction test with the fix flag off: simulated charger unplugs, drops websocket, reconnects, reports Available, then sends queued Ended.",
+          "The test passes by asserting the bug: session-svc ignores the Ended as out of order and the transaction stays open.",
+          "This shows backend behaviour only. It says nothing about whether FW-B sends or queues its Ended after the drop.",
+          "Manual step: on a FW-B 4.2.x test charger, drop the connection after EVCommunicationLost but before Ended is sent; capture at charger and gateway."
+        ],
+        "evidence_attached": [
+          "Lab tests: bug reproduced; regression fails without the fix",
+          "CP-022-04 log: late Ended ignored, connector already Available",
+          "CP-014-02 and CP-031-01 logs: Available after reconnect, no Ended",
+          "Fleet view: FW-B 4.2.x 12 of 19 stuck; 41 other drops, 0 stuck",
+          "Unplug-to-drop times for 14 stuck sessions, all 3 to 88 s"
+        ],
+        "ruled_out": [
+          "Payment provider fault: unlikely, no incidents and normal captures on unaffected sessions",
+          "App display bug: unlikely, session API itself returns state=Charging",
+          "Single bad site or charger: unlikely, 14 tickets across 9 sites",
+          "Driver behaviour: unlikely, every connector reported Available within 2 minutes of unplug"
+        ],
+        "workaround_in_place": "Support corrected the 5 open sessions with RB-05 at last meter value and reversed idle fees; invoice flagged for billing review; a 15-minute detector query is proposed, not yet running.",
+        "the_ask": "Decide whether to change session-svc to accept a late Ended after the connector is Available, and to approve the 15-minute detector until the fix ships. Also assign the FW-B 4.2.x capture test.",
+        "hypothesis_note": "The backend ignoring a late Ended is reproduced in a lab with a simulated charger. Whether FW-B drops its queued Ended is not confirmed."
+      },
+      "trace": {
+        "step": "handoff",
+        "source": "ai",
+        "model": "claude-sonnet-5-5",
+        "attempts": 1,
+        "checks": [
+          { "name": "Ask and escalation rules present", "passed": true, "detail": "3 rules" },
+          {
+            "name": "Lab test attached; firmware question marked not confirmed",
+            "passed": true,
+            "detail": "fixed wording"
+          },
+          { "name": "Ids exist in the data", "passed": true, "detail": "1 referenced" },
+          { "name": "Numbers come from the input", "passed": true, "detail": "all matched" }
+        ],
+        "tokens": { "input": 6312, "output": 799 },
+        "cost": 0.020614,
+        "reliability": "high"
+      },
+      "ms": 7489
+    },
+    "kb": {
+      "data": {
+        "title": "Session stuck Charging after unplug websocket drop",
+        "applies_when": [
+          "Driver sees Charging and idle fees running hours after unplugging",
+          "Host map shows In use on an empty bay",
+          "Driver cannot start a new session after a recent unplug"
+        ],
+        "how_to_confirm": [
+          "In the charger log, find a websocket drop within 90 s of unplug, then Available after reconnect.",
+          "Late-Ended form: session-svc log shows 'ignored: connector already Available (out of order)', as on CP-022-04.",
+          "No-Ended form: log shows state=Charging, no TransactionEvent Ended received, after reconnect, as on CP-014-02 and CP-031-01."
+        ],
+        "steps": [
+          "Confirm the meter shows no energy change since unplug, before RB-05.",
+          "Run RB-05 at the last meter value to close the session and reverse idle fees.",
+          "If a payment hold remains, check the session is closed, then use RB-02.",
+          "Flag the invoice for billing review and link the ticket to the parent incident."
+        ],
+        "escalate_if": [
+          "Energy is still rising on the open session.",
+          "No connection drop occurred near the unplug time.",
+          "Charger runs a firmware line other than FW-A or FW-B.",
+          "A newer session already started on the same connector."
+        ],
+        "status_note": "ENG-4471 is behind a per-station flag on 5 FW-B canary sites with 6 control sites; whether FW-B sends or queues Ended after reconnect is unconfirmed, vendor ticket open.",
+        "related": ["RB-05", "RB-02", "ENG-4471"]
+      },
+      "trace": {
+        "step": "kb",
+        "source": "ai",
+        "model": "claude-sonnet-5-5",
+        "attempts": 1,
+        "checks": [
+          { "name": "Fixed meter check is step 1", "passed": true, "detail": "1 model step about the meter replaced" },
+          {
+            "name": "Fixed billing review is the last step",
+            "passed": true,
+            "detail": "1 model step about billing review replaced"
+          },
+          { "name": "Ids exist in the data", "passed": true, "detail": "3 referenced" },
+          { "name": "Numbers come from the input", "passed": true, "detail": "all matched" }
+        ],
+        "tokens": { "input": 3808, "output": 524 },
+        "cost": 0.012856,
+        "reliability": "high"
+      },
+      "ms": 4751
+    },
+    "shiftnote": {
+      "data": {
+        "headline": "20 of 40 tickets approved for closure; 20 remain open, including INC-0412 on sessions stuck open after websocket drops, tracked under ENG-4471.",
+        "done": [
+          "Triaged all 40 open tickets; no triage changed by a person",
+          "Approved 20 tickets for closure",
+          "Held T-2041, T-2047, T-2066 under the repeat guardrail"
+        ],
+        "needs_you": [
+          "T-2075: Charger offline, soft reset failed, no heartbeat. Field service to dispatch a visit, NOC to confirm status, by 07:00 ET.",
+          "T-2052: Cracked cable on ground at connector holster. Field service to confirm make-safe and repair plan by 07:00 ET.",
+          "T-2068: Roaming sessions missing from host monthly report. Billing ops to check roaming partner records by 07:00 ET.",
+          "T-2076: Host raw session data export request for audit. Host accounts and India engineering on-call to decide at the 07:00 ET handover."
+        ],
+        "escalated": [
+          "ENG-4471: sessions stay open after unplug-time websocket drop. Engineering owns it; INC-0412 is open.",
+          "Five sessions corrected with RB-05 and invoices flagged for billing review. Tickets stay open on INC-0412."
+        ],
+        "watch": [
+          "Detector query is proposed every 15 min but not yet approved to run.",
+          "T-2053 and T-2058 are held under INC-0412; no KB article published."
+        ]
+      },
+      "trace": {
+        "step": "shiftnote",
+        "source": "ai",
+        "model": "claude-sonnet-5-5",
+        "attempts": 1,
+        "checks": [
+          { "name": "Ids exist in the data", "passed": true, "detail": "12 referenced" },
+          { "name": "Numbers come from the input", "passed": true, "detail": "all matched" }
+        ],
+        "tokens": { "input": 1527, "output": 475 },
+        "cost": 0.007804,
+        "reliability": "high"
+      },
+      "ms": 5340
+    },
+    "classify": {
+      "data": {
+        "component": "session-state",
+        "severity": "S2",
+        "matches_known_pattern": true,
+        "matched_article": "Session stuck Charging after unplug websocket drop",
+        "suggested_action": "Confirm meter stable since 22:10, then run RB-05 to close session and reverse idle fees.",
+        "escalate": false,
+        "why": "Connection drop at 22:09 matches pattern; no energy rise reported; escalation criteria not met.",
+        "confirm": "Before RB-05, a person checks the meter shows no energy change since unplug. The check above reads wording only."
+      },
+      "trace": {
+        "step": "classify",
+        "source": "ai",
+        "model": "claude-haiku-4-5-20251001",
+        "attempts": 1,
+        "checks": [
+          { "name": "Matched article exists", "passed": true, "detail": "" },
+          {
+            "name": "Pattern exceptions checked by wording: energy still moving; no connection drop near unplug; firmware outside FW-A and FW-B",
+            "passed": true,
+            "detail": "no exception wording found; this doesn't confirm the meter is flat"
+          }
+        ],
+        "tokens": { "input": 1422, "output": 99 },
+        "cost": 0.001917,
+        "reliability": "high"
+      },
+      "ms": 2684
+    },
+    "triage": [
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-2040",
+              "summary": "Charger CP-044-01 offline, no heartbeat since 08:47",
+              "component": "connectivity",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-03",
+              "confidence": 0.95,
+              "reason": "No heartbeat is the trigger condition for RB-03 soft and hard reset.",
+              "evidence": "CP-044-01 no heartbeat since 08:47",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2041",
+              "summary": "Driver says the app still showed 'Charging' hours after",
+              "component": "session-state",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-05",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"still showed 'Charging'\" (stuck session).",
+              "evidence": "still showed 'Charging'",
+              "source": "rules",
+              "quote_verified": false,
+              "rejected_quote": "app still showed 'Charging' hours after they unplugged, Idle fee kept running",
+              "fallback_reason": "AI quote not found in the ticket"
+            },
+            {
+              "id": "T-2042",
+              "summary": "Hospital staff badges rejected at CP-038-03 since this morning",
+              "component": "authorization",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-01",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"badge\" (card authorization).",
+              "evidence": "badge",
+              "source": "rules",
+              "quote_verified": false,
+              "rejected_quote": "Hospital staff badges rejected at CP-038-03 since this morning, Host updated their badge list yesterday afternoon",
+              "fallback_reason": "AI quote not found in the ticket"
+            },
+            {
+              "id": "T-2043",
+              "summary": "Pending $50 hold from failed session on Saturday",
+              "component": "payments",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-02",
+              "confidence": 0.88,
+              "reason": "Driver reports stale pending hold after failed session start, matching RB-02 use case.",
+              "evidence": "Driver's card shows a $50 pending hold from a session that failed to start on Saturday",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2044",
+              "summary": "Host requests weekly utilization email feature",
+              "component": "request-or-question",
+              "severity": "S4",
+              "action": "info_only",
+              "runbook": "none",
+              "confidence": 0.99,
+              "reason": "Plain feature request with no current system impact or data problem.",
+              "evidence": "Host wants a weekly utilization email instead of logging in to the portal",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "ai",
+          "model": "claude-haiku-4-5-20251001",
+          "attempts": 1,
+          "checks": [
+            { "name": "Quote found in the ticket", "passed": false, "detail": "3 of 5" },
+            { "name": "Label fits the ticket", "passed": true, "detail": "3 of 3" },
+            { "name": "Every closure names a runbook", "passed": true, "detail": "all" },
+            { "name": "Runbook fits the label", "passed": true, "detail": "3 of 3" },
+            { "name": "Quote names the label's subject", "passed": true, "detail": "all" },
+            { "name": "Runbook exceptions", "passed": true, "detail": "none applied" }
+          ],
+          "tokens": { "input": 1702, "output": 578 },
+          "cost": 0.004592,
+          "reliability": "medium"
+        },
+        "ms": 7324
+      },
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-2045",
+              "summary": "Two ports rejecting staff badges at hospital charger",
+              "component": "authorization",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-01",
+              "confidence": 0.95,
+              "reason": "Card reader functions with test card; staff badges rejected after likely card-list change.",
+              "evidence": "Two more ports rejecting staff badges. Charger is online, card reader works with a test card.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2046",
+              "summary": "Charger offline 41 minutes, last heartbeat 11:24",
+              "component": "connectivity",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-03",
+              "confidence": 0.98,
+              "reason": "No heartbeat for 41 minutes; soft then hard reset and dispatch if no response after 15 min.",
+              "evidence": "CP-063-02 offline 41 min. Last message: Heartbeat at 11:24.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2047",
+              "summary": "Charger showing 'In use' on map, nobody parked",
+              "component": "session-state",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-05",
+              "confidence": 0.9,
+              "reason": "Session stuck in Charging state overnight with no driver present; force-close and reverse idle fees.",
+              "evidence": "has shown 'In use' on the public map since last night. Nobody is parked there.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2048",
+              "summary": "Can host invoices group sessions by port?",
+              "component": "request-or-question",
+              "severity": "S4",
+              "action": "info_only",
+              "runbook": "none",
+              "confidence": 0.85,
+              "reason": "Feature request for invoice grouping; billing ops needs to evaluate if configurable or requires development.",
+              "evidence": "can host invoices show sessions grouped by port instead of by day?",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2049",
+              "summary": "Driver has $35 hold pending two days post-session",
+              "component": "payments",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-02",
+              "confidence": 0.98,
+              "reason": "Stale pre-authorization hold after completed session; release the hold immediately.",
+              "evidence": "Driver has a $35 hold still pending two days after a completed session",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "ai",
+          "model": "claude-haiku-4-5-20251001",
+          "attempts": 1,
+          "checks": [
+            { "name": "Quote found in the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Label fits the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Every closure names a runbook", "passed": true, "detail": "all" },
+            { "name": "Runbook fits the label", "passed": true, "detail": "5 of 5" },
+            { "name": "Quote names the label's subject", "passed": true, "detail": "all" },
+            { "name": "Runbook exceptions", "passed": true, "detail": "none applied" }
+          ],
+          "tokens": { "input": 1686, "output": 508 },
+          "cost": 0.004226,
+          "reliability": "high"
+        },
+        "ms": 6435
+      },
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-2050",
+              "summary": "Badges not working at hospital site third call",
+              "component": "authorization",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-01",
+              "confidence": 0.92,
+              "reason": "Third call about rejected RFID cards at one site indicates a card-list push is needed.",
+              "evidence": "Third call today about badges not working at the hospital site",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2051",
+              "summary": "Host portal 12-month export times out fails",
+              "component": "host-portal",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-04",
+              "confidence": 0.95,
+              "reason": "Large date-range export timeout with successful smaller exports matches RB-04 pattern.",
+              "evidence": "12-month session report spins and then fails. Smaller exports work",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2052",
+              "summary": "Connector holster cracked cable on ground",
+              "component": "hardware-field",
+              "severity": "S1",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.98,
+              "reason": "Physical damage to connector and cable is a safety issue; field service needs to validate part and dispatch.",
+              "evidence": "Connector holster on CP-044-03 cracked, cable on the ground",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2053",
+              "summary": "Session stuck open 9h no energy change",
+              "component": "session-state",
+              "severity": "S2",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.88,
+              "reason": "Stuck session with no energy flow for hours; needs to verify if driver still present before force-close.",
+              "evidence": "Session SX-88301 open 9h 40m with no energy change since 12:02",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2054",
+              "summary": "API 5xx spike 00:10–00:14 ET auto-resolved",
+              "component": "platform-api",
+              "severity": "S4",
+              "action": "info_only",
+              "runbook": "none",
+              "confidence": 0.96,
+              "reason": "Brief transient outage already resolved; no impact signal or follow-up errors.",
+              "evidence": "Elevated 5xx on the auth API 00:10–00:14 ET. Auto-resolved",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "ai",
+          "model": "claude-haiku-4-5-20251001",
+          "attempts": 1,
+          "checks": [
+            { "name": "Quote found in the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Label fits the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Every closure names a runbook", "passed": true, "detail": "all" },
+            { "name": "Runbook fits the label", "passed": true, "detail": "5 of 5" },
+            { "name": "Quote names the label's subject", "passed": true, "detail": "all" },
+            { "name": "Runbook exceptions", "passed": true, "detail": "none applied" }
+          ],
+          "tokens": { "input": 1670, "output": 486 },
+          "cost": 0.0041,
+          "reliability": "high"
+        },
+        "ms": 6338
+      },
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-2055",
+              "summary": "Nurse badge rejected on hospital charger",
+              "component": "authorization",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-01",
+              "confidence": 0.95,
+              "reason": "RFID card rejection after a known card-list change at this site; runbook RB-01 resolves by re-pushing local authorization list.",
+              "evidence": "Nurse badge rejected on CP-038-04",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2056",
+              "summary": "Charger offline, no heartbeat for 52 minutes",
+              "component": "connectivity",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-03",
+              "confidence": 0.98,
+              "reason": "Charger silent for 52 min exceeds typical transient; runbook RB-03 covers soft and hard reset with field dispatch fallback.",
+              "evidence": "CP-011-02 no heartbeat for 52 min",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2057",
+              "summary": "$50 payment hold after failed short session",
+              "component": "payments",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-02",
+              "confidence": 0.96,
+              "reason": "Driver sees pending hold after session completed early; runbook RB-02 releases stale pre-authorization holds.",
+              "evidence": "Driver has a $50 hold after a session that stopped after 2 minutes",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2058",
+              "summary": "Driver shows active session three hours after checkout",
+              "component": "session-state",
+              "severity": "S2",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.88,
+              "reason": "Session state did not clear despite apparent driver departure; requires investigation into state machine or session close logic.",
+              "evidence": "They left S-022 about three hours ago",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "weak"
+            },
+            {
+              "id": "T-2059",
+              "summary": "Host asking about time-of-use pricing setup",
+              "component": "request-or-question",
+              "severity": "S4",
+              "action": "close_with_runbook",
+              "runbook": "RB-07",
+              "confidence": 0.92,
+              "reason": "Host needs explanation of ToU pricing and configuration guidance; runbook RB-07 provides education and obtains written approval.",
+              "evidence": "Host asks how time-of-use pricing works and whether we can set evening rates",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "ai",
+          "model": "claude-haiku-4-5-20251001",
+          "attempts": 1,
+          "checks": [
+            { "name": "Quote found in the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Label fits the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Every closure names a runbook", "passed": true, "detail": "all" },
+            { "name": "Runbook fits the label", "passed": true, "detail": "5 of 5" },
+            { "name": "Quote names the label's subject", "passed": false, "detail": "1 weak, kept and marked" },
+            { "name": "Runbook exceptions", "passed": true, "detail": "none applied" }
+          ],
+          "tokens": { "input": 1678, "output": 505 },
+          "cost": 0.004203,
+          "reliability": "medium"
+        },
+        "ms": 6474
+      },
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-2060",
+              "summary": "DC charger derated to 50 kW at high temperature",
+              "component": "hardware-field",
+              "severity": "S3",
+              "action": "info_only",
+              "runbook": "none",
+              "confidence": 0.9,
+              "reason": "Thermal derating at 39°C is normal charger behavior; no fault codes present.",
+              "evidence": "delivering 50 kW max since 11:30. Site temperature 39°C. No faults reported.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2061",
+              "summary": "Checked CP-038-03 local auth list version: v211. Host portal",
+              "component": "authorization",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-01",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"auth list\" (card authorization).",
+              "evidence": "auth list",
+              "source": "rules",
+              "quote_verified": false,
+              "rejected_quote": "local auth list version: v211. Host portal says the list should be v214.",
+              "fallback_reason": "AI label \"session-state\" doesn't fit the ticket"
+            },
+            {
+              "id": "T-2062",
+              "summary": "App displayed price in USD instead of GBP",
+              "component": "pricing",
+              "severity": "S4",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.85,
+              "reason": "Session billing is correct but app display error suggests frontend or locale bug; engineering review needed.",
+              "evidence": "app showed the price as $0.45/kWh instead of £. Session itself billed correctly in GBP.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2063",
+              "summary": "Host user locked out of portal before council meeting",
+              "component": "host-portal",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-06",
+              "confidence": 0.98,
+              "reason": "RB-06 covers locked-out portal access; same-day deadline justifies urgent execution.",
+              "evidence": "Host user locked out of the portal after password resets. Needs access today for a council meeting.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2064",
+              "summary": "Charger offline 35 min, recurrent soft-reset events",
+              "component": "connectivity",
+              "severity": "S2",
+              "action": "escalation_candidate",
+              "runbook": "RB-03",
+              "confidence": 0.8,
+              "reason": "Pattern of resets clearing the issue suggests intermittent fault; soft reset alone may not be stable; escalate if reset fails.",
+              "evidence": "CP-052-01 offline 35 min. Two earlier offline events this week, both cleared by soft reset.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "ai",
+          "model": "claude-haiku-4-5-20251001",
+          "attempts": 1,
+          "checks": [
+            { "name": "Quote found in the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Label fits the ticket", "passed": false, "detail": "4 of 5" },
+            { "name": "Every closure names a runbook", "passed": true, "detail": "all" },
+            { "name": "Runbook fits the label", "passed": true, "detail": "4 of 4" },
+            { "name": "Quote names the label's subject", "passed": true, "detail": "all" },
+            { "name": "Runbook exceptions", "passed": true, "detail": "none applied" }
+          ],
+          "tokens": { "input": 1715, "output": 530 },
+          "cost": 0.004365,
+          "reliability": "medium"
+        },
+        "ms": 6993
+      },
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-2065",
+              "summary": "Driver app crashes on launch, Android 16, version 7.12.0",
+              "component": "driver-app",
+              "severity": "S3",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.7,
+              "reason": "App crash with reinstall failure suggests code or environment issue requiring engineering investigation.",
+              "evidence": "Driver app closes on launch for a driver on Android 16, app version 7.12.0. Reinstall did not help.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2066",
+              "summary": "Session stuck open 12h, idle fee disputed at depot",
+              "component": "session-state",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-05",
+              "confidence": 0.9,
+              "reason": "Energy stopped climbing after 40 min; session shows charging but driver has left; RB-05 resolves stuck sessions and reverses idle fees.",
+              "evidence": "Session at S-047 (fleet depot) open over 12h, energy stopped climbing after about 40 min.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2067",
+              "summary": "Two UK drivers see prices in dollars instead pounds",
+              "component": "pricing",
+              "severity": "S2",
+              "action": "escalation_candidate",
+              "runbook": "none",
+              "confidence": 0.85,
+              "reason": "Second report of currency display bug at same site suggests config or localization issue requiring engineering.",
+              "evidence": "Second UK driver report: price shown in dollars in the app at S-077.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2068",
+              "summary": "Roaming partner sessions missing from host monthly report",
+              "component": "roaming",
+              "severity": "S2",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.6,
+              "reason": "Data completeness issue across roaming partner integration requires billing and roaming system investigation.",
+              "evidence": "roaming sessions from a partner network are missing from their monthly report.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2069",
+              "summary": "Staff badge access problem ongoing three days",
+              "component": "authorization",
+              "severity": "S3",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.7,
+              "reason": "Multi-day badge access outage at hospital requires field investigation; no charger or firmware data limits diagnosis.",
+              "evidence": "staff badge problem now on day three.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "ai",
+          "model": "claude-haiku-4-5-20251001",
+          "attempts": 1,
+          "checks": [
+            { "name": "Quote found in the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Label fits the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Every closure names a runbook", "passed": true, "detail": "all" },
+            { "name": "Runbook fits the label", "passed": true, "detail": "5 of 5" },
+            { "name": "Quote names the label's subject", "passed": true, "detail": "all" },
+            { "name": "Runbook exceptions", "passed": true, "detail": "none applied" }
+          ],
+          "tokens": { "input": 1664, "output": 488 },
+          "cost": 0.004104,
+          "reliability": "high"
+        },
+        "ms": 6649
+      },
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-2070",
+              "summary": "Charger offline, no heartbeat 47 minutes",
+              "component": "connectivity",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-03",
+              "confidence": 0.95,
+              "reason": "Charger silent for 47 min; soft and hard reset are standard first steps before field dispatch.",
+              "evidence": "CP-035-03 no heartbeat for 47 min",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2071",
+              "summary": "Driver $50 hold not dropped after 3 days",
+              "component": "payments",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-02",
+              "confidence": 0.92,
+              "reason": "Stale payment hold blocking driver; RB-02 releases it directly.",
+              "evidence": "Driver has a $50 hold that has not dropped off after 3 days",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2072",
+              "summary": "Host report export Jan–Sep times out",
+              "component": "host-portal",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-04",
+              "confidence": 0.9,
+              "reason": "Long date range export timeout; RB-04 splits into smaller ranges to resolve.",
+              "evidence": "Host report export for Jan–Sep times out",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2073",
+              "summary": "When is next firmware rollout for S-066?",
+              "component": "request-or-question",
+              "severity": "S4",
+              "action": "info_only",
+              "runbook": "none",
+              "confidence": 0.88,
+              "reason": "Plain question about firmware schedule; not a defect or outage.",
+              "evidence": "When is the next firmware rollout for S-066",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2074",
+              "summary": "Non-EV vehicle parked in charger bay",
+              "component": "request-or-question",
+              "severity": "S4",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.85,
+              "reason": "Parking enforcement is outside our technical scope; host needs to contact site management or local enforcement.",
+              "evidence": "petrol car keeps parking in the EV bay",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "ai",
+          "model": "claude-haiku-4-5-20251001",
+          "attempts": 1,
+          "checks": [
+            { "name": "Quote found in the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Label fits the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Every closure names a runbook", "passed": true, "detail": "all" },
+            { "name": "Runbook fits the label", "passed": true, "detail": "5 of 5" },
+            { "name": "Quote names the label's subject", "passed": true, "detail": "all" },
+            { "name": "Runbook exceptions", "passed": true, "detail": "none applied" }
+          ],
+          "tokens": { "input": 1661, "output": 456 },
+          "cost": 0.003941,
+          "reliability": "high"
+        },
+        "ms": 5888
+      },
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-2075",
+              "summary": "Charger offline, soft reset failed, no heartbeat",
+              "component": "connectivity",
+              "severity": "S3",
+              "action": "needs_human",
+              "runbook": "RB-03",
+              "confidence": 0.95,
+              "reason": "No heartbeat after soft reset; hard reset and field dispatch are next steps in RB-03.",
+              "evidence": "CP-070-02 no heartbeat for 63 min. Soft reset sent by monitoring at 12:30, no response.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong",
+              "precondition": "RB-03 exception (reset already tried): \"no response\""
+            },
+            {
+              "id": "T-2076",
+              "summary": "Host requests raw session data export for audit",
+              "component": "request-or-question",
+              "severity": "S4",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.85,
+              "reason": "Data export request requires host accounts or billing ops to verify audit scope and provide raw data.",
+              "evidence": "Host asks for a raw session data export for an internal audit, last 6 months.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2077",
+              "summary": "Host portal export timing out on large range",
+              "component": "host-portal",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-04",
+              "confidence": 0.9,
+              "reason": "Large export failure is a known issue resolved by splitting the date range per RB-04.",
+              "evidence": "Large export from host portal failing again.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2078",
+              "summary": "Payment hold appears despite free promotional session",
+              "component": "payments",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-02",
+              "confidence": 0.88,
+              "reason": "Driver sees pending hold after session completion; RB-02 releases stale pre-auth holds.",
+              "evidence": "Driver says a $25 hold appeared even though the session was free",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            },
+            {
+              "id": "T-2079",
+              "summary": "Charger offline for 38 minutes, no heartbeat",
+              "component": "connectivity",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-03",
+              "confidence": 0.92,
+              "reason": "Offline charger with no heartbeat requires soft reset, hard reset, and field dispatch per RB-03.",
+              "evidence": "CP-019-01 offline 38 min.",
+              "source": "ai",
+              "quote_verified": true,
+              "support": "strong"
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "ai",
+          "model": "claude-haiku-4-5-20251001",
+          "attempts": 1,
+          "checks": [
+            { "name": "Quote found in the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Label fits the ticket", "passed": true, "detail": "5 of 5" },
+            { "name": "Every closure names a runbook", "passed": true, "detail": "all" },
+            { "name": "Runbook fits the label", "passed": true, "detail": "5 of 5" },
+            { "name": "Quote names the label's subject", "passed": true, "detail": "all" },
+            { "name": "Runbook exceptions", "passed": true, "detail": "1 closure blocked, sent to a person" }
+          ],
+          "tokens": { "input": 1648, "output": 568 },
+          "cost": 0.004488,
+          "reliability": "high"
+        },
+        "ms": 6893
+      }
+    ]
+  }
+}

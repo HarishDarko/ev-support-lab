@@ -1,0 +1,200 @@
+.story {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--gutter) calc(var(--bar-h) + var(--space-6));
+}
+.story:focus {
+  outline: none;
+}
+
+/* ---- claim ---- */
+
+.claim {
+  min-height: clamp(168px, 24vh, 216px);
+}
+.claim-kicker {
+  margin: 0 0 var(--space-3);
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-12);
+  letter-spacing: var(--tracking-kicker);
+  text-transform: uppercase;
+}
+.claim-text {
+  max-width: 26ch;
+  margin: 0;
+  font-size: clamp(32px, min(3.6vw, 5.4vh), 60px);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-display);
+  line-height: 1.04;
+  text-wrap: balance;
+}
+.claim-lede {
+  max-width: 62ch;
+  margin: var(--space-3) 0 0;
+  color: var(--fg-2);
+  font-family: var(--font-read);
+  font-size: clamp(18px, min(1.6vw, 2.5vh), 22px);
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+.claim-action {
+  margin: var(--space-4) 0 0;
+}
+
+@media (min-width: 1000px) and (max-height: 860px) {
+  .story {
+    padding-top: var(--space-4);
+  }
+  .claim {
+    min-height: 140px;
+  }
+  .claim-text {
+    font-size: clamp(30px, min(3.2vw, 4.8vh), 52px);
+  }
+  .claim-lede {
+    margin-top: var(--space-2);
+  }
+}
+
+/* ---- buttons ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  color: var(--fg);
+  font-size: var(--text-14);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease);
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--fg-2);
+}
+.btn:disabled {
+  color: var(--fg-3);
+  cursor: default;
+}
+.btn kbd {
+  padding: 0 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  color: var(--fg-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16px;
+}
+.btn--primary,
+.btn--next {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+.btn--primary:hover:not(:disabled),
+.btn--next:hover:not(:disabled) {
+  background: var(--fg-2);
+  border-color: var(--fg-2);
+}
+.btn--primary {
+  height: 44px;
+  font-size: var(--text-16);
+}
+.btn--done,
+.btn--done:disabled {
+  background: var(--ok-soft);
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+/* ---- the control bar ---- */
+
+.bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  height: calc(var(--bar-h) + env(safe-area-inset-bottom, 0px));
+  padding: 0 var(--gutter) env(safe-area-inset-bottom, 0px);
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+}
+.bar-where {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  min-width: 0;
+}
+.bar-stage {
+  font-size: var(--text-14);
+  font-weight: var(--weight-semibold);
+}
+.bar-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+.dot--on {
+  background: var(--fg);
+}
+.bar-end {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+@media (max-width: 640px) {
+  .bar-where,
+  .bar .btn kbd {
+    display: none;
+  }
+}
+
+/* ---- the run control (triage) ---- */
+
+.run-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-3);
+}
+.run-label {
+  margin: 0;
+  color: var(--fg-2);
+  font-size: var(--text-13);
+}
+.run-message {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--fg-2);
+  font-size: var(--text-13);
+}
+.btn--small {
+  height: 30px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-13);
+}
+
+/* A quiet pointer on the first beat for engineers who want the build notes before the story. */
+.engineering-hint {
+  margin: var(--space-3) 0 0;
+}
