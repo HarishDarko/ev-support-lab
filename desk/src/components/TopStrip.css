@@ -50,8 +50,10 @@
   cursor: pointer;
   transition: color var(--dur-1) var(--ease);
 }
-.strip-stage:hover {
-  color: var(--fg);
+@media (hover: hover) and (pointer: fine) {
+  .strip-stage:hover {
+    color: var(--fg);
+  }
 }
 .strip-sep {
   margin-left: var(--space-2);
@@ -108,9 +110,11 @@
   white-space: nowrap;
   cursor: pointer;
 }
-.strip-ai:hover {
-  border-color: var(--line-strong);
-  color: var(--fg);
+@media (hover: hover) and (pointer: fine) {
+  .strip-ai:hover {
+    border-color: var(--line-strong);
+    color: var(--fg);
+  }
 }
 
 .strip-theme {
@@ -126,8 +130,10 @@
   cursor: pointer;
   transition: border-color var(--dur-1) var(--ease);
 }
-.strip-theme:hover {
-  border-color: var(--fg-2);
+@media (hover: hover) and (pointer: fine) {
+  .strip-theme:hover {
+    border-color: var(--fg-2);
+  }
 }
 
 @media (max-width: 999px) {
@@ -160,6 +166,6 @@
     flex-basis: 100%;
   }
   .strip-stage {
-    height: 40px;
+    height: 44px;
   }
 }

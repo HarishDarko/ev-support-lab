@@ -75,10 +75,16 @@
   cursor: pointer;
   transition:
     background var(--dur-1) var(--ease),
-    border-color var(--dur-1) var(--ease);
+    border-color var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease);
 }
-.btn:hover:not(:disabled) {
-  border-color: var(--fg-2);
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover:not(:disabled) {
+    border-color: var(--fg-2);
+  }
 }
 .btn:disabled {
   color: var(--fg-3);
@@ -99,10 +105,12 @@
   border-color: var(--fg);
   color: var(--bg);
 }
-.btn--primary:hover:not(:disabled),
-.btn--next:hover:not(:disabled) {
-  background: var(--fg-2);
-  border-color: var(--fg-2);
+@media (hover: hover) and (pointer: fine) {
+  .btn--primary:hover:not(:disabled),
+  .btn--next:hover:not(:disabled) {
+    background: var(--fg-2);
+    border-color: var(--fg-2);
+  }
 }
 .btn--primary {
   height: 44px;

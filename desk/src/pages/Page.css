@@ -78,8 +78,10 @@
   text-decoration-color: var(--line-strong);
   text-underline-offset: 3px;
 }
-.page a:hover {
-  text-decoration-color: var(--fg);
+@media (hover: hover) and (pointer: fine) {
+  .page a:hover {
+    text-decoration-color: var(--fg);
+  }
 }
 
 .page .timeline {

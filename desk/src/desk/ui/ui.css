@@ -205,10 +205,17 @@
   font-weight: var(--weight-medium);
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color var(--dur-1) var(--ease);
+  transition:
+    background-color var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease);
 }
-.dk-button:hover:not(:disabled) {
-  background: var(--surface-2);
+.dk-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .dk-button:hover:not(:disabled) {
+    background: var(--surface-2);
+  }
 }
 .dk-button:disabled {
   color: var(--fg-3);
@@ -220,8 +227,10 @@
   text-underline-offset: 3px;
   text-decoration-color: var(--line-strong);
 }
-.dk-link:hover {
-  text-decoration-color: var(--fg);
+@media (hover: hover) and (pointer: fine) {
+  .dk-link:hover {
+    text-decoration-color: var(--fg);
+  }
 }
 
 .dk-check {

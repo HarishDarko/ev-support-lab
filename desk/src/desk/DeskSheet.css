@@ -68,7 +68,7 @@
 }
 .desk-tab {
   flex: none;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 var(--space-3);
   border: 0;
   border-bottom: 2px solid transparent;
@@ -81,8 +81,10 @@
     color var(--dur-1) var(--ease),
     border-color var(--dur-1) var(--ease);
 }
-.desk-tab:hover {
-  color: var(--fg);
+@media (hover: hover) and (pointer: fine) {
+  .desk-tab:hover {
+    color: var(--fg);
+  }
 }
 .desk-tab[aria-selected="true"] {
   border-bottom-color: var(--fg);

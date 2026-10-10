@@ -30,6 +30,16 @@ button {
   border-radius: var(--radius-control);
 }
 
+/* Controls drawn smaller than 44px get a 44px tap area; how they look does not change. */
+:is(.btn, .dk-button, .queue-filter, .strip-theme, .strip-ai) {
+  position: relative;
+}
+:is(.btn, .dk-button, .queue-filter, .strip-theme, .strip-ai)::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, (100% - 44px) / 2);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
