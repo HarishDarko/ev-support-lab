@@ -12,10 +12,6 @@ import { ScorecardTab } from "./scorecard/ScorecardTab";
 import { DESK_TABS, type DeskTab } from "./tabs";
 import { useDialog } from "./useDialog";
 import { DeskTicket } from "./focus";
-import { hasIncident } from "../packs/industry";
-import { useIndustry } from "../packs/IndustryContext";
-import { IndustryMenu } from "../packs/IndustryMenu";
-import { ShowcaseNote } from "../packs/ShowcaseNote";
 import "./DeskSheet.css";
 
 export type { DeskTab } from "./tabs";
@@ -43,7 +39,8 @@ const TRANSITION = { duration: 0.25, ease: [0.2, 0.8, 0.2, 1] } as const;
 
 /**
  * The desk: a right-hand sheet with six tabs. Esc closes it, focus is trapped while it is open and returns to
- * whatever opened it. Under 1000 px it fills the screen.
+ * whatever opened it. Under 1000 px it fills the screen. It opens only in the EV walkthrough; the Industry menu is
+ * in the top strip, outside the sheet, so switching industry never hides an open sheet.
  */
 export function DeskSheet(props: DeskSheetProps) {
   return createPortal(
@@ -59,9 +56,7 @@ function Sheet({ tab, onClose, onTab, ticket = null }: DeskSheetProps) {
   const dialog = useRef<HTMLElement>(null);
   const tabButtons = useRef<Partial<Record<DeskTab, HTMLButtonElement | null>>>({});
   const { onKeyDown } = useDialog({ dialog, onClose, present });
-  const { id } = useIndustry();
-  // Without an incident, the incident and handoff tabs say where the incident walkthrough lives.
-  const Panel = !hasIncident(id) && (tab === "incident" || tab === "handoff") ? ShowcaseNote : PANELS[tab];
+  const Panel = PANELS[tab];
 
   // Arrow keys move between tabs (roving tabindex); Home and End jump to the ends.
   const onTabKeyDown = (event: KeyboardEvent) => {
@@ -121,7 +116,6 @@ function Sheet({ tab, onClose, onTab, ticket = null }: DeskSheetProps) {
               <span>{label}</span>
             </p>
           </div>
-          <IndustryMenu className="desk-industry" />
           <button type="button" className="dk-button desk-close" onClick={onClose}>
             Close
             <span className="desk-key" aria-hidden="true">

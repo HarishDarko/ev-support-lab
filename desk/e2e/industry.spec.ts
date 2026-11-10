@@ -29,7 +29,12 @@ for (const link of [
     await expect(table.getByRole("row")).toHaveCount(41);
     await expect(table.getByRole("columnheader", { name: "Site" })).toBeVisible();
     await expect(table.getByRole("columnheader", { name: "Firmware" })).toBeVisible();
-    await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveValue("ev-charging");
+    // The Industry menu lives in the top strip only: picking another industry from inside the desk hid the desk
+    // without closing it.
+    await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(menu(page)).toHaveValue("ev-charging");
     expect(errors).toEqual([]);
   });
 }
@@ -101,4 +106,20 @@ test("in SaaS support the rules button jumps to the scorecard, and the EV desk d
   await menu(page).selectOption("ev-charging");
   await expect(page.getByText("40 tickets are waiting.").first()).toBeVisible();
   await expect(page.getByRole("dialog", { name: "The desk" })).toHaveCount(0);
+});
+
+test("switching industry after closing the desk keeps it closed", async ({ page }) => {
+  const errors = watchErrors(page);
+  await page.goto("/?desk=queue");
+  const dialog = page.getByRole("dialog", { name: "The desk" });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await menu(page).selectOption("saas-support");
+  await expect(page.getByRole("heading", { name: "21 tickets are waiting." })).toBeVisible();
+  await menu(page).selectOption("ev-charging");
+  await expect(page.getByText("40 tickets are waiting.").first()).toBeVisible();
+  await expect(dialog).toHaveCount(0);
+  await expect(menu(page)).toHaveValue("ev-charging");
+  expect(errors).toEqual([]);
 });
