@@ -149,10 +149,17 @@ test("Run it live keeps working when the model is off, and says so in one line",
   await expect(dialog.getByRole("table").first().getByRole("row")).toHaveCount(41);
 });
 
-test("the scorecard says Not measured yet and shows this run's cost per step", async ({ page }) => {
+test("the scorecard shows measured accuracy, the rules' held-out check, and this run's cost per step", async ({
+  page,
+}) => {
   await page.goto("/?desk=scorecard");
   const dialog = await atRest(page);
-  await expect(dialog.getByText("Not measured yet.")).toBeVisible();
+  await expect(dialog.getByText("Not measured yet.")).toHaveCount(0);
+  const accuracy = dialog.getByRole("table", { name: "Triage accuracy against the reviewed labels" });
+  await expect(accuracy.getByRole("row", { name: /All four right/ })).toContainText("28 of 40");
+  await expect(accuracy.getByRole("row", { name: /All four right/ })).toContainText("24 of 40");
+  const heldOut = dialog.getByRole("table", { name: "Keyword rules on older closed tickets" });
+  await expect(heldOut).toContainText("21 of 30");
   await expect(dialog.getByRole("heading", { name: "Method" })).toBeVisible();
   const table = dialog.getByRole("table", { name: "Cost of this run, per step" });
   await expect(table.getByRole("row")).toHaveCount(10); // header + 8 steps + total
