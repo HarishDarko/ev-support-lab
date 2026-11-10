@@ -11,6 +11,7 @@ import {
   rulesAnswers,
   scoreTriage,
   triageAnswers,
+  wilson95,
   type ReferenceLabel,
   type TriageAnswer,
 } from "../src/run/score";
@@ -117,5 +118,13 @@ describe("the scorecard numbers for the committed recorded run", () => {
 
   it("the rules pick the real resolution's runbook on 21 of 30 older closed tickets", () => {
     expect(historyCheck()).toEqual({ same: 21, n: 30 });
+  });
+});
+
+describe("the uncertainty the Scorecard states", () => {
+  it("gives the 95% ranges for the recorded run (28 of 40) and the rules (24 of 40), which overlap", () => {
+    expect(wilson95(28, 40)).toEqual([55, 82]);
+    expect(wilson95(24, 40)).toEqual([45, 74]);
+    expect(wilson95(0, 0)).toEqual([0, 0]);
   });
 });
