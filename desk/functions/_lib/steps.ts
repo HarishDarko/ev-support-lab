@@ -132,6 +132,9 @@ ${pack.tickets
           n.noRunbook += 1;
           return reject("AI proposed a closure with no runbook");
         }
+        // A runbook that is not in this pack (another pack's id, say) is never kept, whatever the action.
+        if (r.runbook !== "none" && !runbookIds.has(r.runbook))
+          return reject(`Runbook ${r.runbook} is not in this pack`);
         const fits = pack.runbookFits[r.runbook];
         if (r.runbook !== "none" && fits && !fits.includes(r.component))
           return reject(`Runbook ${r.runbook} doesn't apply to ${r.component}`);

@@ -1,4 +1,5 @@
-import { STEPS, type Step } from "../_lib/steps";
+import { PACKS, DEFAULT_PACK_ID, isPackId } from "../../shared/packs";
+import { STEPS, stepsFor, type Step } from "../_lib/steps";
 import { callJSON, rateLimit, costOf, StepError, models } from "../_lib/ai";
 import { ValidationError, check } from "../_lib/validate";
 import type { Check, Env, StepInput, Usage } from "../_lib/types";
@@ -34,8 +35,7 @@ export interface Trace {
 // and nothing unvalidated reaches the screen. The trace says which path produced the result and why.
 export async function onRequestPost({ request, env, params }: Context): Promise<Response> {
   const name = params.step as string;
-  const step = Object.hasOwn(STEPS, name) ? (STEPS as Record<string, Step>)[name] : undefined;
-  if (!step) return json({ error: "Unknown step." }, 404);
+  if (!Object.hasOwn(STEPS, name)) return json({ error: "Unknown step." }, 404);
   let input: StepInput = {};
   try {
     const body: unknown = await request.json();
@@ -43,6 +43,12 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
   } catch {
     /* steps that take no input */
   }
+  // The industry pack, from an allowlist. No pack means the default one, so the recorded run and older clients
+  // are unchanged.
+  const packId = input?.pack ?? DEFAULT_PACK_ID;
+  if (!isPackId(packId)) return json({ error: "Unknown pack." }, 400);
+  const pack = PACKS[packId];
+  const step = (stepsFor(packId) as Record<string, Step>)[name]!;
 
   let prompt: string;
   try {
@@ -89,6 +95,7 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
           schema: step.schema,
           maxTokens: step.maxTokens,
           timeout: left,
+          system: pack.prompts.system,
         });
         spend(res);
         const { data, checks } = step.validate(res.data, input, prompt);
