@@ -30,6 +30,7 @@ import { DEFAULT_COMPONENT, RULES } from "./triage-rules";
 
 export const EV_CHARGING = {
   ...META,
+  liveRuns: true,
   fields: [...META.fields],
   newTicketExample: NEW_TICKET_EXAMPLE,
   components: COMPONENTS,
