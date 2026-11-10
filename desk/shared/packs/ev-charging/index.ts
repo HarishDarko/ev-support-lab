@@ -6,6 +6,7 @@ import {
   ENGINEERING_CHANGE,
   HERO,
   HISTORY,
+  NEW_TICKET_EXAMPLE,
   RUNBOOKS,
   TICKETS,
   type Component,
@@ -29,6 +30,13 @@ import { DEFAULT_COMPONENT, RULES } from "./triage-rules";
 export const EV_CHARGING = {
   id: "ev-charging",
   name: "EV charging",
+  complete: true,
+  fields: [
+    { key: "site", label: "Site" },
+    { key: "charger", label: "Charger" },
+    { key: "fw", label: "Firmware" },
+  ],
+  newTicketExample: NEW_TICKET_EXAMPLE,
   components: COMPONENTS,
   defaultComponent: DEFAULT_COMPONENT,
   runbooks: RUNBOOKS,

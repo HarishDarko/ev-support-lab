@@ -59,6 +59,12 @@ export interface Pack<
 > {
   id: string;
   name: string;
+  /** Shown in the Industry menu only when complete: data, rules, reviewed labels and a recorded run. */
+  complete?: boolean;
+  /** Ticket fields the queue shows, in order, with their labels. */
+  fields?: { key: string; label: string }[];
+  /** The ticket the new-ticket check starts from. */
+  newTicketExample?: string;
   components: readonly C[];
   /** The label for plain questions and requests, and for any ticket no rule matches. */
   defaultComponent: C;

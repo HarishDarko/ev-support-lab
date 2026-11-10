@@ -30,6 +30,8 @@ export type StepInput =
       summary?: unknown;
       text?: unknown;
       article?: unknown;
+      /** The pattern a short-chain article is written from. */
+      pattern?: unknown;
       /** The industry pack's id. Missing means the default pack. */
       pack?: unknown;
     }

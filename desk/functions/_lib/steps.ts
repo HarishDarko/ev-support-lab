@@ -7,6 +7,7 @@ import { ValidationError, check, exceptionIn, mentions, quoted } from "./checks"
 import { StepError } from "./errors";
 import { bool, obj, runbookListOf, severity, str, strs, type Step } from "./kit";
 import { ruleTriageFor, rulePatternsFor } from "./rule-engine";
+import { shortChainSteps } from "./short-chain";
 import type { StepInput } from "./types";
 
 export type { Step } from "./kit";
@@ -281,6 +282,12 @@ export function stepsFor(id: PackId = DEFAULT_PACK_ID): ReturnType<typeof build>
   if (!steps) built.set(id, (steps = build(id)));
   return steps;
 }
+
+/** The steps for a pack with no incident: triage, patterns and the short chain (no investigation, handoff or
+ * verification). */
+export const queueOnlySteps = <C extends string, T extends PackTicket, H extends PackHistoryItem>(
+  pack: Pack<C, T, H>,
+) => ({ ...queueSteps(pack), ...shortChainSteps(pack) }) satisfies Record<string, Step>;
 
 /** The default pack's steps. */
 export const STEPS = stepsFor();
