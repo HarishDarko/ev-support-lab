@@ -74,7 +74,7 @@ The lab reproduces the backend side of the mechanism with a simulated charger. I
 
 | Path | What |
 | --- | --- |
-| `lab/` | OCPP 2.0.1 backend, simulator, experiment, 87 tests |
+| `lab/` | OCPP 2.0.1 backend, simulator, experiment, 88 tests (CI, Java 25 with Docker) |
 | `desk/` | the walkthrough, the console and the AI steps, with unit and browser tests |
 | `docs/adr/` | decision records 0001–0003 |
 | `docs/specs/` | what each part was built to do |
