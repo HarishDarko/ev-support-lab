@@ -3,8 +3,8 @@
 // the background and merges answers as they land.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { classifyTicket } from "./classify";
-import { runLabel } from "./cost";
-import { CHAIN_CALLS, liveNote, mergeUpdate, postTo, runChain, type PostStep } from "./live";
+import { chainSeconds, runLabel } from "./cost";
+import { CHAIN_CALLS, TRIAGE_BATCHES, liveNote, mergeUpdate, postTo, runChain, type PostStep } from "./live";
 import { recordedRun } from "./recorded";
 import { indexRun, laneCounts, lanesOf, type TicketResult } from "./selectors";
 import type { LaneCounts } from "./guardrail";
@@ -22,6 +22,8 @@ export interface RunApi {
   message: string | null;
   /** Calls settled so far while a live run is going. Null when none is. */
   progress: { settled: number; total: number } | null;
+  /** What a screen reader hears about a live run: its start, each finished group of steps, and its end. */
+  announcement: string;
   /** What the run is, in words: "Recorded run, rules only ..." or "Live run". */
   label: string;
   runLive: () => Promise<void>;
@@ -45,6 +47,15 @@ interface ProviderProps {
   post?: PostStep;
 }
 
+/** The groups of steps a screen reader hears about, in the order they usually finish. */
+const ANNOUNCED_GROUPS: [steps: string[], name: string][] = [
+  [["triage"], "Triage"],
+  [["patterns"], "Patterns"],
+  [["investigate"], "The investigation"],
+  [["handoff", "verify"], "The handoff and the verification reading"],
+  [["kb", "classify", "shiftnote"], "The article, the new-ticket check and the shift note"],
+];
+
 export function RunProvider({ children, initial, post }: ProviderProps) {
   const [run, setRun] = useState<Run>(() => initial ?? recordedRun());
   const [status, setStatus] = useState<RunStatus>("idle");
@@ -53,6 +64,7 @@ export function RunProvider({ children, initial, post }: ProviderProps) {
   const [unpriced, setUnpriced] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState<RunApi["progress"]>(null);
+  const [announcement, setAnnouncement] = useState("");
 
   const postStep = useMemo(() => post ?? postTo(), [post]);
   const latest = useRef(run);
@@ -72,6 +84,9 @@ export function RunProvider({ children, initial, post }: ProviderProps) {
     setStatus("running");
     setMessage(null);
     setProgress({ settled: 0, total: CHAIN_CALLS });
+    setAnnouncement(`Live run started. It usually takes about ${chainSeconds(recordedRun().steps)} seconds.`);
+    const done = new Set<string>();
+    let triageDone = 0;
     const report = await runChain({
       post: postStep,
       base: latest.current.steps,
@@ -83,6 +98,14 @@ export function RunProvider({ children, initial, post }: ProviderProps) {
           if (update.result.trace.unpriced) setUnpriced(true);
         }
         setProgress({ settled: update.settled, total: CHAIN_CALLS });
+        if (update.step === "triage") triageDone += 1;
+        else done.add(update.step);
+        const finished = ANNOUNCED_GROUPS.find(
+          ([steps]) =>
+            steps.includes(update.step) &&
+            steps.every((s) => (s === "triage" ? triageDone === TRIAGE_BATCHES.length : done.has(s))),
+        );
+        if (finished) setAnnouncement(`${finished[1]} finished.`);
       },
     });
     busy.current = false;
@@ -90,6 +113,8 @@ export function RunProvider({ children, initial, post }: ProviderProps) {
     setProgress(null);
     setStatus(report.answered === 0 ? "failed" : "done");
     setMessage(liveNote(report));
+    // The note itself is shown in its own status line, so it is not repeated here.
+    setAnnouncement("Live run finished.");
   }, [postStep]);
 
   const classify = useCallback(
@@ -116,6 +141,7 @@ export function RunProvider({ children, initial, post }: ProviderProps) {
       unpriced,
       message,
       progress,
+      announcement,
       label,
       runLive,
       classify,
@@ -124,7 +150,7 @@ export function RunProvider({ children, initial, post }: ProviderProps) {
       lanes,
       counts,
     }),
-    [run, status, spent, unpriced, message, progress, label, runLive, classify, index, lanes, counts],
+    [run, status, spent, unpriced, message, progress, announcement, label, runLive, classify, index, lanes, counts],
   );
 
   return <RunContext value={value}>{children}</RunContext>;

@@ -5,7 +5,7 @@ import "./RunBar.css";
 
 /** What this run is, who decided the tickets, and the "Run it live" button. */
 export function RunBar() {
-  const { run, label, source, status, spent, unpriced, message, progress, runLive } = useRun();
+  const { run, label, source, status, spent, unpriced, message, progress, announcement, runLive } = useRun();
   const who = useMemo(() => originCounts(indexRun(run)), [run]);
   const running = status === "running";
 
@@ -27,7 +27,11 @@ export function RunBar() {
         <button type="button" className="dk-button" onClick={() => void runLive()} disabled={running}>
           {running ? "Running live" : "Run it live"}
         </button>
-        <p className="runbar-status" role="status" aria-live="polite">
+        {/* The visible line updates on every answer; screen readers hear only the start, each finished group and the end. */}
+        <p className="sr-only" role="status" aria-live="polite">
+          {announcement}
+        </p>
+        <p className="runbar-status">
           {running && progress
             ? `Asking the model: ${progress.settled} of ${progress.total} answers in, usually about ${chainSeconds(recordedRun().steps)} seconds in all. ${liveSpendText(spent, unpriced)}`
             : source === "live" || spent > 0
