@@ -72,7 +72,7 @@ src/
   - **Handoff tab.** The full packet as an engineer would receive it.
   - **Knowledge base tab.** The article, plus a textarea prefilled with NEW_TICKET_EXAMPLE and "Check against the article" (live classify).
   - **Coverage tab.** The 24-hour ET strip at full size with the hour axis.
-  - **Scorecard tab.** Model accuracy against `docs/eval/reference-labels.json`. Until it is measured, the tab says "Not measured yet" and shows the method. Never show placeholder numbers. Below it, the cost of this run per step.
+  - **Scorecard tab.** Model accuracy against `docs/eval/reference-labels.json`. Until it is measured, the tab says "Not measured yet" and shows the method. Never show placeholder numbers. Below it, the cost of this run per step. (Superseded: accuracy is now measured against independently reviewed labels, with the rules' held-out check; the tab no longer says "Not measured yet". The other industries have their own label files in `docs/eval/`.)
 - **Source links (depth 3)** point to `https://github.com/HarishDarko/ev-support-lab/blob/main/...`, built from one constant so they can change.
 
 ## 4. Phone (< 1000 px)

@@ -5,6 +5,8 @@ A prototype of Eastern-time production support for an EV-charging network, built
 - **`lab/`:** a small OCPP 2.0.1 backend and scripted charger (Java 25, Spring Boot 4, PostgreSQL). It reproduces a known class of reconnect bug on demand, fixes it behind a per-station flag, and proves the fix with tests.
 - **`desk/`:** the support side (React, TypeScript, Cloudflare Pages Functions). It covers AI-assisted triage with checks and a person approving every closure, the investigation and the handoff to engineering, verification against a control, and the handover note.
 
+The site has an **Industry** menu in its top strip. EV charging is the full walkthrough above, with a recorded AI run and "Run it live". SaaS support and e-commerce each have their own synthetic queue, patterns, knowledge base article, new-ticket check and scorecard, answered by keyword rules; they have no incident and make no paid model calls yet. Each industry is a pack in [`desk/shared/packs/`](desk/shared/packs).
+
 **Live walkthrough:** https://supportdesk.harishdarko.com. Press → to step through, and D to open the console.
 
 Everything is synthetic. No real company, network, customer or person is described.
@@ -24,7 +26,7 @@ Everything is synthetic. No real company, network, customer or person is describ
    - the flag turned off mid-sweep.
 4. **The decisions and their trade-offs:** [`docs/adr/`](docs/adr).
 5. **The limits:** "Known limits" in [`lab/README.md`](lab/README.md), and the *Engineering notes* page, which also covers how the same race looks on OCPP 1.6.
-6. **How AI output is checked on the support side:** [`desk/functions/_lib/validate.ts`](desk/functions/_lib/validate.ts) and its cases in [`desk/tests/attacks.test.ts`](desk/tests/attacks.test.ts). These cover:
+6. **How AI output is checked on the support side:** [`desk/functions/_lib/checks.ts`](desk/functions/_lib/checks.ts) (the checks), [`desk/shared/packs/ev-charging/guardrails.ts`](desk/shared/packs/ev-charging/guardrails.ts) (the EV word lists and runbook exceptions), and their cases in [`desk/tests/attacks.test.ts`](desk/tests/attacks.test.ts). These cover:
    - exact-quote checks;
    - runbook fit;
    - a rules fallback;
@@ -56,6 +58,7 @@ The desk is a Cloudflare Pages project (`support-desk`, Direct Upload, no Git bu
 
 - **Normal path:** merge to `main`. The `desk` workflow runs typecheck, lint, unit tests, the build and the browser tests; only if all of them pass does its `deploy` job upload that same build with `wrangler pages deploy`. It needs two repository secrets: `CLOUDFLARE_API_TOKEN` (a token with Account, Cloudflare Pages, Edit) and `CLOUDFLARE_ACCOUNT_ID`.
 - **By hand, if Actions is down:** `cd desk && npm run deploy`. It runs typecheck, lint and the unit tests, then the build, and stops before uploading if any of them fails. From a branch other than `main` it makes a preview, not a production deploy. The browser tests are not part of it; run `npm run e2e` first.
+- **Headers:** the Content-Security-Policy, frame protection and the one-year cache for the hashed files under `/assets` are in [`desk/public/_headers`](desk/public/_headers). If you change the inline theme script in `desk/index.html`, update its hash there; `desk/tests/headers.test.ts` fails until you do.
 - **Rollback:** in the Cloudflare dashboard, Pages, `support-desk`, Deployments, pick the last good production deployment and choose "Rollback to this deployment". That is quick but temporary: the next merge to `main` deploys again. So also `git revert` the bad merge on `main`; the workflow then deploys the reverted build after the tests pass.
 
 ## What it does not prove
@@ -76,4 +79,5 @@ The lab reproduces the backend side of the mechanism with a simulated charger. I
 | `docs/adr/` | decision records 0001–0003 |
 | `docs/specs/` | what each part was built to do |
 | `docs/design/direction.md` | the visual direction |
-| `docs/eval/` | reference labels for scoring triage models |
+| `desk/shared/packs/` | one pack per industry: tickets, runbooks, rules, guardrails and prompts |
+| `docs/eval/` | reviewed reference labels for scoring triage, one file per industry |
