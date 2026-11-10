@@ -21,7 +21,8 @@ export interface RunApi {
   /** One line when the last live run did not go fully to plan. Null otherwise. */
   message: string | null;
   /** Calls settled so far while a live run is going. Null when none is. */
-  progress: { settled: number; total: number } | null;
+  /** `ai` counts the answers a model gave; the rest came from the rules. */
+  progress: { settled: number; total: number; ai: number } | null;
   /** What a screen reader hears about a live run: its start, each finished group of steps, and its end. */
   announcement: string;
   /** What the run is, in words: "Recorded run, rules only ..." or "Live run". */
@@ -83,7 +84,8 @@ export function RunProvider({ children, initial, post }: ProviderProps) {
     controller.current = abort;
     setStatus("running");
     setMessage(null);
-    setProgress({ settled: 0, total: CHAIN_CALLS });
+    setProgress({ settled: 0, total: CHAIN_CALLS, ai: 0 });
+    let ai = 0;
     setAnnouncement(`Live run started. It usually takes about ${chainSeconds(recordedRun().steps)} seconds.`);
     const done = new Set<string>();
     let triageDone = 0;
@@ -97,7 +99,8 @@ export function RunProvider({ children, initial, post }: ProviderProps) {
           setSpent((total) => total + update.result.trace.cost);
           if (update.result.trace.unpriced) setUnpriced(true);
         }
-        setProgress({ settled: update.settled, total: CHAIN_CALLS });
+        if (update.outcome !== "failed" && update.result.trace.source === "ai") ai += 1;
+        setProgress({ settled: update.settled, total: CHAIN_CALLS, ai });
         if (update.step === "triage") triageDone += 1;
         else done.add(update.step);
         const finished = ANNOUNCED_GROUPS.find(

@@ -8,6 +8,7 @@ import {
   rulesAnswers,
   scoreTriage,
   triageAnswers,
+  wilson95,
   type ScoreField,
 } from "../../run/score";
 import { SourceLink } from "../ui/SourceLink";
@@ -39,6 +40,14 @@ export function ScorecardTab() {
   const answers = triageAnswers(run);
   const lenient = scoreTriage(REFERENCE_LABELS, answers);
   const strict = scoreTriage(REFERENCE_LABELS, answers, "strict");
+  // Tickets where the model's answer failed a check and the rules answered instead; they count in this run's column.
+  const fallbacks = run.steps.triage
+    .flatMap((b) => b.data.results)
+    .filter((r) => r.source === "rules")
+    .map((r) => r.id);
+  const [runLow, runHigh] = wilson95(lenient.allFour, lenient.n);
+  const [rulesLow, rulesHigh] = wilson95(RULES_LENIENT.allFour, RULES_LENIENT.n);
+  const overlap = runLow <= rulesHigh && rulesLow <= runHigh;
   const rows = costByStep(run.steps);
   const total = runCost(run.steps);
   const unpriced = rows.some((r) => r.unpriced);
@@ -92,6 +101,15 @@ export function ScorecardTab() {
           Where the labels accept two answers, either counts. Counting only the reviewers&apos; majority answer, this
           run is fully right on {share(strict.allFour, strict.n)} tickets and the rules on{" "}
           {share(RULES_STRICT.allFour, RULES_STRICT.n)}.
+          {fallbacks.length > 0 &&
+            ` This run's column includes ${fallbacks.length} ticket${fallbacks.length > 1 ? "s" : ""} (${fallbacks.join(", ")}) where the model's answer failed a check and the rules answered instead.`}
+        </p>
+        <p className="dk-lede" data-testid="score-uncertainty">
+          {lenient.n} tickets is a small sample. With 95% confidence, this run gets all four fields right on between{" "}
+          {runLow}% and {runHigh}% of tickets like these, and the rules on between {rulesLow}% and {rulesHigh}%.{" "}
+          {overlap
+            ? `The two ranges overlap, so ${lenient.n} tickets cannot say whether the model or the rules triage better.`
+            : "The two ranges do not overlap."}
         </p>
 
         <h4 className="dk-h4">The rules&apos; score is in-sample</h4>
@@ -125,8 +143,10 @@ export function ScorecardTab() {
           <li>
             Reference answers for the {TICKETS.length} synthetic tickets are in{" "}
             <SourceLink path={REFERENCE_LABELS_PATH}>reference-labels.json</SourceLink>. Three AI reviewers labelled
-            every ticket on their own, from the ticket text and the label definitions only: two separate Claude runs and
-            one Gemini run. None saw the earlier draft labels, the rules or any model&apos;s answers.
+            every ticket separately, from the ticket text and the label definitions only: two separate Claude runs and
+            one Gemini run. None saw the earlier draft labels, the rules or any model&apos;s answers. They are not fully
+            independent: the two Claude reviewers agreed with each other more often than with Gemini, and the model
+            scored here is also Claude, so the labels may lean towards how Claude reads a ticket.
           </li>
           <li>
             The first answer in each field is the majority answer. A second answer is accepted only when at least one

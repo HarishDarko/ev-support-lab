@@ -1,5 +1,5 @@
 // Which industry the desk shows. A `?pack=<id>` link wins, then the visitor's last pick, then the default.
-// Only complete packs (data, rules, reviewed labels and a recorded run) can be picked; anything else falls back.
+// Only complete packs (synthetic data, keyword rules and reviewed labels) can be picked; anything else falls back.
 import type { PackId } from "../../shared/packs";
 import { CATALOG, CATALOG_DEFAULT_ID as DEFAULT_PACK_ID } from "../../shared/packs/catalog";
 

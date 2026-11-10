@@ -33,7 +33,9 @@ export function RunBar() {
         </p>
         <p className="runbar-status">
           {running && progress
-            ? `Asking the model: ${progress.settled} of ${progress.total} answers in, usually about ${chainSeconds(recordedRun().steps)} seconds in all. ${liveSpendText(spent, unpriced)}`
+            ? progress.settled > 0 && progress.ai === 0
+              ? `No model has answered yet; the rules are answering: ${progress.settled} of ${progress.total} answers in. ${liveSpendText(spent, unpriced)}`
+              : `Asking the model: ${progress.settled} of ${progress.total} answers in, usually about ${chainSeconds(recordedRun().steps)} seconds in all. ${liveSpendText(spent, unpriced)}`
             : source === "live" || spent > 0
               ? liveSpendText(spent, unpriced)
               : ""}

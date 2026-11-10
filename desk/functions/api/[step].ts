@@ -52,6 +52,13 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
   const packId = input?.pack ?? DEFAULT_PACK_ID;
   if (!isPackId(packId)) return json({ error: "Unknown pack." }, 400);
   const pack = PACKS[packId];
+  // Paid model calls are switched on per pack, so a new industry cannot spend before it is ready. With the model
+  // turned off (MOCK=1) nothing is spent, and the rules still answer.
+  if (env.MOCK !== "1" && (pack as { liveRuns?: boolean }).liveRuns !== true)
+    return json(
+      { error: "Live AI runs are not switched on for this industry yet. Its answers come from the rules." },
+      403,
+    );
   // A pack with an incident runs the full chain; any other pack runs the short one, without the incident steps.
   const steps: Record<string, Step> = isIncidentPack(packId) ? stepsFor(packId) : queueOnlySteps(pack as Pack);
   const step = steps[name];
