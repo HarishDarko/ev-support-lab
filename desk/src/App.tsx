@@ -55,7 +55,8 @@ function Walkthrough() {
   const showcase = hasIncident(industry.id);
   // A link with ?desk=<tab> opens the console at once.
   const [linked] = useState(requestedTab);
-  const [deskOpen, setDeskOpen] = useState(linked !== null);
+  // The desk sheet belongs to the EV walkthrough: a ?desk= link in another industry does not open it later.
+  const [deskOpen, setDeskOpen] = useState(linked !== null && showcase);
   const [deskTab, setDeskTab] = useState<DeskTab>(linked ?? "queue");
   // When the desk opens from a link, the opener takes focus in the same commit, before the sheet records what
   // to return focus to on close.
@@ -88,7 +89,7 @@ function Walkthrough() {
 
   // D opens the desk on the tab that holds this beat's evidence.
   useEffect(() => {
-    if (deskOpen || page !== "walkthrough") return;
+    if (!showcase || deskOpen || page !== "walkthrough") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.altKey || e.ctrlKey || e.metaKey || e.defaultPrevented) return;
       if ((e.target as HTMLElement | null)?.closest("input, textarea, select, [contenteditable='true']")) return;
@@ -98,7 +99,7 @@ function Walkthrough() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [deskOpen, page, beat.desk, openDesk]);
+  }, [showcase, deskOpen, page, beat.desk, openDesk]);
 
   // On a phone the stage in view drives the top strip, and the strip scrolls to a stage.
   const [phoneStage, setPhoneStage] = useState(0);
@@ -133,7 +134,9 @@ function Walkthrough() {
         theme={theme}
         onToggleTheme={toggle}
         aiLabel={aiLabel}
-        onAi={() => openDesk("scorecard")}
+        onAi={() =>
+          showcase ? openDesk("scorecard") : document.getElementById("pack-score")?.scrollIntoView({ block: "start" })
+        }
         page={page}
         onPage={onPage}
         showStages={showcase}

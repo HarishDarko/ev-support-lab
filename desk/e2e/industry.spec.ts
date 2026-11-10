@@ -88,3 +88,17 @@ test("the e-commerce desk has no sideways scroll at 390 px", async ({ page }) =>
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+test("in SaaS support the rules button jumps to the scorecard, and the EV desk does not pop open later", async ({
+  page,
+}) => {
+  await page.goto("/?desk=queue&pack=saas-support");
+  await expect(page.getByRole("heading", { name: "21 tickets are waiting." })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "The desk" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Rules · no recorded run yet" }).click();
+  await expect(page.getByRole("heading", { name: "Scorecard" })).toBeInViewport();
+  await expect(page.getByRole("dialog", { name: "The desk" })).toHaveCount(0);
+  await menu(page).selectOption("ev-charging");
+  await expect(page.getByText("40 tickets are waiting.").first()).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "The desk" })).toHaveCount(0);
+});
