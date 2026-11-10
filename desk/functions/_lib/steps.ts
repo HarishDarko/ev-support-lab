@@ -285,9 +285,18 @@ export function stepsFor(id: PackId = DEFAULT_PACK_ID): ReturnType<typeof build>
 
 /** The steps for a pack with no incident: triage, patterns and the short chain (no investigation, handoff or
  * verification). */
-export const queueOnlySteps = <C extends string, T extends PackTicket, H extends PackHistoryItem>(
+const queueOnlyBuilt = new WeakMap<object, Record<string, Step>>();
+export function queueOnlySteps<C extends string, T extends PackTicket, H extends PackHistoryItem>(
   pack: Pack<C, T, H>,
-) => ({ ...queueSteps(pack), ...shortChainSteps(pack) }) satisfies Record<string, Step>;
+): Record<string, Step> {
+  let steps = queueOnlyBuilt.get(pack);
+  if (!steps)
+    queueOnlyBuilt.set(
+      pack,
+      (steps = { ...queueSteps(pack), ...shortChainSteps(pack) } satisfies Record<string, Step>),
+    );
+  return steps;
+}
 
 /** The default pack's steps. */
 export const STEPS = stepsFor();

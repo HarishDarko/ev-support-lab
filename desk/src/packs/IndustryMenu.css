@@ -18,11 +18,10 @@
   font: inherit;
   text-overflow: ellipsis;
 }
-.industry-select:focus-visible {
-  outline: 2px solid var(--focus, currentColor);
-  outline-offset: 2px;
-}
 @media (max-width: 600px) {
+  .industry-select {
+    max-width: 8rem;
+  }
   .industry-label {
     position: absolute;
     width: 1px;

@@ -1,5 +1,5 @@
 // The short chain, for a pack with no incident: after triage and patterns, a knowledge base article written from
-// the top recurring pattern, the new-ticket check against that article, and the end-of-shift note. Everything comes
+// the top pattern (a recurring one first), the new-ticket check against that article, and the end-of-shift note. Everything comes
 // from the pack's tickets, history, runbooks, rules and exceptions, and each step falls back to rules built from
 // the same data, so a failed call still shows something true. Neutral: no industry content here.
 import type { Pack, PackHistoryItem, PackTicket, ShiftSummary } from "../../shared/packs/types";
@@ -11,11 +11,7 @@ import type { StepInput } from "./types";
 import type { ClassifyModel, KbModel, ShiftnoteModel } from "../../shared/packs/steps";
 import type { PatternModel } from "./steps";
 
-/** The pattern the article is about: a recurring one first, then the one with most open tickets. */
-export function topPattern<P extends Pick<PatternModel, "name" | "recurring" | "ticket_ids">>(patterns: P[]): P | null {
-  const score = (p: P) => (p.recurring ? 1000 : 0) + p.ticket_ids.length;
-  return [...patterns].sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name))[0] ?? null;
-}
+export { topPattern } from "./top-pattern";
 
 const words = (text: string, n: number) =>
   text
@@ -58,12 +54,15 @@ export function shortChainSteps<C extends string, T extends PackTicket, H extend
     return [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
   }
 
-  /** The article's runbook: the record-only one if the article names it, else the first runbook it names. */
+  /** The article's runbook: the one the rules give the article's tickets, else the first runbook it names. */
   function articleRunbook(article: unknown): string | null {
     const related = (article as { related?: unknown } | null | undefined)?.related;
-    const ids = Array.isArray(related) ? related.filter((id) => typeof id === "string") : [];
-    if (fixed && ids.includes(fixed.runbook)) return fixed.runbook;
-    return ids.find((id) => pack.runbooks.some((r) => r.id === id)) ?? null;
+    const ids = Array.isArray(related) ? related.filter((id): id is string => typeof id === "string") : [];
+    return (
+      runbookOf(ids.filter((id) => ticketById.has(id))) ??
+      ids.find((id) => pack.runbooks.some((r) => r.id === id)) ??
+      null
+    );
   }
 
   const recordOnly = (runbook: string | null) => Boolean(fixed && runbook === fixed.runbook);
@@ -114,8 +113,11 @@ ${runbookList}`;
     },
     validate(data: KbModel, input: StepInput, prompt: string) {
       data.related = data.related.filter((id) => known.has(id));
+      // The article always names its pattern's runbook, so the new-ticket check knows which exceptions apply.
+      const runbook = runbookOf(patternOf(input).ticketIds);
+      if (runbook && !data.related.includes(runbook)) data.related.push(runbook);
       const checks = [];
-      if (fixed && recordOnly(runbookOf(patternOf(input).ticketIds))) {
+      if (fixed && recordOnly(runbook)) {
         // The fixed check and review frame the steps, whatever the model wrote; copies of them are removed.
         const same = (a: string, b: string) => normalize(a) === normalize(b);
         const rest = data.steps.filter((s) => !same(s, fixed.confirmStep) && !same(s, fixed.reviewStep));

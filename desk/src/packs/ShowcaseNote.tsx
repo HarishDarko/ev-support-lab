@@ -1,13 +1,15 @@
+import { useId } from "react";
 import { useIndustry } from "./IndustryContext";
 import { DEFAULT_PACK_ID, industryName } from "./industry";
 
 /** For an industry with no incident: the incident walkthrough is the default pack's showcase. */
 export function ShowcaseNote() {
   const { pick } = useIndustry();
+  const heading = useId();
   const name = industryName(DEFAULT_PACK_ID);
   return (
-    <section className="dk-section showcase-note" aria-labelledby="showcase-heading">
-      <h3 id="showcase-heading" className="dk-h3">
+    <section className="dk-section showcase-note" aria-labelledby={heading}>
+      <h3 id={heading} className="dk-h3">
         The incident walkthrough is the {name} showcase
       </h3>
       <p className="dk-lede">

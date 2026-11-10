@@ -61,7 +61,7 @@ export interface Pack<
   name: string;
   /** Shown in the Industry menu only when complete: data, rules, reviewed labels and a recorded run. */
   complete?: boolean;
-  /** Ticket fields the queue shows, in order, with their labels. */
+  /** The pack's labels for the queue's ticket fields (for EV: site, charger, firmware). */
   fields?: { key: string; label: string }[];
   /** The pack has a step-by-step incident walkthrough (logs, handoff, verification). */
   hasIncident?: boolean;
