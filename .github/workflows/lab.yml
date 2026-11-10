@@ -1,13 +1,17 @@
 name: lab
 
+# One run per commit: pushes run only on main; branches run through their pull request. The desk's copy of the
+# experiment result is checked against a fresh run (ExperimentStoryTest), so a change to it runs the lab too.
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - "lab/**"
       - "gradle/**"
       - "gradlew"
       - "settings.gradle.kts"
+      - "desk/src/data/experiment.json"
       - ".github/workflows/lab.yml"
   pull_request:
     paths:
@@ -15,6 +19,7 @@ on:
       - "gradle/**"
       - "gradlew"
       - "settings.gradle.kts"
+      - "desk/src/data/experiment.json"
       - ".github/workflows/lab.yml"
 
 concurrency:
@@ -26,22 +31,36 @@ permissions:
 
 jobs:
   lab:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      # Any JDK runs the wrapper; the build provisions Java 25 through its toolchain.
+      # Java 25 is the build's toolchain, so Gradle uses this JDK instead of provisioning another one.
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: "25"
       - uses: gradle/actions/setup-gradle@v4
       # Docker is available on the runner, so Testcontainers starts PostgreSQL itself.
       - name: Tests, including the experiment
         run: ./gradlew :lab:test --console=plain
+      # With the fix off the regression test must fail on its assertions. A Gradle or Docker error, or a filter that
+      # matches no test, must not count as that failure, so the step reads the test report instead of the exit code.
       - name: The regression test fails without the fix
         run: |
-          if ./gradlew :lab:test --tests '*StuckSessionRegressionTest' -Dlab.fix.enabled=false --console=plain; then
-            echo "StuckSessionRegressionTest passed with the fix off; it no longer proves the fix." >&2
+          report=lab/build/test-results/test/TEST-dev.evlab.transaction.StuckSessionRegressionTest.xml
+          rm -rf lab/build/test-results/test
+          set +e
+          ./gradlew :lab:test --tests '*StuckSessionRegressionTest' -Dlab.fix.enabled=false --console=plain
+          set -e
+          if [ ! -f "$report" ]; then
+            echo "::error::No report for StuckSessionRegressionTest: the test did not run with the fix off." >&2
+            exit 1
+          fi
+          attr() { grep -o "$1=\"[0-9]*\"" "$report" | head -n 1 | tr -dc '0-9'; }
+          tests=$(attr tests); failures=$(attr failures); errors=$(attr errors)
+          echo "With the fix off: tests=$tests failures=$failures errors=$errors"
+          if [ "${tests:-0}" -eq 0 ] || [ "${failures:-0}" -eq 0 ] || [ "${errors:-0}" -ne 0 ]; then
+            echo "::error::StuckSessionRegressionTest must fail on its assertions with the fix off (failures above 0, errors 0)." >&2
             exit 1
           fi

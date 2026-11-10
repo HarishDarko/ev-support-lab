@@ -3,10 +3,15 @@ package dev.evlab.experiment;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.evlab.experiment.ExperimentResult.LogExcerpt;
+import dev.evlab.ocpp.OcppJson;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Runs the whole experiment with the committed inputs against a throw-away PostgreSQL. Takes about two minutes:
@@ -71,5 +76,19 @@ class ExperimentStoryTest {
         assertThat(late).anyMatch(m -> m.contains("ignored: connector already Available (out of order)"));
         assertThat(logs.get(0).lines().getLast().get(2)).contains("idle fee accruing");
         assertThat(logs.get(1).lines().getLast().get(2)).contains("'In use'");
+    }
+
+    /**
+     * The desk shows this result from its own copy (desk/src/data/experiment.json, see desk/src/data/experiment.ts).
+     * The run is seeded, so a fresh run must equal that copy; if the lab changes, re-copy the file as experiment.ts
+     * says.
+     */
+    @Test
+    void the_desk_copy_of_the_result_matches_this_run() throws IOException {
+        Path copy = Path.of("..", "desk", "src", "data", "experiment.json");
+        JsonNode committed = OcppJson.MAPPER.readTree(Files.readString(copy));
+        // Through text, the way the copy was made, so both sides are read by the same parser.
+        JsonNode fresh = OcppJson.MAPPER.readTree(OcppJson.MAPPER.writeValueAsString(result));
+        assertThat(fresh).isEqualTo(committed);
     }
 }
