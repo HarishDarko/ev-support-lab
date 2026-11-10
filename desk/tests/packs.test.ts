@@ -57,7 +57,7 @@ describe("the pack registry", () => {
     expect(DEFAULT_PACK_ID).toBe("ev-charging");
     expect(PACKS[DEFAULT_PACK_ID]).toBe(DEFAULT_PACK);
     expect(isPackId("ev-charging")).toBe(true);
-    expect(isPackId("saas-support")).toBe(false);
+    expect(isPackId("telecom")).toBe(false);
     expect(isPackId("__proto__")).toBe(false);
     expect(isPackId(7)).toBe(false);
   });
@@ -80,7 +80,7 @@ describe("the pack a request names", () => {
   });
 
   it("an unknown pack is a 400, before any step runs", async () => {
-    for (const pack of ["saas-support", "__proto__", 7]) {
+    for (const pack of ["telecom", "__proto__", 7]) {
       const res = await post("triage", { ids: ["T-2040"], pack });
       expect(res, String(pack)).toEqual({ status: 400, body: { error: "Unknown pack." } });
     }

@@ -1,7 +1,7 @@
 // The steps of a run, for any pack. Triage and patterns are built here from the pack's queue, history, runbooks,
 // rules and word lists; the incident steps come from the pack itself. A request with no pack gets the default pack.
-import { DEFAULT_PACK, DEFAULT_PACK_ID, PACKS, type PackId } from "../../shared/packs";
-import { INCIDENT_SOURCES, INCIDENT_STEPS } from "../../shared/packs/steps";
+import { DEFAULT_PACK, DEFAULT_PACK_ID, PACKS } from "../../shared/packs";
+import { INCIDENT_SOURCES, INCIDENT_STEPS, type IncidentPackId } from "../../shared/packs/steps";
 import type { Pack, PackHistoryItem, PackTicket } from "../../shared/packs/types";
 import { ValidationError, check, exceptionIn, mentions, quoted } from "./checks";
 import { StepError } from "./errors";
@@ -100,7 +100,7 @@ ${runbookList}
 Tickets:
 ${pack.tickets
   .filter((t) => ids.includes(t.id))
-  .map(pack.prompts.ticketLine)
+  .map((t) => pack.prompts.ticketLine(t))
   .join("\n")}`;
     },
     // Per ticket, the AI result is kept only if: its quote is really in the ticket, its label fits the ticket,
@@ -243,7 +243,7 @@ Runbooks:
 ${runbookList}
 
 Closed history (last 21 days):
-${pack.history.map(pack.prompts.historyLine).join("\n")}`;
+${pack.history.map((h) => pack.prompts.historyLine(h)).join("\n")}`;
     },
     validate(data: { patterns: PatternModel[] }) {
       let dropped = 0;
@@ -274,10 +274,11 @@ ${pack.history.map(pack.prompts.historyLine).join("\n")}`;
   return { triage, patterns };
 }
 
-const build = (id: PackId) => ({ ...queueSteps(PACKS[id]), ...INCIDENT_STEPS[id] }) satisfies Record<string, Step>;
-const built = new Map<PackId, ReturnType<typeof build>>();
-/** Every step for a pack, built once. */
-export function stepsFor(id: PackId = DEFAULT_PACK_ID): ReturnType<typeof build> {
+const build = (id: IncidentPackId) =>
+  ({ ...queueSteps(PACKS[id]), ...INCIDENT_STEPS[id] }) satisfies Record<string, Step>;
+const built = new Map<IncidentPackId, ReturnType<typeof build>>();
+/** Every step for a pack with an incident, built once. */
+export function stepsFor(id: IncidentPackId = DEFAULT_PACK_ID): ReturnType<typeof build> {
   let steps = built.get(id);
   if (!steps) built.set(id, (steps = build(id)));
   return steps;

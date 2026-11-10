@@ -3,9 +3,10 @@
 import type { PackId } from ".";
 import { INCIDENT_STEPS as EV, SOURCES as EV_SOURCES } from "./ev-charging/steps";
 
-export const INCIDENT_STEPS = { "ev-charging": EV } satisfies Record<PackId, unknown>;
+export const INCIDENT_STEPS = { "ev-charging": EV } satisfies Partial<Record<PackId, unknown>>;
+export type IncidentPackId = keyof typeof INCIDENT_STEPS;
 /** Named sources an evidence point may cite, per pack. */
-export const INCIDENT_SOURCES = { "ev-charging": EV_SOURCES } satisfies Record<PackId, Record<string, string>>;
+export const INCIDENT_SOURCES = { "ev-charging": EV_SOURCES } satisfies Record<IncidentPackId, Record<string, string>>;
 
 export type {
   ClassifyModel,

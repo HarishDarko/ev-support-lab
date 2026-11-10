@@ -1,0 +1,27 @@
+{
+  "about": "Reference triage for the 21 synthetic e-commerce tickets, used to score the keyword rules (and later models). Labelled independently by 3 reviewers on 2026-11-10 from the ticket text and the label definitions only (no rules or model output): 2 fresh Claude Opus 5.5 runs and 1 Gemini 4 Pro run (agy, Gemini 4 Argon High). The first answer in each field is the majority answer (strict scoring); the others are answers at least one reviewer chose and at least two accepted (lenient scoring). All three gave the same best answer on component 20 of 21, severity 19, action 19 and runbook 21. No field needed a hand decision.",
+  "reviewed": "2026-11-10",
+  "labels": [
+    { "id": "T-4001", "component": ["delivery"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-22"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4002", "component": ["payments"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-21"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4003", "component": ["product-issue"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-23"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4004", "component": ["returns-refunds"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-24"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4005", "component": ["order-status"], "severity": ["S4", "S3"], "action": ["needs_human"], "runbook": ["RB-25"], "why": "Reviewers split on severity (A:S4 B:S4 G:S3); majority answer first." },
+    { "id": "T-4006", "component": ["payments"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-21"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4007", "component": ["payments"], "severity": ["S2"], "action": ["needs_human", "info_only"], "runbook": ["none"], "why": "Reviewers split on action (A:needs_human B:needs_human G:info_only); majority answer first." },
+    { "id": "T-4008", "component": ["account-access"], "severity": ["S3"], "action": ["close_with_runbook", "needs_human"], "runbook": ["RB-26"], "why": "Reviewers split on action (A:close_with_runbook B:close_with_runbook G:needs_human); majority answer first." },
+    { "id": "T-4009", "component": ["delivery"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4010", "component": ["payments"], "severity": ["S2"], "action": ["escalation_candidate"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4011", "component": ["order-status"], "severity": ["S4", "S3"], "action": ["needs_human"], "runbook": ["none"], "why": "Reviewers split on severity (A:S4 B:S4 G:S3); majority answer first." },
+    { "id": "T-4012", "component": ["payments"], "severity": ["S3"], "action": ["escalation_candidate"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4013", "component": ["order-status"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4014", "component": ["product-issue"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4015", "component": ["payments"], "severity": ["S3"], "action": ["escalation_candidate"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4016", "component": ["payments", "returns-refunds"], "severity": ["S3"], "action": ["escalation_candidate"], "runbook": ["none"], "why": "Reviewers split on component (A:returns-refunds B:payments G:payments); majority answer first." },
+    { "id": "T-4017", "component": ["product-issue"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-23"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4018", "component": ["payments"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-21"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4019", "component": ["product-issue"], "severity": ["S4"], "action": ["needs_human"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4020", "component": ["request-or-question"], "severity": ["S4"], "action": ["info_only"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-4021", "component": ["returns-refunds"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." }
+  ]
+}

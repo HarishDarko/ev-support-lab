@@ -13,13 +13,17 @@ import { recordedRun } from "../src/run/recorded";
 
 const TWO: IndustryOption[] = [
   { id: "ev-charging", name: "EV charging" },
-  // A second complete pack, for these tests only (none is complete yet besides EV).
-  { id: "saas-support" as never, name: "SaaS support" },
+  // A made-up option list, so the tests do not depend on which packs exist.
+  { id: "saas-support", name: "SaaS support" },
 ];
 
 describe("the Industry menu's choices", () => {
   it("offers only complete packs, the default first", () => {
-    expect(INDUSTRY_OPTIONS).toEqual([{ id: "ev-charging", name: "EV charging" }]);
+    expect(INDUSTRY_OPTIONS).toEqual([
+      { id: "ev-charging", name: "EV charging" },
+      { id: "saas-support", name: "SaaS support" },
+      { id: "e-commerce", name: "E-commerce" },
+    ]);
     expect(PACKS[DEFAULT_PACK_ID].complete).toBe(true);
   });
 });
@@ -36,7 +40,7 @@ describe("resolveIndustry", () => {
     expect(resolveIndustry("?desk=queue", "saas-support", TWO)).toBe("saas-support");
   });
   it("falls back to the default for unknown, incomplete or hostile values", () => {
-    for (const bad of ["?pack=saas-support", "?pack=__proto__", "?pack=", "?pack=EV-CHARGING"])
+    for (const bad of ["?pack=telecom", "?pack=__proto__", "?pack=", "?pack=EV-CHARGING"])
       expect(resolveIndustry(bad, "nonsense"), bad).toBe("ev-charging");
     expect(resolveIndustry("?pack=shop", "shop", TWO)).toBe("ev-charging");
   });
@@ -48,7 +52,7 @@ describe("withIndustry", () => {
     expect(withIndustry("", "ev-charging")).toBe("");
   });
   it("sets the pack and keeps other parameters", () => {
-    expect(withIndustry("?desk=queue", "saas-support" as never)).toBe("?desk=queue&pack=saas-support");
+    expect(withIndustry("?desk=queue", "saas-support")).toBe("?desk=queue&pack=saas-support");
   });
 });
 

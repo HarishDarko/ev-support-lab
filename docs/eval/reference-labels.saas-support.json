@@ -1,0 +1,27 @@
+{
+  "about": "Reference triage for the 21 synthetic saas-support tickets, used to score the keyword rules (and later models). Labelled independently by 3 reviewers on 2026-11-10 from the ticket text and the label definitions only (no rules or model output): 2 fresh Claude Opus 5.5 runs and 1 Gemini 4 Pro run (agy, Gemini 4 Argon High). The first answer in each field is the majority answer (strict scoring); the others are answers at least one reviewer chose and at least two accepted (lenient scoring). All three gave the same best answer on component 19 of 21, severity 19, action 17 and runbook 21. No field needed a hand decision.",
+  "reviewed": "2026-11-10",
+  "labels": [
+    { "id": "T-3001", "component": ["login-access"], "severity": ["S2"], "action": ["needs_human"], "runbook": ["RB-11"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3002", "component": ["login-access"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["RB-12"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3003", "component": ["billing"], "severity": ["S2"], "action": ["close_with_runbook"], "runbook": ["RB-13"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3004", "component": ["integration"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-14"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3005", "component": ["performance"], "severity": ["S3", "S2"], "action": ["info_only"], "runbook": ["none"], "why": "Reviewers split on severity (A:S3 B:S2 G:S3); majority answer first." },
+    { "id": "T-3006", "component": ["data-request"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-15"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3007", "component": ["bug"], "severity": ["S3"], "action": ["escalation_candidate"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3008", "component": ["data-request"], "severity": ["S4"], "action": ["needs_human", "close_with_runbook"], "runbook": ["RB-16"], "why": "Reviewers split on action (A:needs_human B:needs_human G:close_with_runbook); majority answer first." },
+    { "id": "T-3009", "component": ["bug"], "severity": ["S2", "S1"], "action": ["escalation_candidate"], "runbook": ["none"], "why": "Reviewers split on severity (A:S2 B:S2 G:S1); majority answer first." },
+    { "id": "T-3010", "component": ["integration"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3011", "component": ["billing"], "severity": ["S2"], "action": ["needs_human"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3012", "component": ["data-request"], "severity": ["S3"], "action": ["needs_human", "escalation_candidate"], "runbook": ["none"], "why": "Reviewers split on action (A:escalation_candidate B:needs_human G:needs_human); majority answer first." },
+    { "id": "T-3013", "component": ["integration"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3014", "component": ["performance"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3015", "component": ["billing"], "severity": ["S4"], "action": ["info_only"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3016", "component": ["integration"], "severity": ["S1"], "action": ["escalation_candidate"], "runbook": ["none"], "why": "Reviewers split on action (A:escalation_candidate B:escalation_candidate G:needs_human); majority answer first." },
+    { "id": "T-3017", "component": ["data-request"], "severity": ["S4"], "action": ["needs_human"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3018", "component": ["request-or-question"], "severity": ["S4"], "action": ["info_only", "needs_human"], "runbook": ["none"], "why": "Reviewers split on action (A:info_only B:needs_human G:info_only); majority answer first." },
+    { "id": "T-3019", "component": ["data-request"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-15"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3020", "component": ["performance", "login-access"], "severity": ["S1"], "action": ["escalation_candidate"], "runbook": ["none"], "why": "Reviewers split on component (A:performance B:performance G:login-access); majority answer first." },
+    { "id": "T-3021", "component": ["integration", "bug"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["none"], "why": "Reviewers split on component (A:bug B:integration G:integration); majority answer first." }
+  ]
+}

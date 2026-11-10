@@ -1,9 +1,12 @@
 import { PACKS, DEFAULT_PACK_ID, isPackId } from "../../shared/packs";
-import { INCIDENT_STEPS } from "../../shared/packs/steps";
+import { INCIDENT_STEPS, type IncidentPackId } from "../../shared/packs/steps";
+import type { Pack } from "../../shared/packs/types";
 import { STEPS, queueOnlySteps, stepsFor, type Step } from "../_lib/steps";
 import { callJSON, rateLimit, costOf, StepError, models } from "../_lib/ai";
 import { ValidationError, check } from "../_lib/validate";
 import type { Check, Env, StepInput, Usage } from "../_lib/types";
+
+const isIncidentPack = (id: string): id is IncidentPackId => Object.hasOwn(INCIDENT_STEPS, id);
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -50,7 +53,7 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
   if (!isPackId(packId)) return json({ error: "Unknown pack." }, 400);
   const pack = PACKS[packId];
   // A pack with an incident runs the full chain; any other pack runs the short one, without the incident steps.
-  const steps: Record<string, Step> = Object.hasOwn(INCIDENT_STEPS, packId) ? stepsFor(packId) : queueOnlySteps(pack);
+  const steps: Record<string, Step> = isIncidentPack(packId) ? stepsFor(packId) : queueOnlySteps(pack as Pack);
   const step = steps[name];
   if (!step) return json({ error: "This step is not part of this industry's chain." }, 404);
 
