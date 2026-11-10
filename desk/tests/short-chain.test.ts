@@ -223,9 +223,9 @@ describe("runShortChain (the client side, with a fake server)", () => {
     const calls: [StepKey, Record<string, unknown>][] = [];
     const report = await runShortChain({
       pack: { id: STUB.id, ticketIds: STUB.tickets.map((t) => t.id), newTicketExample: STUB.newTicketExample },
-      post: async (step, body) => {
+      post: (step, body) => {
         calls.push([step, body as Record<string, unknown>]);
-        return answer(step, body as { ids?: string[] });
+        return Promise.resolve(answer(step, body as { ids?: string[] }));
       },
     });
     expect(calls.map(([s]) => s)).toEqual(["triage", "patterns", "kb", "classify", "shiftnote"]);
@@ -243,10 +243,12 @@ describe("runShortChain (the client side, with a fake server)", () => {
   it("skips the article and the check when no pattern was found, and says why", async () => {
     const report = await runShortChain({
       pack: { id: STUB.id, ticketIds: STUB.tickets.map((t) => t.id), newTicketExample: STUB.newTicketExample },
-      post: async (step, body) =>
-        step === "patterns"
-          ? { ...answer(step, {}), data: { patterns: [] } }
-          : answer(step, body as { ids?: string[] }),
+      post: (step, body) =>
+        Promise.resolve(
+          step === "patterns"
+            ? { ...answer(step, {}), data: { patterns: [] } }
+            : answer(step, body as { ids?: string[] }),
+        ),
     });
     expect(report.failures.map((f) => f.step)).toEqual(["kb", "classify"]);
     expect(report.failures[0]!.message).toBe("Skipped: no recurring pattern to write an article about.");
