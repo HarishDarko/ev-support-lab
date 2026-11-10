@@ -73,3 +73,14 @@ export function historyCheck(): { same: number; n: number } {
   }
   return { same, n: HISTORY.length };
 }
+
+/** The Wilson 95% interval for k right out of n, in whole percent. */
+export function wilson95(k: number, n: number): [low: number, high: number] {
+  if (n === 0) return [0, 0];
+  const z = 1.96;
+  const p = k / n;
+  const d = 1 + (z * z) / n;
+  const centre = (p + (z * z) / (2 * n)) / d;
+  const half = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / d;
+  return [Math.round(Math.max(0, centre - half) * 100), Math.round(Math.min(1, centre + half) * 100)];
+}
