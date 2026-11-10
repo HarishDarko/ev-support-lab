@@ -66,7 +66,7 @@ describe("fieldLabel", () => {
 });
 
 describe("chainSeconds", () => {
-  it("is about 42 seconds for the committed recorded run (its own step times)", () => {
-    expect(chainSeconds(recordedRun().steps)).toBe(42);
+  it("is about 26 seconds for the committed recorded run (its own step times, investigation started at once)", () => {
+    expect(chainSeconds(recordedRun().steps)).toBe(26);
   });
 });

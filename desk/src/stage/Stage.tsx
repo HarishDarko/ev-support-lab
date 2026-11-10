@@ -126,16 +126,12 @@ export function RunControl({ api }: { api: RunApi }) {
     <div className="run-control">
       <p className="run-label">
         <span className="mono">{api.label}</span>
-        {api.progress && (
-          <span className="muted">
-            {" "}
-            · {api.progress.settled} of {api.progress.total} calls answered
-          </span>
-        )}
       </p>
       <button type="button" className="btn btn--small" onClick={() => void api.runLive()} disabled={running}>
         {running ? "Running live…" : "Run it live"}
       </button>
+      {/* Visible text that changes every second, so it is not a live region. */}
+      {api.statusText && <p className="run-status">{api.statusText}</p>}
       {api.message && (
         <p className="run-message" role="status">
           {api.message}

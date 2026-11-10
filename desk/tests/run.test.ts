@@ -260,10 +260,10 @@ describe("the live chain", () => {
     const order = calls.map((c) => c.step);
     const at = (step: StepKey) => order.indexOf(step);
     expect(order.slice(0, TRIAGE_BATCHES.length).every((s) => s === "triage")).toBe(true);
-    expect(at("patterns")).toBe(TRIAGE_BATCHES.length);
-    expect(at("investigate")).toBeGreaterThan(at("patterns"));
+    // The investigation and the verification read nothing from earlier steps, so they start with triage.
+    expect(order.slice(TRIAGE_BATCHES.length, TRIAGE_BATCHES.length + 2)).toEqual(["investigate", "verify"]);
+    expect(at("patterns")).toBeGreaterThan(at("verify"));
     expect(at("handoff")).toBeGreaterThan(at("investigate"));
-    expect(at("verify")).toBeGreaterThan(at("investigate"));
     expect(at("kb")).toBeGreaterThan(at("handoff"));
     expect(at("classify")).toBeGreaterThan(at("kb"));
     expect(at("shiftnote")).toBeGreaterThan(at("handoff"));
