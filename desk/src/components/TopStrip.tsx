@@ -21,16 +21,28 @@ interface Props {
   onAi: () => void;
   page: Page;
   onPage: (page: Page) => void;
+  /** The walkthrough's stages; hidden for an industry with no walkthrough. */
+  showStages?: boolean;
 }
 
 /** The 52 px top strip: name, stage nav, synthetic-data label, where the AI answers come from, theme toggle. */
-export function TopStrip({ stageIndex, onStage, theme, onToggleTheme, aiLabel, onAi, page, onPage }: Props) {
+export function TopStrip({
+  stageIndex,
+  onStage,
+  theme,
+  onToggleTheme,
+  aiLabel,
+  onAi,
+  page,
+  onPage,
+  showStages = true,
+}: Props) {
   return (
     <header className="strip">
       <span className="strip-name">Support Desk</span>
       <nav className="strip-nav" aria-label="Walkthrough and pages">
         <ol>
-          {STAGES.map((stage, i) => (
+          {(showStages ? STAGES : []).map((stage, i) => (
             <li key={stage.id}>
               <button
                 type="button"
@@ -63,8 +75,8 @@ export function TopStrip({ stageIndex, onStage, theme, onToggleTheme, aiLabel, o
           ))}
         </ol>
       </nav>
+      <IndustryMenu className="strip-industry" />
       <div className="strip-end">
-        <IndustryMenu />
         <button type="button" className="strip-ai" onClick={onAi} title="Cost and provenance in the desk">
           {aiLabel}
         </button>

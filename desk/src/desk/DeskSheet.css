@@ -110,6 +110,16 @@
   }
 }
 
+.desk-head {
+  flex-wrap: wrap;
+}
 .desk-industry {
   margin-left: auto;
+}
+@media (max-width: 600px) {
+  .desk-industry {
+    order: 3;
+    flex-basis: 100%;
+    margin-left: 0;
+  }
 }

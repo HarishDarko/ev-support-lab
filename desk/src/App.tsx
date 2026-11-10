@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { MotionConfig } from "motion/react";
 import { useTheme } from "./theme";
 import { TopStrip, type Page } from "./components/TopStrip";
@@ -16,7 +16,8 @@ import { useStory } from "./story/useStory";
 import { MeterGateContext } from "./story/meterGate";
 import { hasIncident } from "./packs/industry";
 import { IndustryProvider, useIndustry } from "./packs/IndustryContext";
-import { ShowcaseNote } from "./packs/ShowcaseNote";
+// Other industries load only when picked, so the EV page carries none of their data.
+const PackDesk = lazy(() => import("./packs/PackDesk").then((m) => ({ default: m.PackDesk })));
 
 const NARROW = "(max-width: 999px)";
 const subscribe = (cb: () => void) => {
@@ -113,8 +114,9 @@ function Walkthrough() {
     window.scrollTo({ top: 0 });
   };
 
-  const aiLabel =
-    runApi.source === "live"
+  const aiLabel = !showcase
+    ? "Rules · no recorded run yet"
+    : runApi.source === "live"
       ? liveSpendText(runApi.spent, runApi.unpriced)
       : run.recording.source === "ai"
         ? "AI · recorded run"
@@ -134,6 +136,7 @@ function Walkthrough() {
         onAi={() => openDesk("scorecard")}
         page={page}
         onPage={onPage}
+        showStages={showcase}
       />
       <main
         id="stage"
@@ -146,7 +149,17 @@ function Walkthrough() {
         ) : page === "notes" ? (
           <EngineeringNotes />
         ) : !showcase ? (
-          <ShowcaseNote />
+          <Suspense
+            fallback={
+              <article className="page" aria-busy="true">
+                <p className="page-lede" role="status">
+                  Loading this industry&apos;s queue. It takes a moment.
+                </p>
+              </article>
+            }
+          >
+            <PackDesk id={industry.id} />
+          </Suspense>
         ) : narrow ? (
           <PhoneStory
             data={data}
@@ -181,7 +194,7 @@ function Walkthrough() {
           </>
         )}
       </main>
-      {!narrow && page === "walkthrough" && (
+      {showcase && !narrow && page === "walkthrough" && (
         <ControlBar
           index={story.index}
           actionPending={actionPending}
@@ -193,7 +206,7 @@ function Walkthrough() {
       )}
       <MeterGateContext.Provider value={meterGate}>
         <DeskSheet
-          open={deskOpen}
+          open={showcase && deskOpen}
           tab={deskTab}
           ticket={deskTicket}
           onClose={() => setDeskOpen(false)}
