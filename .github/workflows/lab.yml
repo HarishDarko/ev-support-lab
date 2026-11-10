@@ -64,3 +64,11 @@ jobs:
             echo "::error::StuckSessionRegressionTest must fail on its assertions with the fix off (failures above 0, errors 0)." >&2
             exit 1
           fi
+          # Gradle reports every exception as a failure, so also check each failure is an assertion, not a crash.
+          types=$(grep -E '^\s*<failure ' "$report" | grep -oE ' type="[^"]*"' | sed 's/ type="//; s/"$//')
+          other=$(printf '%s\n' "$types" | grep -vE '^(org\.opentest4j\.AssertionFailedError|java\.lang\.AssertionError|org\.assertj\.core\.error\..+)?$' || true)
+          echo "Failure types: $(printf '%s ' $types)"
+          if [ -n "$other" ]; then
+            echo "::error::With the fix off the test failed for another reason: $other" >&2
+            exit 1
+          fi
