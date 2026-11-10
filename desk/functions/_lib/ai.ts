@@ -1,5 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { DEFAULT_PACK } from "../../shared/packs";
+import { StepError } from "./errors";
 import type { Env, JsonSchema, Usage } from "./types";
+
+export { StepError, clip } from "./errors";
 
 export const DEFAULT_FAST_MODEL = "claude-haiku-4-5";
 export const DEFAULT_DEEP_MODEL = "claude-sonnet-5-5";
@@ -9,27 +13,8 @@ export function models(env: Pick<Env, "FAST_MODEL" | "DEEP_MODEL">): { fast: str
   return { fast: env.FAST_MODEL || DEFAULT_FAST_MODEL, deep: env.DEEP_MODEL || DEFAULT_DEEP_MODEL };
 }
 
-export const SYSTEM = `You work inside an internal production-support desk for an EV charging network operator. The support desk serves internal teams (customer care, NOC, field service, host accounts, billing ops), not drivers directly.
-
-Everything you are given is synthetic data made up for a prototype.
-
-Rules:
-- Never invent names of people. Refer to roles only (driver, host, customer care, NOC, field service, engineering).
-- Never invent business figures such as revenue, cost, savings or customer counts. Use only numbers present in the input.
-- Use only facts in the input. If something is not in the input, say it is unknown.
-- A pattern across tickets is a correlation. State causes as hypotheses, never as proven.
-- Write plainly and briefly, the way an experienced support engineer writes for colleagues. No marketing language, no lecturing.`;
-
-export class StepError extends Error {
-  status: number;
-  /** Set when the model call spent tokens before failing, so the cost is still counted. */
-  model?: string;
-  usage?: Usage;
-  constructor(message: string, status = 502) {
-    super(message);
-    this.status = status;
-  }
-}
+/** The system prompt of the default pack. Each call sends its pack's own (see `system` below). */
+export const SYSTEM = DEFAULT_PACK.prompts.system;
 
 // A live demo can't wait a minute: each call gets a hard deadline and no hidden SDK retries.
 function client(env: Env, timeout: number): Anthropic {
@@ -70,6 +55,8 @@ export interface CallOptions {
   schema: JsonSchema;
   maxTokens?: number;
   timeout?: number;
+  /** The pack's system prompt. Defaults to the default pack's. */
+  system?: string;
 }
 
 export interface CallResult {
@@ -82,7 +69,7 @@ export interface CallResult {
 // One structured-output call. Fast model for triage/classification, deep model for reasoning steps.
 export async function callJSON(
   env: Env,
-  { deep = false, prompt, schema, maxTokens, timeout = 30_000 }: CallOptions,
+  { deep = false, prompt, schema, maxTokens, timeout = 30_000, system = SYSTEM }: CallOptions,
 ): Promise<CallResult> {
   const anthropic = client(env, timeout);
   const format = { type: "json_schema" as const, schema };
@@ -97,7 +84,7 @@ export async function callJSON(
         betas: ["server-side-fallback-2026-07-01"],
         fallbacks: "default",
         output_config: { effort: "low", format },
-        system: SYSTEM,
+        system,
         messages: [{ role: "user", content: prompt }],
       });
     } else {
@@ -105,7 +92,7 @@ export async function callJSON(
         model: fast,
         max_tokens: maxTokens ?? 4000,
         output_config: { format },
-        system: SYSTEM,
+        system,
         messages: [{ role: "user", content: prompt }],
       });
     }
@@ -163,11 +150,4 @@ export async function rateLimit(env: Env, request: Request): Promise<void> {
     kv.put(ipKey, String(ipCount + 1), { expirationTtl: 3700 }),
     kv.put(dayKey, String(dayCount + 1), { expirationTtl: 90000 }),
   ]);
-}
-
-// Trims client-supplied JSON (earlier model output) before it goes back into a prompt.
-export function clip(value: unknown, max = 6000): string {
-  const text = JSON.stringify(value ?? null);
-  if (text.length > max) throw new StepError("Input too large.", 400);
-  return text;
 }
