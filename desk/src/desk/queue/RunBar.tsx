@@ -1,4 +1,4 @@
-import { liveSpendText, originCounts, formatUsd, useRun, indexRun } from "../../run";
+import { chainSeconds, liveSpendText, originCounts, formatUsd, recordedRun, useRun, indexRun } from "../../run";
 import { useMemo } from "react";
 import { TICKETS } from "../../data/synthetic";
 import "./RunBar.css";
@@ -29,7 +29,7 @@ export function RunBar() {
         </button>
         <p className="runbar-status" role="status" aria-live="polite">
           {running && progress
-            ? `${liveSpendText(spent, unpriced)} · ${progress.settled} of ${progress.total} calls`
+            ? `Asking the model: ${progress.settled} of ${progress.total} answers in, usually about ${chainSeconds(recordedRun().steps)} seconds in all. ${liveSpendText(spent, unpriced)}`
             : source === "live" || spent > 0
               ? liveSpendText(spent, unpriced)
               : ""}

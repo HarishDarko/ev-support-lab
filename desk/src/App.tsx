@@ -14,6 +14,9 @@ import { facts } from "./story/beats";
 import { storyDataFromRun } from "./story/fromRun";
 import { useStory } from "./story/useStory";
 import { MeterGateContext } from "./story/meterGate";
+import { hasIncident } from "./packs/industry";
+import { IndustryProvider, useIndustry } from "./packs/IndustryContext";
+import { ShowcaseNote } from "./packs/ShowcaseNote";
 
 const NARROW = "(max-width: 999px)";
 const subscribe = (cb: () => void) => {
@@ -34,9 +37,11 @@ const requestedTab = (): DeskTab | null => {
 export function App() {
   return (
     <MotionConfig reducedMotion="user">
-      <RunProvider>
-        <Walkthrough />
-      </RunProvider>
+      <IndustryProvider>
+        <RunProvider>
+          <Walkthrough />
+        </RunProvider>
+      </IndustryProvider>
     </MotionConfig>
   );
 }
@@ -45,6 +50,8 @@ function Walkthrough() {
   const { theme, toggle } = useTheme();
   const narrow = useNarrow();
   const runApi = useRun();
+  const industry = useIndustry();
+  const showcase = hasIncident(industry.id);
   // A link with ?desk=<tab> opens the console at once.
   const [linked] = useState(requestedTab);
   const [deskOpen, setDeskOpen] = useState(linked !== null);
@@ -138,6 +145,8 @@ function Walkthrough() {
           <OperatingModel />
         ) : page === "notes" ? (
           <EngineeringNotes />
+        ) : !showcase ? (
+          <ShowcaseNote />
         ) : narrow ? (
           <PhoneStory
             data={data}

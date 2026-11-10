@@ -88,3 +88,16 @@ export function runLabel(run: Run): string {
 /** "Live · $0.04 so far", with a plus when some call had no list price (the figure is then a floor). */
 export const liveSpendText = (spent: number, unpriced = false): string =>
   `Live · ${formatUsdShort(spent)}${unpriced ? "+" : ""} so far`;
+
+/**
+ * Roughly how long a full live run takes, from a run's own step times: the slowest triage batch, then patterns and
+ * the investigation, then the verification beside the handoff and what follows it. Rounded to whole seconds.
+ */
+export function chainSeconds(steps: RunSteps): number {
+  const ms = (k: Exclude<StepKey, "triage">) => steps[k].ms;
+  const triage = Math.max(0, ...steps.triage.map((b) => b.ms));
+  const afterHandoff = Math.max(ms("kb") + ms("classify"), ms("shiftnote"));
+  return Math.round(
+    (triage + ms("patterns") + ms("investigate") + Math.max(ms("verify"), ms("handoff") + afterHandoff)) / 1000,
+  );
+}

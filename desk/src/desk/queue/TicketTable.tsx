@@ -2,6 +2,8 @@ import { TICKETS } from "../../data/synthetic";
 import { pillTone } from "../ui/origin";
 import type { Lane, TicketResult } from "../../run";
 import { Pill } from "../ui/Pill";
+import { useIndustry } from "../../packs/IndustryContext";
+import { fieldLabel } from "../../packs/industry";
 import "./TicketTable.css";
 
 interface Props {
@@ -15,6 +17,7 @@ const ticketById = new Map(TICKETS.map((t) => [t.id, t]));
 
 /** The tickets in a dense table, one row each. The ID is the button that selects the row. */
 export function TicketTable({ rows, resultFor, selected, onSelect }: Props) {
+  const industry = useIndustry().id;
   return (
     <div className="dk-scroll tickets-scroll">
       <table className="dk-table tickets">
@@ -26,10 +29,10 @@ export function TicketTable({ rows, resultFor, selected, onSelect }: Props) {
               Source
             </th>
             <th scope="col" className="tickets-site">
-              Site
+              {fieldLabel(industry, "site", "Site")}
             </th>
             <th scope="col" className="tickets-fw">
-              Firmware
+              {fieldLabel(industry, "fw", "Firmware")}
             </th>
             <th scope="col">Lane</th>
             <th scope="col" className="tickets-component">

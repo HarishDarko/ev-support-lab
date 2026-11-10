@@ -5,6 +5,8 @@ import { Pill } from "../ui/Pill";
 import { ProvenanceNote } from "../ui/ProvenanceNote";
 import { QuotedText } from "../ui/QuotedText";
 import { useMeterGate } from "../../story/meterGate";
+import { useIndustry } from "../../packs/IndustryContext";
+import { fieldLabel } from "../../packs/industry";
 import "./Inspector.css";
 
 const ACTION_LABEL: Record<string, string> = {
@@ -17,6 +19,7 @@ const ACTION_LABEL: Record<string, string> = {
 /** The selected ticket in full: its text with the quoted words highlighted, the decision, and how it was checked. */
 export function Inspector({ entry }: { entry: TicketResult | undefined }) {
   const gate = useMeterGate();
+  const industry = useIndustry().id;
   if (!entry) {
     return (
       <aside className="inspector" id="queue-inspector" aria-label="Selected ticket">
@@ -40,15 +43,15 @@ export function Inspector({ entry }: { entry: TicketResult | undefined }) {
         <dd>{ticket.from}</dd>
         {site && (
           <>
-            <dt>Site</dt>
+            <dt>{fieldLabel(industry, "site", "Site")}</dt>
             <dd>{site}</dd>
           </>
         )}
         {ticket.charger !== "-" && (
           <>
-            <dt>Charger</dt>
+            <dt>{fieldLabel(industry, "charger", "Charger")}</dt>
             <dd className="dk-mono">{ticket.charger}</dd>
-            <dt>Firmware</dt>
+            <dt>{fieldLabel(industry, "fw", "Firmware")}</dt>
             <dd className="dk-mono">{ticket.fw}</dd>
           </>
         )}

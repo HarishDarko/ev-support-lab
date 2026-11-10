@@ -63,6 +63,8 @@ export interface Pack<
   complete?: boolean;
   /** Ticket fields the queue shows, in order, with their labels. */
   fields?: { key: string; label: string }[];
+  /** The pack has a step-by-step incident walkthrough (logs, handoff, verification). */
+  hasIncident?: boolean;
   /** The ticket the new-ticket check starts from. */
   newTicketExample?: string;
   components: readonly C[];

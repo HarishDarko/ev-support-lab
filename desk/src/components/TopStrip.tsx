@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { STAGES } from "../stages";
 import { META } from "../data/synthetic";
 import type { Theme } from "../theme";
+import { IndustryMenu } from "../packs/IndustryMenu";
 
 export type Page = "walkthrough" | "operating" | "notes";
 const PAGES: { id: Exclude<Page, "walkthrough">; name: string }[] = [
@@ -63,6 +64,7 @@ export function TopStrip({ stageIndex, onStage, theme, onToggleTheme, aiLabel, o
         </ol>
       </nav>
       <div className="strip-end">
+        <IndustryMenu />
         <button type="button" className="strip-ai" onClick={onAi} title="Cost and provenance in the desk">
           {aiLabel}
         </button>
