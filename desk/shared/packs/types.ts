@@ -75,6 +75,8 @@ export interface Pack<
   /** The labels each runbook may be used for. */
   runbookFits: Record<string, string[]>;
   runbookExceptions: Record<string, RunbookExceptionRule[]>;
+  /** The fixed steps around the pack's record-only runbook, if it has one: a check before it, a review after it. */
+  recordOnly?: { runbook: string; confirmStep: string; reviewStep: string; confirmNote: string };
   prompts: {
     /** The system prompt for every call. */
     system: string;

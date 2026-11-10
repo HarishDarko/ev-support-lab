@@ -5,9 +5,7 @@ import { ruleTriageFor } from "../../../functions/_lib/rule-engine";
 import type { ShiftSummary } from "../types";
 import { ENGINEERING_CHANGE, HERO, TICKETS, VERIFICATION } from "./data";
 import { RUNBOOK_EXCEPTIONS } from "./guardrails";
-import { DEFAULT_COMPONENT, RULES } from "./triage-rules";
-
-const EV_RULES = { rules: RULES, runbookExceptions: RUNBOOK_EXCEPTIONS, defaultComponent: DEFAULT_COMPONENT };
+import { TRIAGE_RULES } from "./triage-rules";
 
 const fb = HERO.fleet;
 export function ruleInvestigate() {
@@ -168,7 +166,7 @@ export function ruleShiftnote(summary?: ShiftSummary | null) {
 
 // The pattern's exceptions apply here too: a ticket outside the pattern is never routed to the runbook.
 export function ruleClassify(text: string, article?: { title?: string } | null) {
-  const r = ruleTriageFor(EV_RULES, { id: "NEW", text });
+  const r = ruleTriageFor(TRIAGE_RULES, { id: "NEW", text });
   const exception =
     r.component === "session-state" || /session|charging|energy/i.test(text)
       ? exceptionIn(RUNBOOK_EXCEPTIONS, "RB-05", text)?.hit

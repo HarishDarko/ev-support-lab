@@ -1,5 +1,6 @@
 // EV charging pack: the keyword rules of the triage fallback. The first rule whose pattern matches decides.
 import type { TriageRule } from "../types";
+import { RUNBOOK_EXCEPTIONS } from "./guardrails";
 import type { Component } from "./data";
 
 /** The label for plain questions and requests, and for any ticket no rule matches. */
@@ -111,3 +112,10 @@ export const RULES: TriageRule<Component>[] = [
     why: "app crash",
   },
 ];
+
+/** What the rules engine needs: the rules, the runbook exceptions and the default label. */
+export const TRIAGE_RULES = {
+  rules: RULES,
+  runbookExceptions: RUNBOOK_EXCEPTIONS,
+  defaultComponent: DEFAULT_COMPONENT,
+};

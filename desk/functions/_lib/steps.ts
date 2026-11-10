@@ -5,7 +5,7 @@ import { INCIDENT_SOURCES, INCIDENT_STEPS } from "../../shared/packs/steps";
 import type { Pack, PackHistoryItem, PackTicket } from "../../shared/packs/types";
 import { ValidationError, check, exceptionIn, mentions, quoted } from "./checks";
 import { StepError } from "./errors";
-import { bool, obj, runbookListOf, severity, str, strs } from "./kit";
+import { bool, obj, runbookListOf, severity, str, strs, type Step } from "./kit";
 import { ruleTriageFor, rulePatternsFor } from "./rule-engine";
 import type { StepInput } from "./types";
 
@@ -273,7 +273,7 @@ ${pack.history.map(pack.prompts.historyLine).join("\n")}`;
   return { triage, patterns };
 }
 
-const build = (id: PackId) => ({ ...queueSteps(PACKS[id]), ...INCIDENT_STEPS[id] });
+const build = (id: PackId) => ({ ...queueSteps(PACKS[id]), ...INCIDENT_STEPS[id] }) satisfies Record<string, Step>;
 const built = new Map<PackId, ReturnType<typeof build>>();
 /** Every step for a pack, built once. */
 export function stepsFor(id: PackId = DEFAULT_PACK_ID): ReturnType<typeof build> {

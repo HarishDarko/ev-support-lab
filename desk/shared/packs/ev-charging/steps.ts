@@ -27,15 +27,11 @@ import {
   ruleVerify,
 } from "./fallbacks";
 import { RUNBOOK_EXCEPTIONS } from "./guardrails";
+import { EV_CHARGING } from "./index";
 import { BILLING_STEP, CONFIRM_METER, METER_STEP, SEVERITY_GUIDE, historyLine, ticketLine } from "./prompts";
 
 const runbookList = runbookListOf(RUNBOOKS);
-const KNOWN_IDS = knownIds({
-  tickets: TICKETS,
-  history: HISTORY,
-  runbooks: RUNBOOKS,
-  extraIds: [ENGINEERING_CHANGE.ref, HERO.incidentId],
-});
+const KNOWN_IDS = knownIds(EV_CHARGING);
 const grounding = groundingIn(KNOWN_IDS);
 const runbookException = (runbook: string, text: unknown, fw?: string) =>
   exceptionIn(RUNBOOK_EXCEPTIONS, runbook, text, fw);

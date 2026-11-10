@@ -1,6 +1,5 @@
-// Checks applied to model output before anything reaches the screen.
-// Evidence must be quoted exactly from the input; numbers must come from the input.
-// The checks are in checks.ts; the word lists and runbook exceptions here are the default pack's.
+// The checks applied to model output (in checks.ts), plus the default pack's word lists and runbook exceptions,
+// where the tests import them from.
 import { DEFAULT_PACK } from "../../shared/packs";
 import { exceptionIn, exceptionNamesIn } from "./checks";
 

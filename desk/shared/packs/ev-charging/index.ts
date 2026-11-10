@@ -50,4 +50,4 @@ export const EV_CHARGING = {
   },
   /** The fixed steps around the record-only runbook: confirm first, then a person reviews the bill. */
   recordOnly: { runbook: "RB-05", confirmStep: METER_STEP, reviewStep: BILLING_STEP, confirmNote: CONFIRM_METER },
-} satisfies Pack<Component, Ticket, HistoryItem> & Record<string, unknown>;
+} satisfies Pack<Component, Ticket, HistoryItem>;

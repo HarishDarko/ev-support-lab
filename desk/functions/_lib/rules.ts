@@ -1,7 +1,6 @@
-// Deterministic fallback for every step. Used when a live call fails, is rate limited,
-// or returns output that fails validation. Built only from the synthetic data, so it never invents anything.
-// The engine is in rule-engine.ts and the content in the pack; these are the default pack's rules.
-import { DEFAULT_COMPONENT, RULES, RUNBOOKS, RUNBOOK_EXCEPTIONS } from "../../shared/packs/default";
+// The default pack's deterministic fallbacks, where the UI and the tests import them from. The rules engine is in
+// rule-engine.ts and the rules themselves are in the pack (shared/packs/), built only from its synthetic data.
+import { RUNBOOKS, TRIAGE_RULES } from "../../shared/packs/default";
 import { ruleTriageFor, rulePatternsFor, type TriageTicket } from "./rule-engine";
 import { DEFAULT_PACK } from "../../shared/packs";
 
@@ -17,8 +16,6 @@ export {
   ruleShiftnote,
   ruleVerify,
 } from "../../shared/packs/default";
-
-const TRIAGE_RULES = { rules: RULES, runbookExceptions: RUNBOOK_EXCEPTIONS, defaultComponent: DEFAULT_COMPONENT };
 
 export const ruleTriage = (ticket: TriageTicket) => ruleTriageFor(TRIAGE_RULES, ticket);
 export const rulePatterns = () => rulePatternsFor(DEFAULT_PACK);
