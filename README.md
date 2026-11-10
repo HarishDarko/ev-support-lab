@@ -50,6 +50,14 @@ npx playwright install chromium   # once, before the first browser-test run
 npm run e2e
 ```
 
+## Deploy
+
+The desk is a Cloudflare Pages project (`support-desk`, Direct Upload, no Git build). Production changes only after the tests pass:
+
+- **Normal path:** merge to `main`. The `desk` workflow runs typecheck, lint, unit tests, the build and the browser tests; only if all of them pass does its `deploy` job upload that same build with `wrangler pages deploy`. It needs two repository secrets: `CLOUDFLARE_API_TOKEN` (a token with Account, Cloudflare Pages, Edit) and `CLOUDFLARE_ACCOUNT_ID`.
+- **By hand, if Actions is down:** `cd desk && npm run deploy`. It runs typecheck, lint and the unit tests, then the build, and stops before uploading if any of them fails. From a branch other than `main` it makes a preview, not a production deploy. The browser tests are not part of it; run `npm run e2e` first.
+- **Rollback:** in the Cloudflare dashboard, Pages, `support-desk`, Deployments, pick the last good production deployment and choose "Rollback to this deployment".
+
 ## What it does not prove
 
 The lab reproduces the backend side of the mechanism with a simulated charger. It says nothing about any real firmware or production system. The canary-against-control experiment runs on scripted inputs: it shows the mechanism, not a measured effect. It does not model:
