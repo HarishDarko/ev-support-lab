@@ -38,20 +38,11 @@ import * as validate from "../functions/_lib/validate";
 import { HISTORY, NEW_TICKET_EXAMPLE, RUNBOOKS, TICKETS } from "../shared/synthetic";
 import { recordedRun } from "../src/run/recorded";
 import { TRIAGE_BATCHES } from "../src/run/live";
-import {
-  costByStep,
-  indexRun,
-  indexTriage,
-  laneCounts,
-  lanesOf,
-  originCounts,
-  runCost,
-  runLabel,
-  shiftSummary,
-  TICKET_ORDER,
-} from "../src/run";
+import { costByStep, runCost, runLabel } from "../src/run/cost";
+import { TICKET_ORDER } from "../src/run/guardrail";
+import { indexRun, indexTriage, laneCounts, lanesOf, originCounts, shiftSummary } from "../src/run/selectors";
+import type { TicketResult } from "../src/run/selectors";
 import { rulesStoryData, type StoryData } from "../src/story/data";
-import { storyDataFromRun } from "../src/story/fromRun";
 import { BEATS, canaryOutcome, facts, type Decisions } from "../src/story/beats";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -120,7 +111,7 @@ describe("golden outputs (SD-10: unchanged by the EV pack move)", () => {
       sdk.plain.mockResolvedValue(reply(answer));
       sdk.beta.mockResolvedValue(reply(answer));
       const live = await post(step, body, { ANTHROPIC_API_KEY: "golden-key" });
-      const calls = [...sdk.plain.mock.calls, ...sdk.beta.mock.calls].map((c) => c[0]);
+      const calls: unknown[] = [...sdk.plain.mock.calls, ...sdk.beta.mock.calls].map((c): unknown => c[0]);
       sdk.plain.mockReset();
       sdk.beta.mockReset();
       const off = await post(step, body, { MOCK: "1" });
@@ -160,7 +151,12 @@ describe("golden outputs (SD-10: unchanged by the EV pack move)", () => {
         id,
         RUNBOOKS.map((r) => [r.id, validate.runbookException(r.id, text, fw)]),
       ]),
-      stepShapes: Object.entries(steps.STEPS).map(([k, st]) => [k, st.deep, st.maxTokens ?? null, st.schema]),
+      stepShapes: Object.entries(steps.STEPS).map(([k, st]) => [
+        k,
+        st.deep,
+        (st as { maxTokens?: number }).maxTokens ?? null,
+        st.schema,
+      ]),
     });
   });
 
@@ -191,7 +187,13 @@ describe("golden outputs (SD-10: unchanged by the EV pack move)", () => {
     });
   });
 
-  it("story: the walkthrough's data and every beat's text, from the recorded run and from the rules", () => {
+  it("story: the walkthrough's data and every beat's text, from the recorded run and from the rules", async () => {
+    // fromRun.ts imports the run module's React hook, which the test type-check does not compile, so it is loaded
+    // by a path the type-checker does not follow. Vitest runs the real module.
+    const fromRunPath: string = "../src/story/fromRun";
+    const { storyDataFromRun } = (await import(fromRunPath)) as {
+      storyDataFromRun: (api: { run: typeof run; resultFor: (id: string) => TicketResult | undefined }) => StoryData;
+    };
     const index = indexRun(run);
     const fromRun = storyDataFromRun({ run, resultFor: (id) => index.get(id) });
     const none: Decisions = { approvedIds: [], sent: false, meterChecked: [] };
