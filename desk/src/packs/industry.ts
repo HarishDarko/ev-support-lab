@@ -2,7 +2,7 @@
 // that one, and any other address (an old link, an unknown or hostile value) lands on the choice. Only complete packs
 // (synthetic data, keyword rules and reviewed labels) with their incident walkthrough can be picked.
 import type { PackId } from "../../shared/packs";
-import { CATALOG, CATALOG_DEFAULT_ID as DEFAULT_PACK_ID } from "../../shared/packs/catalog";
+import { CATALOG } from "../../shared/packs/catalog";
 
 export interface IndustryOption {
   id: PackId;
@@ -36,6 +36,3 @@ export function fieldLabel(id: PackId, key: string, fallback: string): string {
   const fields: readonly { key: string; label: string }[] = CATALOG[id].fields ?? [];
   return fields.find((f) => f.key === key)?.label ?? fallback;
 }
-
-export const industryName = (id: PackId): string => CATALOG[id].name;
-export { DEFAULT_PACK_ID };

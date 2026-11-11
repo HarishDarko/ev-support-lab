@@ -15,7 +15,7 @@ Everything is synthetic. No real company, network, customer or person is describ
 
 **How it was built:** with AI coding assistants. I decided what to build and the rules it had to follow, reviewed the code, and checked it with tests and with independent reviews by separate AI models. The assistants wrote much of the code. What those reviews found, and what changed, is listed on the live site's *Engineering notes* page.
 
-## Start here (about 10 minutes, the EV charging lab; the other two labs have the same shape)
+## Start here: EV charging (about 10 minutes)
 
 1. **The bug, reproduced.** [`StuckSessionReproductionTest`](lab/src/test/java/dev/evlab/transaction/StuckSessionReproductionTest.java) passes while the bug exists: the late or missing Ended leaves the session open. [`StuckSessionRegressionTest`](lab/src/test/java/dev/evlab/transaction/StuckSessionRegressionTest.java) passes with the fix on and fails with it off, and CI checks that it fails.
 2. **The decision.** [`ReconciliationPolicy.java`](lab/src/main/java/dev/evlab/reconciliation/ReconciliationPolicy.java) is one pure function with documented thresholds. It closes provisionally only on an explicit "not ongoing, nothing queued" answer, with the Started received and no seqNo gaps. Anything unclear goes to a person.
@@ -34,6 +34,18 @@ Everything is synthetic. No real company, network, customer or person is describ
    - a rules fallback;
    - the repeat rule;
    - the meter check before a record-only closure.
+
+## Start here: SaaS support
+
+1. **The bug, reproduced.** [`TokenStormReproductionTest`](lab-saas/src/test/java/dev/saaslab/delivery/TokenStormReproductionTest.java) passes while the bug exists: a burst of deliveries meets an expired token, each asks for its own, the identity provider answers 429, and the endpoint is paused while it is up. [`TokenStormRegressionTest`](lab-saas/src/test/java/dev/saaslab/delivery/TokenStormRegressionTest.java) passes with the fix on and fails with it off, and CI checks that it fails.
+2. **The edge cases.** [`DeliveryEdgeCasesTest`](lab-saas/src/test/java/dev/saaslab/delivery/DeliveryEdgeCasesTest.java) (a quiet expiry, a rate-limited identity provider, a revoked client, a real outage, an HMAC endpoint, a rotated secret) and [`SingleFlightRefreshIT`](lab-saas/src/test/java/dev/saaslab/delivery/SingleFlightRefreshIT.java) (the shared refresh with real threads).
+3. **The limits:** [`lab-saas/README.md`](lab-saas/README.md) and the site's *Engineering notes* page with SaaS support picked.
+
+## Start here: E-commerce
+
+1. **The bug, reproduced.** [`SecondAuthorizationReproductionTest`](lab-ecommerce/src/test/java/dev/shoplab/checkout/SecondAuthorizationReproductionTest.java) passes while the bug exists: a retry after a slow answer gets a new idempotency key, the processor makes a second authorization, and the order is held in Payment pending (or captured twice when the app's retry races). [`SecondAuthorizationRegressionTest`](lab-ecommerce/src/test/java/dev/shoplab/checkout/SecondAuthorizationRegressionTest.java) passes with the fix on and fails with it off, and CI checks that it fails.
+2. **The edge cases.** [`CheckoutEdgeCasesTest`](lab-ecommerce/src/test/java/dev/shoplab/checkout/CheckoutEdgeCasesTest.java) (a fast answer, a shopper who waits, a new card after a decline, a very slow answer, a webhook that never comes, RB-21's release) and [`CaptureSerializationIT`](lab-ecommerce/src/test/java/dev/shoplab/orders/CaptureSerializationIT.java) (the double capture with real threads, and the per-order lock).
+3. **The limits:** [`lab-ecommerce/README.md`](lab-ecommerce/README.md) and the site's *Engineering notes* page with E-commerce picked.
 
 ## Run it
 
@@ -72,7 +84,18 @@ The EV lab reproduces the backend side of the mechanism with a simulated charger
 - OCPI or CDRs;
 - idle fees or real payment capture.
 
-The SaaS and e-commerce labs run on scripted parties too (an identity provider, a payment processor) and prove the mechanism, not a measured effect. What each does not model is on the site's *Engineering notes* page for that industry; their READMEs say how the scripted parties work.
+The SaaS lab runs on a scripted identity provider and customer endpoint, with the delivery pool modelled in rounds so runs repeat. It does not model:
+
+- real customers' identity providers (the lab's keeps one active token per client and allows 100 token requests a minute);
+- webhook signing beyond two contrast cases (an HMAC endpoint and a rotated secret).
+
+The e-commerce lab runs on a scripted payment processor and scripted shoppers. It does not model:
+
+- a real processor (the lab's answers at scripted times and honours `Idempotency-Key`);
+- card networks, 3-D Secure, refunds or chargebacks;
+- other retry paths, such as saved carts.
+
+Like the EV lab, each shows the mechanism and the fix on synthetic traffic, not a measured effect.
 
 ## Layout
 
@@ -82,7 +105,7 @@ The SaaS and e-commerce labs run on scripted parties too (an identity provider, 
 | `lab-saas/` | SaaS support: webhook delivery service, scripted identity provider and endpoint, experiment |
 | `lab-ecommerce/` | E-commerce: checkout and order service, scripted payment processor and shoppers, experiment |
 | `desk/` | the walkthrough, the console and the AI steps, with unit and browser tests |
-| `docs/adr/` | decision records 0001–0003 |
+| `docs/adr/` | the EV lab's decision records 0001–0003 |
 | `docs/specs/` | what each part was built to do |
 | `docs/design/direction.md` | the visual direction |
 | `docs/eval/` | reference labels for scoring triage models |

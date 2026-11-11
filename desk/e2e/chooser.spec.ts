@@ -25,13 +25,18 @@ test("the site opens on the three industries, each with its own case, and no wal
   await expect(cards.nth(0)).toHaveText(/^EV charging.*sessions stay open after a charger reconnects/);
   await expect(cards.nth(1)).toHaveText(/^SaaS support.*webhook endpoints are paused by a token-refresh storm/);
   await expect(cards.nth(2)).toHaveText(/^E-commerce.*stuck in Payment pending after checkout retries a slow payment/);
-  await expect(page.locator("#stage")).not.toHaveAttribute("data-beat", /.+/);
+  // No walkthrough behind it: no industry's queue, no stage nav, no desk.
+  await expect(page.getByText(/tickets are waiting\./)).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Walkthrough and pages" })).toHaveCount(0);
   await expect(page.getByRole("dialog", { name: "The desk" })).toHaveCount(0);
   await expect(page.getByText(/showcase/i)).toHaveCount(0);
 
   await cards.nth(2).click();
   await expect(page).toHaveURL(/\?pack=e-commerce(#.*)?$/);
   await expect(heading(page)).toHaveText("22 tickets are waiting.");
+  // Focus moves to the new screen rather than being lost with the card.
+  await expect(page.locator("#stage")).toBeFocused();
+  await expect(page.getByText(/showcase/i)).toHaveCount(0);
   await page.reload();
   await expect(heading(page)).toHaveText("22 tickets are waiting.");
   expect(errors).toEqual([]);
@@ -70,8 +75,24 @@ test("an unknown industry in a link lands on the chooser too", async ({ page }) 
   await page.goto("/?pack=telecom&desk=queue");
   await expect(heading(page)).toHaveText("Pick an industry");
   await page.getByRole("button", { name: /^E-commerce/ }).click();
-  await expect(page.getByRole("dialog", { name: "The desk" })).toBeVisible();
-  await expect(page).toHaveURL(/pack=e-commerce/);
+  const dialog = page.getByRole("dialog", { name: "The desk" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("tab", { name: "Queue" })).toHaveAttribute("aria-selected", "true");
+  await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveValue("e-commerce");
+  await expect(page).toHaveURL(/\?desk=queue&pack=e-commerce(#.*)?$/);
+});
+
+test("when an industry fails to load, the page says so and goes back to the chooser", async ({ page }) => {
+  // The SaaS bundle is its own file, loaded when SaaS is picked; here the network refuses it.
+  await page.route(/\/assets\/saas-desk-[^/]*\.js$/, (route) => route.abort());
+  await page.goto("/?pack=saas-support&desk=queue");
+  await expect(page.getByRole("alert")).toHaveText("This industry did not load. Reload the page to try again.");
+  await page.getByRole("button", { name: "Back to the industries" }).click();
+  await expect(heading(page)).toHaveText("Pick an industry");
+  await expect(page.locator("#stage")).toBeFocused();
+  // The address no longer names an industry or a desk tab, so a reload shows the chooser too.
+  expect(new URL(page.url()).search).toBe("");
+  await expect(page.getByText("This link opens the desk. Pick an industry and it opens there.")).toHaveCount(0);
 });
 
 for (const scheme of ["light", "dark"] as const) {
