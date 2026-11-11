@@ -1,6 +1,7 @@
 import { PACKS, DEFAULT_PACK_ID, isPackId } from "../../shared/packs";
 import { INCIDENT_STEPS, type IncidentPackId } from "../../shared/packs/steps";
 import type { Pack } from "../../shared/packs/types";
+import { liveAllowed, recordingAllowed } from "../_lib/live-packs";
 import { STEPS, queueOnlySteps, stepsFor, type Step } from "../_lib/steps";
 import { callJSON, rateLimit, costOf, StepError, models } from "../_lib/ai";
 import { ValidationError, check } from "../_lib/validate";
@@ -53,8 +54,9 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
   if (!isPackId(packId)) return json({ error: "Unknown pack." }, 400);
   const pack = PACKS[packId];
   // Paid model calls are switched on per pack, so a new industry cannot spend before it is ready. With the model
-  // turned off (MOCK=1) nothing is spent, and the rules still answer.
-  if (env.MOCK !== "1" && (pack as { liveRuns?: boolean }).liveRuns !== true)
+  // turned off (MOCK=1) nothing is spent, and the rules still answer. A local server with ALLOW_PACK_RECORDING=1 may
+  // call the model for any pack, to make that pack's first recording (functions/_lib/live-packs.ts).
+  if (env.MOCK !== "1" && !liveAllowed(packId, pack as { liveRuns?: boolean }) && !recordingAllowed(env, request.url))
     return json(
       { error: "Live AI runs are not switched on for this industry yet. Its answers come from the rules." },
       403,
