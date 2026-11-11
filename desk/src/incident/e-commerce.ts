@@ -160,7 +160,7 @@ export const SHOP_INCIDENT: Incident = {
   },
   breakdown: {
     title: `Channel view, last ${WINDOW} days`,
-    lede: `Every checkout, by channel. A slow first answer is one that came after checkout's ${I.timeoutSeconds} s timeout. Only a retry with a new idempotency key made a second authorization.`,
+    lede: `Every checkout, by channel. A slow first answer is one that came after checkout's ${I.timeoutSeconds} s timeout. Only a retry with a new idempotency key made a second authorization: ${total.secondAuth} orders, of which ${I.totalTickets} reached support as tickets and the investigation's query found the other ${total.secondAuth - I.totalTickets}.`,
     caption: "Checkouts, slow first answers and second authorizations by channel",
     columns: [
       { label: "Channel" },

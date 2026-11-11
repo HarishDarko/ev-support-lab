@@ -21,7 +21,8 @@ export function liveAllowed(id: PackId, pack: { liveRuns?: boolean }): boolean {
 const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
 
 /**
- * The recording switch: ALLOW_PACK_RECORDING=1 lets a local `wrangler pages dev` call the model for a pack whose live
+ * The recording switch: the binding ALLOW_PACK_RECORDING=1 (`wrangler pages dev ... --binding ALLOW_PACK_RECORDING=1`;
+ * a shell environment variable is not a binding) lets a local server call the model for a pack whose live
  * runs are still off, so `npm run record -- <url> --pack <id>` can make that pack's first AI recording. Off unless
  * the variable is exactly "1", never set in wrangler.toml, and ignored unless the request is to a local address, so
  * it cannot turn on in production even if the variable were set there.
