@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { openFromChooser } from "./chooser";
 import AxeBuilder from "@axe-core/playwright";
 
 /** Collects anything that would show up as an error in the browser console. */
@@ -14,7 +15,7 @@ function watchErrors(page: Page): string[] {
 
 test("loads, shows the synthetic label, toggles the theme, no console errors", async ({ page }) => {
   const errors = watchErrors(page);
-  await page.goto("/");
+  await openFromChooser(page, "/");
 
   await expect(page).toHaveTitle("Support Desk");
   await expect(page.getByTestId("synthetic-label")).toContainText("Synthetic data");
@@ -67,7 +68,7 @@ test("the Pages Function answers from the rules under MOCK=1", async ({ request 
 for (const scheme of ["light", "dark"] as const) {
   test(`no accessibility violations (WCAG 2.2 AA), ${scheme} theme`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
-    await page.goto("/");
+    await openFromChooser(page, "/");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
@@ -78,7 +79,7 @@ for (const scheme of ["light", "dark"] as const) {
 
 test("no horizontal scroll at 390 px", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await openFromChooser(page, "/");
   await expect(page.getByRole("heading", { name: "40 tickets are waiting." })).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -90,7 +91,7 @@ test("the two reading pages open from the top strip, pass axe, and the stage nav
   page,
 }) => {
   const errors = watchErrors(page);
-  await page.goto("/");
+  await openFromChooser(page, "/");
   const nav = page.getByRole("navigation", { name: "Walkthrough and pages" });
 
   for (const [name, heading] of [
@@ -113,7 +114,7 @@ test("the two reading pages open from the top strip, pass axe, and the stage nav
 });
 
 test("the theme button is an icon with a stable name and a pressed state", async ({ page }) => {
-  await page.goto("/");
+  await openFromChooser(page, "/");
   const toggle = page.getByRole("button", { name: "Dark mode" });
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
   await expect(toggle).toHaveText("");

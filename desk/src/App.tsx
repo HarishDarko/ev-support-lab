@@ -14,8 +14,8 @@ import { facts } from "./story/beats";
 import { storyDataFromRun } from "./story/fromRun";
 import { useStory } from "./story/useStory";
 import { MeterGateContext } from "./story/meterGate";
-import { DEFAULT_PACK_ID, industryName } from "./packs/industry";
-import { IndustryProvider, useIndustry } from "./packs/IndustryContext";
+import { IndustryProvider, useIndustry, useIndustryChoice } from "./packs/IndustryContext";
+import { Chooser } from "./packs/Chooser";
 import { usePackBundle } from "./packs/bundles";
 import { IncidentContext, useIncident } from "./incident";
 
@@ -38,16 +38,25 @@ const requestedTab = (): DeskTab | null => {
 export function App() {
   return (
     <MotionConfig reducedMotion="user">
-      <IndustryProvider>
-        <Industry />
-      </IndustryProvider>
+      <Site />
     </MotionConfig>
+  );
+}
+
+/** The site opens on the choice of industries, unless the address names one (`?pack=`). */
+function Site() {
+  const { id, pick, choose } = useIndustryChoice();
+  if (!id) return <Chooser onPick={pick} deskLink={requestedTab() !== null} />;
+  return (
+    <IndustryProvider id={id} pick={pick} choose={choose}>
+      <Industry />
+    </IndustryProvider>
   );
 }
 
 /** The picked industry's run and incident around the walkthrough. A new industry starts its own run. */
 function Industry() {
-  const { id, pick } = useIndustry();
+  const { id, choose } = useIndustry();
   const { bundle, failed } = usePackBundle(id);
   // A ?desk= link opens the desk once, in the industry the page loaded on. Switching industry starts a new
   // walkthrough, and it must not open the desk again from the same link.
@@ -63,8 +72,8 @@ function Industry() {
                 This industry did not load. Reload the page to try again.
               </p>
               <p>
-                <button type="button" className="btn" onClick={() => pick(DEFAULT_PACK_ID)}>
-                  Switch to {industryName(DEFAULT_PACK_ID)}
+                <button type="button" className="btn" onClick={choose}>
+                  Back to the industries
                 </button>
               </p>
             </>

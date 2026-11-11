@@ -1,6 +1,7 @@
 // SD-11, SD-13 and SD-15: the Industry choice. Three complete industries, each with its full incident walkthrough:
 // EV charging, SaaS support and e-commerce.
 import { test, expect, type Page } from "@playwright/test";
+import { openFromChooser } from "./chooser";
 
 function watchErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -19,9 +20,11 @@ for (const link of [
   "/?desk=queue&pack=nope",
   "/?desk=queue&pack=__proto__",
 ]) {
+  // Only a link that names EV charging goes straight to it; the others land on the choice of industries first.
   test(`${link} opens the EV desk with its own columns`, async ({ page }) => {
     const errors = watchErrors(page);
-    await page.goto(link);
+    if (link.includes("pack=ev-charging")) await page.goto(link);
+    else await openFromChooser(page, link);
     const dialog = page.getByRole("dialog", { name: "The desk" });
     await expect(dialog).toBeVisible();
     const table = dialog.getByRole("table").first();
@@ -33,8 +36,10 @@ for (const link of [
   });
 }
 
-test("the Industry menu offers the three complete industries, EV charging first", async ({ page }) => {
+test("the Industry menu offers the three complete industries, in the chooser's order", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("list").getByRole("button")).toHaveText([/^EV charging/, /^SaaS support/, /^E-commerce/]);
+  await page.getByRole("button", { name: /^EV charging/ }).click();
   await expect(menu(page)).toHaveValue("ev-charging");
   await expect(menu(page).getByRole("option")).toHaveText(["EV charging", "SaaS support", "E-commerce"]);
   await expect(page.getByText("40 tickets are waiting.").first()).toBeVisible();
@@ -44,7 +49,7 @@ test("picking SaaS support shows its own walkthrough, keeps the pick on reload, 
   page,
 }) => {
   const errors = watchErrors(page);
-  await page.goto("/");
+  await openFromChooser(page, "/");
   await menu(page).selectOption("saas-support");
   await expect(page).toHaveURL(/\?pack=saas-support(#.*)?$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("25 tickets are waiting.");
@@ -54,7 +59,7 @@ test("picking SaaS support shows its own walkthrough, keeps the pick on reload, 
   await expect(menu(page)).toHaveValue("saas-support");
 
   await menu(page).selectOption("ev-charging");
-  await expect(page).not.toHaveURL(/pack=/);
+  await expect(page).toHaveURL(/\?pack=ev-charging(#.*)?$/);
   await expect(page.getByText("40 tickets are waiting.").first()).toBeVisible();
   expect(errors).toEqual([]);
 });
