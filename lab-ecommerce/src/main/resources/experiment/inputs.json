@@ -87,5 +87,38 @@
       ]
     }
   ],
-  "expectedStory": {}
+  "expectedStory": {
+    "before.canary.checkouts": 1644,
+    "before.canary.slowFirstAnswer": 3,
+    "before.canary.secondAuthorization": 1,
+    "before.canary.stuck": 1,
+    "before.canary.bothCaptured": 0,
+    "before.canary.heldOther": 0,
+    "before.canary.newCardAfterDecline": 3,
+    "before.canary.detectorHits": 1,
+    "before.control.checkouts": 6643,
+    "before.control.slowFirstAnswer": 14,
+    "before.control.secondAuthorization": 6,
+    "before.control.stuck": 5,
+    "before.control.bothCaptured": 1,
+    "before.control.heldOther": 1,
+    "before.control.newCardAfterDecline": 6,
+    "before.control.detectorHits": 6,
+    "after.canary.checkouts": 1646,
+    "after.canary.slowFirstAnswer": 4,
+    "after.canary.secondAuthorization": 0,
+    "after.canary.stuck": 0,
+    "after.canary.bothCaptured": 0,
+    "after.canary.heldOther": 0,
+    "after.canary.newCardAfterDecline": 4,
+    "after.canary.detectorHits": 0,
+    "after.control.checkouts": 6643,
+    "after.control.slowFirstAnswer": 15,
+    "after.control.secondAuthorization": 7,
+    "after.control.stuck": 6,
+    "after.control.bothCaptured": 1,
+    "after.control.heldOther": 0,
+    "after.control.newCardAfterDecline": 6,
+    "after.control.detectorHits": 7
+  }
 }
