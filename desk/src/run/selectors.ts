@@ -1,6 +1,8 @@
 // Reads over a Run: one result per ticket with its lane and provenance, lane counts, and the shift summary the
 // end-of-shift note is written from. Pure functions; the React hook only memoises them.
-import { ENGINEERING_CHANGE, HERO, TICKETS, type HistoryItem, type Runbook, type Ticket } from "../data/synthetic";
+import { TICKETS, type HistoryItem, type Runbook, type Ticket } from "../data/synthetic";
+import { EV_INCIDENT } from "../incident/ev-charging";
+import type { Incident } from "../incident/types";
 import {
   LANE_LABEL,
   emptyLaneCounts,
@@ -95,7 +97,12 @@ export function originCounts(index: TicketIndex): { ai: number; rules: number } 
  * `approved` is the number of closures a person approved. The recording assumes the shift approved every
  * closure in the close lane, which is the number the story ends on.
  */
-export function shiftSummary(index: TicketIndex, handoffTitle: string, approved?: number) {
+export function shiftSummary(
+  index: TicketIndex,
+  handoffTitle: string,
+  approved?: number,
+  incident: Incident = EV_INCIDENT,
+) {
   const lanes = lanesOf(index);
   const closing = approved ?? lanes.close.length;
   return {
@@ -110,8 +117,8 @@ export function shiftSummary(index: TicketIndex, handoffTitle: string, approved?
       decided_by_rules_fallback: originCounts(index).rules,
     },
     // The incident is where support contains the problem; the engineering ticket is where the fix is asked for.
-    incident: { ref: HERO.incidentId, held_tickets: HERO.openIds },
-    escalated: { ref: ENGINEERING_CHANGE.ref, title: handoffTitle, workaround: HERO.supportNow },
+    incident: { ref: incident.id, held_tickets: incident.openIds },
+    escalated: { ref: incident.change.ref, title: handoffTitle, workaround: incident.containment.lines },
     kb_article_published: false,
   };
 }

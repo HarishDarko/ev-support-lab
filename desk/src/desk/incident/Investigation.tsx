@@ -1,4 +1,4 @@
-import { HERO } from "../../data/synthetic";
+import { useIncident } from "../../incident";
 import { blockClass, originOfStep, pillTone } from "../ui/origin";
 import { provenanceOfStep, useRun } from "../../run";
 import { Pill } from "../ui/Pill";
@@ -16,6 +16,7 @@ const list = (items: readonly string[]) => (
 /** The AI's reading of the evidence: what is happening, the evidence it quotes, two hypotheses, what is unknown. */
 export function Investigation() {
   const { run } = useRun();
+  const { ruledOut } = useIncident();
   const { data } = run.steps.investigate;
   const origin = originOfStep(run.steps.investigate);
 
@@ -73,7 +74,7 @@ export function Investigation() {
         <div>
           <h4 className="dk-h4">Judged unlikely by support</h4>
           <ul className="dk-list">
-            {HERO.ruledOut.map((r) => (
+            {ruledOut.map((r) => (
               <li key={r}>{r}</li>
             ))}
           </ul>

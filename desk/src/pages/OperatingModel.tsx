@@ -1,4 +1,4 @@
-import { ESCALATION_LINE } from "../data/synthetic";
+import { useIncident } from "../incident";
 import "./Page.css";
 
 // A plain page, not part of the animated story: how the Eastern-hours dev-support role would run day to day.
@@ -68,6 +68,7 @@ const PLAN = [
 ];
 
 export function OperatingModel() {
+  const { escalation } = useIncident();
   return (
     <article className="page">
       <p className="page-kicker">How I'd run it · a proposal to adjust with the team</p>
@@ -101,7 +102,7 @@ export function OperatingModel() {
           <div>
             <h3>Support owns it when</h3>
             <ul>
-              {ESCALATION_LINE.supportOwns.map((s) => (
+              {escalation.supportOwns.map((s) => (
                 <li key={s}>{s}</li>
               ))}
             </ul>
@@ -109,7 +110,7 @@ export function OperatingModel() {
           <div>
             <h3>It goes to engineering when any of these hold</h3>
             <ul>
-              {ESCALATION_LINE.escalateWhenAny.map((r) => (
+              {escalation.escalateWhenAny.map((r) => (
                 <li key={r.key}>{r.text}</li>
               ))}
             </ul>

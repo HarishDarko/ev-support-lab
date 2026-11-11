@@ -1,4 +1,5 @@
-import { LAB, REPO, source } from "../data/lab";
+import { REPO, source } from "../data/lab";
+import { useIncident } from "../incident";
 import "./Page.css";
 
 // How the prototype was built, how its AI output is checked, and what it does not prove. Plain text on purpose:
@@ -74,6 +75,7 @@ const NOT_MODELLED = [
 ];
 
 export function EngineeringNotes() {
+  const { lab } = useIncident();
   return (
     <article className="page">
       <p className="page-kicker">Engineering notes</p>
@@ -161,16 +163,16 @@ export function EngineeringNotes() {
           ))}
         </ul>
         <p className="page-links">
-          <a href={source(LAB.readme)} target="_blank" rel="noreferrer">
+          <a href={source(lab.readme)} target="_blank" rel="noreferrer">
             Lab README
           </a>
-          {LAB.adrs.map((a) => (
+          {lab.adrs.map((a) => (
             <a key={a.path} href={source(a.path)} target="_blank" rel="noreferrer">
               {a.title}
             </a>
           ))}
-          <a href={LAB.precedent.url} target="_blank" rel="noreferrer">
-            Related public fix: {LAB.precedent.title}
+          <a href={lab.precedent.url} target="_blank" rel="noreferrer">
+            Related public fix: {lab.precedent.title}
           </a>
         </p>
       </section>

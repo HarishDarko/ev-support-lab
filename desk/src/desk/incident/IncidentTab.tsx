@@ -1,6 +1,6 @@
-import { HERO } from "../../data/synthetic";
+import { useIncident } from "../../incident";
+import { BreakdownTable } from "./BreakdownTable";
 import { Containment } from "./Containment";
-import { FleetTable } from "./FleetTable";
 import { Investigation } from "./Investigation";
 import { LogExcerpts } from "./LogExcerpts";
 import { PatternFacts } from "./PatternFacts";
@@ -9,16 +9,17 @@ import { VerificationResult } from "./VerificationResult";
 
 /** The incident in full: the pattern, the evidence behind it, the hypotheses, containment, and the day-20 result. */
 export function IncidentTab() {
+  const incident = useIncident();
   return (
     <div>
       <header>
-        <p className="dk-kicker">{HERO.incidentId}</p>
-        <h3 className="dk-h3">{HERO.name}</h3>
+        <p className="dk-kicker">{incident.id}</p>
+        <h3 className="dk-h3">{incident.name}</h3>
       </header>
       <PatternFacts />
       <TimingTable />
       <LogExcerpts />
-      <FleetTable />
+      <BreakdownTable />
       <Investigation />
       <Containment />
       <VerificationResult />

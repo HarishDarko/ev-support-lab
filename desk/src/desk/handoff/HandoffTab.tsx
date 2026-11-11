@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { blockClass, draftBy, originOfStep, pillTone } from "../ui/origin";
-import { ESCALATION_LINE, HERO } from "../../data/synthetic";
-import { LAB } from "../../data/lab";
+import { useIncident } from "../../incident";
 import { provenanceOfStep, useRun } from "../../run";
 import { Pill } from "../ui/Pill";
 import { ProvenanceNote } from "../ui/ProvenanceNote";
@@ -13,6 +12,8 @@ import "./HandoffTab.css";
 /** The packet as an engineer would receive it, then the end-of-shift note to India. */
 export function HandoffTab() {
   const { run } = useRun();
+  const incident = useIncident();
+  const lab = incident.lab;
   const packet = run.steps.handoff;
   const h = packet.data;
   const origin = originOfStep(packet);
@@ -21,7 +22,7 @@ export function HandoffTab() {
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(packetMarkdown(h));
+      await navigator.clipboard.writeText(packetMarkdown(h, incident));
       setCopied("Copied as Markdown.");
     } catch {
       setCopied("The browser blocked copying.");
@@ -31,9 +32,7 @@ export function HandoffTab() {
   return (
     <div>
       <section aria-labelledby="handoff-heading">
-        <p className="dk-kicker">
-          {HERO.incidentId} · Engineering handoff · draft, a person approves it before it is sent
-        </p>
+        <p className="dk-kicker">{incident.id} · Engineering handoff · draft, a person approves it before it is sent</p>
         <h3 id="handoff-heading" className="dk-h3">
           {h.title}
         </h3>
@@ -48,7 +47,7 @@ export function HandoffTab() {
 
         <h4 className="dk-h4">Why it crosses the escalation line</h4>
         <ul className="dk-list dk-list--plain handoff-rules">
-          {ESCALATION_LINE.escalateWhenAny.map((rule) => (
+          {incident.escalation.escalateWhenAny.map((rule) => (
             <li key={rule.key} className={fired.has(rule.key) ? "handoff-rule handoff-rule--fired" : "handoff-rule"}>
               <span className="handoff-box" aria-hidden="true">
                 {fired.has(rule.key) ? "✓" : ""}
@@ -67,8 +66,8 @@ export function HandoffTab() {
         </ol>
         <p className="dk-note">
           The reproduction test in the lab:{" "}
-          <SourceLink path={LAB.reproduction.path}>{LAB.reproduction.className}</SourceLink>. It runs with the fix flag{" "}
-          {LAB.reproduction.flag} and shows the session staying open.
+          <SourceLink path={lab.reproduction.path}>{lab.reproduction.className}</SourceLink>. It runs with the fix flag{" "}
+          {lab.reproduction.flag} and {lab.reproShows}
         </p>
 
         <h4 className="dk-h4">Evidence attached</h4>
@@ -78,9 +77,8 @@ export function HandoffTab() {
           ))}
         </ul>
         <p className="dk-note">
-          The attachments are in the Incident tab: the three gateway log excerpts, the fleet table and the
-          unplug-to-drop timings. Linked tickets:{" "}
-          {[...HERO.openIds, ...HERO.historyIds].map((id) => (
+          The attachments are in the Incident tab: {incident.handoff.attachmentsNote} Linked tickets:{" "}
+          {[...incident.openIds, ...incident.historyIds].map((id) => (
             <span key={id} className="dk-mono handoff-id">
               {id}
             </span>
