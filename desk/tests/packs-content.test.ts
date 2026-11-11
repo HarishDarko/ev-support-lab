@@ -8,8 +8,22 @@ import saasLabels from "../../docs/eval/reference-labels.saas-support.json";
 import shopLabels from "../../docs/eval/reference-labels.e-commerce.json";
 
 const CASES = [
-  { id: "saas-support", labels: saasLabels.labels, ticket: /^T-30\d\d$/, history: /^H-31\d\d$/, runbook: /^RB-1\d$/ },
-  { id: "e-commerce", labels: shopLabels.labels, ticket: /^T-40\d\d$/, history: /^H-41\d\d$/, runbook: /^RB-2\d$/ },
+  {
+    id: "saas-support",
+    labels: saasLabels.labels,
+    ticket: /^T-30\d\d$/,
+    history: /^H-31\d\d$/,
+    runbook: /^RB-1\d$/,
+    hasIncident: true,
+  },
+  {
+    id: "e-commerce",
+    labels: shopLabels.labels,
+    ticket: /^T-40\d\d$/,
+    history: /^H-41\d\d$/,
+    runbook: /^RB-2\d$/,
+    hasIncident: false,
+  },
 ] as const;
 
 for (const c of CASES) {
@@ -52,8 +66,8 @@ for (const c of CASES) {
       expect(Object.keys(pack.componentTerms).sort()).toEqual([...pack.components].sort());
     });
 
-    it("is listed in the catalog as complete, with no incident walkthrough", () => {
-      expect(CATALOG[c.id]).toMatchObject({ name: pack.name, complete: true, hasIncident: false });
+    it(`is listed in the catalog as complete, ${c.hasIncident ? "with" : "with no"} incident walkthrough`, () => {
+      expect(CATALOG[c.id]).toMatchObject({ name: pack.name, complete: true, hasIncident: c.hasIncident });
     });
 
     it("has a reviewed label for every ticket, in queue order, with answers the triage step can give", () => {
@@ -69,10 +83,10 @@ for (const c of CASES) {
 describe("the rules' scores on the new packs (in-sample, against the reviewed labels)", () => {
   const view = (i: 0 | 1) => packView(PACKS[CASES[i].id] as unknown as AnyPack, CASES[i].labels).score;
 
-  it("SaaS support: 6 of 21 fully right (5 strict); 14 of 15 on the closed tickets", () => {
+  it("SaaS support: 7 of 25 fully right (6 strict); 14 of 15 on the closed tickets", () => {
     const s = view(0);
-    expect(s.lenient).toEqual({ n: 21, fields: { component: 17, severity: 12, action: 14, runbook: 15 }, allFour: 6 });
-    expect(s.strict.allFour).toBe(5);
+    expect(s.lenient).toEqual({ n: 25, fields: { component: 21, severity: 15, action: 16, runbook: 18 }, allFour: 7 });
+    expect(s.strict.allFour).toBe(6);
     expect(s.history).toEqual({ same: 14, n: 15 });
   });
 

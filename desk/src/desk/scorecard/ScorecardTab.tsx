@@ -158,8 +158,10 @@ export function ScorecardTab() {
           </li>
           <li>
             The first answer in each field is the majority answer. A second answer is accepted only when at least one
-            reviewer chose it and at least two accepted it. One field where all three disagreed was decided by hand,
-            with the reason written in the file.
+            reviewer chose it and at least two accepted it.{" "}
+            {pack.labels.handDecided
+              ? "One field where all three disagreed was decided by hand, with the reason written in the file."
+              : "No field had all three reviewers disagreeing, so none was decided by hand."}
           </li>
           <li>
             Each triage answer is compared field by field: component, severity, action and runbook. Every field is

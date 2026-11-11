@@ -16,7 +16,8 @@ import { useStory } from "./story/useStory";
 import { MeterGateContext } from "./story/meterGate";
 import { hasIncident } from "./packs/industry";
 import { IndustryProvider, useIndustry } from "./packs/IndustryContext";
-import { useIncident } from "./incident";
+import { usePackBundle } from "./packs/bundles";
+import { IncidentContext, useIncident } from "./incident";
 // Other industries load only when picked, so the EV page carries none of their data.
 const PackDesk = lazy(() => import("./packs/PackDesk").then((m) => ({ default: m.PackDesk })));
 
@@ -40,11 +41,38 @@ export function App() {
   return (
     <MotionConfig reducedMotion="user">
       <IndustryProvider>
-        <RunProvider>
-          <Walkthrough />
-        </RunProvider>
+        <Industry />
       </IndustryProvider>
     </MotionConfig>
+  );
+}
+
+/** The picked industry's run and incident around the walkthrough. A new industry starts its own run. */
+function Industry() {
+  const { id } = useIndustry();
+  const { bundle, failed } = usePackBundle(id);
+  if (!bundle)
+    return (
+      <main id="stage" className="story" tabIndex={-1}>
+        <article className="page" aria-busy={!failed}>
+          {failed ? (
+            <p className="page-lede" role="alert">
+              This industry did not load. Reload the page to try again.
+            </p>
+          ) : (
+            <p className="page-lede" role="status">
+              Loading this industry&apos;s walkthrough. It takes a moment.
+            </p>
+          )}
+        </article>
+      </main>
+    );
+  return (
+    <IncidentContext.Provider value={bundle.incident}>
+      <RunProvider key={bundle.desk.id} pack={bundle.desk}>
+        <Walkthrough />
+      </RunProvider>
+    </IncidentContext.Provider>
   );
 }
 
@@ -74,7 +102,7 @@ function Walkthrough() {
 
   const { run, resultFor } = runApi;
   const data = useMemo(() => storyDataFromRun({ run, resultFor }), [run, resultFor]);
-  const f = facts(data, story.decisions, incident);
+  const f = facts(data, story.decisions, incident, runApi.pack);
   const { beat } = story;
   const meterGate = useMemo(
     () => ({ checked: new Set(story.decisions.meterChecked), confirm: story.confirmMeter }),

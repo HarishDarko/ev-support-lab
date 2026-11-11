@@ -106,7 +106,7 @@ export const TICKETS: SaasTicket[] = [
     from: "Customer success",
     account: "Harbor Analytics",
     plan: "Enterprise",
-    text: "Webhook deliveries to their endpoint failed for two hours overnight while their server was down. Endpoint answers 200 again now.",
+    text: "Webhook endpoint paused at 01:00 although their server was up all night. Their identity provider shows our client was rate-limited at 01:00. A test delivery answers 200 now.",
   },
   {
     id: "T-3005",
@@ -244,6 +244,38 @@ export const TICKETS: SaasTicket[] = [
     plan: "Business",
     text: "Task assignment emails stopped reaching everyone at Oak & Pine since Friday. Our mail log shows their domain bounced and is on the suppression list.",
   },
+  {
+    id: "T-3022",
+    opened: "Tue 12:10",
+    from: "Security",
+    account: "Lumen Health",
+    plan: "Enterprise",
+    text: "Customer's security team says their identity provider blocked our OAuth client at 02:00 after about 120 token requests in one minute, and asks whether our integration was compromised.",
+  },
+  {
+    id: "T-3023",
+    opened: "Tue 12:45",
+    from: "Account management",
+    account: "Riverstone Legal",
+    plan: "Business",
+    text: "Their invoicing system is missing task events from 03:00 to 05:40. Our side shows their webhook endpoint as paused; it answers 200 to a test delivery now, and they want the events sent again.",
+  },
+  {
+    id: "T-3024",
+    opened: "Tue 13:20",
+    from: "Support chat",
+    account: "Saffron Foods",
+    plan: "Business",
+    text: "Admin got our 'Webhook endpoint paused after repeated failures' email at 04:01 and asks what failed. Their server logs show no requests from us between 04:00 and 04:01, only token requests to their identity provider.",
+  },
+  {
+    id: "T-3025",
+    opened: "Tue 13:55",
+    from: "Status monitor",
+    account: "-",
+    plan: "-",
+    text: "[ALERT-8913] Daily anomaly report: outbound OAuth token requests ran at 40 times normal for one minute at 01:00, 02:00, 03:00 and 04:00 ET overnight. No customer-facing errors on our API.",
+  },
 ];
 
 // Closed tickets from the last 21 days, with how they were resolved. The resolution starts with the runbook id when
@@ -254,7 +286,7 @@ export const HISTORY: SaasHistoryItem[] = [
     day: -20,
     account: "Copperline",
     fw: "-",
-    text: "Webhook deliveries failed while the customer endpoint was down for a deploy.",
+    text: "Webhook endpoint paused at 03:00; the customer thought their own deploy had caused it.",
     resolution: "RB-14: deliveries replayed after the endpoint recovered.",
   },
   {
@@ -278,8 +310,8 @@ export const HISTORY: SaasHistoryItem[] = [
     day: -15,
     account: "Harbor Analytics",
     fw: "-",
-    text: "Missed webhook events after a firewall change on their side.",
-    resolution: "RB-14: replayed once their firewall allowed our IP range.",
+    text: "Webhook deliveries stopped after the customer's identity provider blocked our client.",
+    resolution: "RB-14: replayed once their identity provider admin unblocked our client.",
   },
   {
     id: "H-3105",
@@ -374,4 +406,4 @@ export const HISTORY: SaasHistoryItem[] = [
 
 /** The ticket the new-ticket check starts from. */
 export const NEW_TICKET_EXAMPLE =
-  "Customer says webhook deliveries failed for 40 minutes while their endpoint was being redeployed. It answers 200 again now.";
+  "Customer got the 'Webhook endpoint paused' email at 02:01. Their identity provider shows a burst of token requests from us at 02:00, and a test delivery answers 200 now.";

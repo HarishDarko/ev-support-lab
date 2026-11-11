@@ -171,9 +171,11 @@ export function EngineeringNotes() {
               {a.title}
             </a>
           ))}
-          <a href={lab.precedent.url} target="_blank" rel="noreferrer">
-            Related public fix: {lab.precedent.title}
-          </a>
+          {lab.precedent && (
+            <a href={lab.precedent.url} target="_blank" rel="noreferrer">
+              Related public fix: {lab.precedent.title}
+            </a>
+          )}
         </p>
       </section>
     </article>

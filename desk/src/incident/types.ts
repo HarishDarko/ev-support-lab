@@ -121,7 +121,8 @@ export interface Lab {
   rules: readonly { name: string; text: string }[];
   adrs: readonly { title: string; path: string }[];
   readme: string;
-  precedent: { title: string; url: string };
+  /** A related fix made in public, if there is one to cite. */
+  precedent?: { title: string; url: string };
   /** The Gradle task that runs the lab's tests, e.g. ":lab:test". */
   testTask: string;
   reproKicker: string;

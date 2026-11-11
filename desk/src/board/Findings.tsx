@@ -120,9 +120,11 @@ export function LabNode({ lab, variant }: { lab: Lab; variant: "repro" | "fix" }
             <a href={source(lab.readme)} target="_blank" rel="noreferrer">
               How the lab works
             </a>
-            <a href={lab.precedent.url} target="_blank" rel="noreferrer">
-              Related public fix: {lab.precedent.title}
-            </a>
+            {lab.precedent && (
+              <a href={lab.precedent.url} target="_blank" rel="noreferrer">
+                Related public fix: {lab.precedent.title}
+              </a>
+            )}
           </>
         )}
       </p>

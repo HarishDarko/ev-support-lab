@@ -274,8 +274,14 @@ ${pack.history.map((h) => pack.prompts.historyLine(h)).join("\n")}`;
   return { triage, patterns };
 }
 
+// Each pack has its own ticket type; the queue steps read only the fields every pack has. Every pack's incident
+// steps have the default pack's shape (only their label names differ), so the default pack's type names them all.
+type IncidentSteps = (typeof INCIDENT_STEPS)[typeof DEFAULT_PACK_ID];
 const build = (id: IncidentPackId) =>
-  ({ ...queueSteps(PACKS[id]), ...INCIDENT_STEPS[id] }) satisfies Record<string, Step>;
+  ({
+    ...queueSteps(PACKS[id] as unknown as Pack),
+    ...(INCIDENT_STEPS[id] as unknown as IncidentSteps),
+  }) satisfies Record<string, Step>;
 const built = new Map<IncidentPackId, ReturnType<typeof build>>();
 /** Every step for a pack with an incident, built once. */
 export function stepsFor(id: IncidentPackId = DEFAULT_PACK_ID): ReturnType<typeof build> {

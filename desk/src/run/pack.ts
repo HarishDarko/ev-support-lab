@@ -27,6 +27,7 @@ import type {
   KbModel,
   Run,
   ShiftnoteModel,
+  StepKey,
   VerifyModel,
 } from "./types";
 
@@ -104,10 +105,18 @@ export interface DeskPack {
   facts: (t: DeskTicket) => readonly DeskField[];
   /** What the record-only runbook does not change, after "it does not change". */
   heldNote: string;
+  /** Where a step's checks differ from the desk's defaults (CHECK_SCOPE), what they cover for this pack. */
+  checkScope?: Partial<Record<StepKey, { checked: string; notChecked: string }>>;
   /** The check a person makes before the record-only runbook runs. */
   gate: { why: (runbook: string) => string; label: string; pending: string };
   /** The reviewed reference labels for the queue, and where they live in the repository. */
-  labels: { labels: readonly ReferenceLabel[]; reviewed: string; path: string };
+  labels: {
+    labels: readonly ReferenceLabel[];
+    reviewed: string;
+    path: string;
+    /** Some field had a 3-way split among the reviewers and was decided by hand. */
+    handDecided: boolean;
+  };
 }
 
 // The EV tickets carry their own fields; the desk reads them by name.
@@ -157,5 +166,10 @@ export const EV_DESK: DeskPack = {
     label: "I checked the meter: no energy change since unplug",
     pending: "Not approvable until the meter is checked.",
   },
-  labels: { labels: labelsJson.labels, reviewed: labelsJson.reviewed, path: "docs/eval/reference-labels.json" },
+  labels: {
+    labels: labelsJson.labels,
+    reviewed: labelsJson.reviewed,
+    path: "docs/eval/reference-labels.json",
+    handDecided: true,
+  },
 };
