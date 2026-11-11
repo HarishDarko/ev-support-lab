@@ -79,7 +79,8 @@ test("an unknown industry in a link lands on the chooser too", async ({ page }) 
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("tab", { name: "Queue" })).toHaveAttribute("aria-selected", "true");
   await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveValue("e-commerce");
-  await expect(page).toHaveURL(/\?desk=queue&pack=e-commerce(#.*)?$/);
+  // The unknown value is replaced in place: ?pack=telecom&desk=queue becomes ?pack=e-commerce&desk=queue.
+  await expect(page).toHaveURL(/\?pack=e-commerce&desk=queue(#.*)?$/);
 });
 
 test("when an industry fails to load, the page says so and goes back to the chooser", async ({ page }) => {
