@@ -21,7 +21,6 @@ interface Props {
   onAi: () => void;
   page: Page;
   onPage: (page: Page) => void;
-  /** The walkthrough's stages; hidden for an industry with no walkthrough. */
 }
 
 /** The 52 px top strip: name, stage nav, synthetic-data label, where the AI answers come from, theme toggle. */
