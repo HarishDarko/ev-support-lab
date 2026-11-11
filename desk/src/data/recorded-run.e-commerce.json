@@ -1,0 +1,708 @@
+{
+  "recordedAt": "2026-11-11T19:48:26.472Z",
+  "source": "rules",
+  "models": [],
+  "totalCost": 0,
+  "steps": {
+    "patterns": {
+      "data": {
+        "patterns": [
+          {
+            "name": "Delivered, not received",
+            "ticket_ids": ["T-4001", "T-4009"],
+            "history_ids": ["H-4102"],
+            "recurring": true,
+            "why_grouped": "Same keyword rule (delivered, not received) and runbook RB-22.",
+            "next_step": "Apply RB-22 and review the pattern."
+          },
+          {
+            "name": "Stuck order hold",
+            "ticket_ids": ["T-4002", "T-4006", "T-4018", "T-4022"],
+            "history_ids": ["H-4101", "H-4104", "H-4107", "H-4109", "H-4113"],
+            "recurring": true,
+            "why_grouped": "Same keyword rule (stuck order hold) and runbook RB-21.",
+            "next_step": "Apply RB-21 and review the pattern."
+          },
+          {
+            "name": "Damaged on arrival",
+            "ticket_ids": ["T-4003", "T-4013", "T-4017"],
+            "history_ids": ["H-4103", "H-4114"],
+            "recurring": true,
+            "why_grouped": "Same keyword rule (damaged on arrival) and runbook RB-23.",
+            "next_step": "Apply RB-23 and review the pattern."
+          },
+          {
+            "name": "Refund not visible",
+            "ticket_ids": ["T-4004", "T-4016", "T-4021"],
+            "history_ids": ["H-4105"],
+            "recurring": true,
+            "why_grouped": "Same keyword rule (refund not visible) and runbook RB-24.",
+            "next_step": "Apply RB-24 and review the pattern."
+          },
+          {
+            "name": "Address change",
+            "ticket_ids": ["T-4005", "T-4011"],
+            "history_ids": ["H-4106"],
+            "recurring": true,
+            "why_grouped": "Same keyword rule (address change) and runbook RB-25.",
+            "next_step": "Apply RB-25 and review the pattern."
+          },
+          {
+            "name": "Charged twice",
+            "ticket_ids": ["T-4010", "T-4015"],
+            "history_ids": [],
+            "recurring": false,
+            "why_grouped": "Same keyword rule (charged twice) and runbook none.",
+            "next_step": "A person reviews the group."
+          },
+          {
+            "name": "Listing error",
+            "ticket_ids": ["T-4014", "T-4019"],
+            "history_ids": [],
+            "recurring": false,
+            "why_grouped": "Same keyword rule (listing error) and runbook none.",
+            "next_step": "A person reviews the group."
+          }
+        ]
+      },
+      "trace": {
+        "step": "patterns",
+        "source": "rules",
+        "model": "deterministic rules",
+        "attempts": 0,
+        "checks": [],
+        "tokens": { "input": 0, "output": 0 },
+        "cost": 0,
+        "reliability": "low",
+        "fallbackReason": "AI is turned off in this environment."
+      },
+      "ms": 1
+    },
+    "investigate": {
+      "data": {
+        "symptom": "Orders are held in Payment pending although the customer paid once, and two customers were charged twice. Every affected order's first payment answer took longer than checkout's 8 second timeout.",
+        "impact": [
+          "9 tickets on 9 orders from 3 channels over 21 days.",
+          "Held orders missed their pick list and their delivery promise.",
+          "2 customers were charged twice for one order."
+        ],
+        "evidence": [
+          {
+            "point": "Every affected order's first answer took 8.4 to 13.9 s, over the 8 s timeout.",
+            "source": "Order timings",
+            "quote": ""
+          },
+          {
+            "point": "The second attempt went out with a new idempotency key, so the processor made a second authorization.",
+            "source": "Log #51102",
+            "quote": "extra authorization au_96FA on a captured order"
+          },
+          {
+            "point": "The app's automatic retry raced the first answer, and both authorizations were captured.",
+            "source": "Log #51209",
+            "quote": "#51209 two captures -> hold: Payment pending"
+          },
+          {
+            "point": "11 of 25 slow first answers in 21 days led to a second authorization; no checkout answered under 8 s was affected.",
+            "source": "Channel view, 21 days",
+            "quote": ""
+          }
+        ],
+        "hypotheses": [
+          {
+            "statement": "Checkout makes a new idempotency key for each attempt, so a retry after a slow answer creates a second authorization, and the order service holds or double-captures the order.",
+            "status": "leading hypothesis",
+            "supports": [
+              "Two keys for one order in the #51102 log.",
+              "Every affected order's first answer took over 8 s."
+            ],
+            "against_or_gaps": [
+              "The processor's own logs are not available to support.",
+              "Only three orders have our full logs."
+            ]
+          },
+          {
+            "statement": "The processor sends authorization webhooks late or twice under load, which makes the order service hold orders. May coexist with the first.",
+            "status": "alternative hypothesis",
+            "supports": [
+              "Every affected order had a slow first answer.",
+              "One held order (H-4109) never got its webhook."
+            ],
+            "against_or_gaps": [
+              "Each extra authorization has its own key from our checkout.",
+              "H-4109 had one authorization and one key."
+            ]
+          }
+        ],
+        "ruled_out": [
+          "The checkout deploy (T-4007)",
+          "The processor or the card issuer duplicating",
+          "Customers paying twice on purpose",
+          "A delayed capture webhook (H-4109)",
+          "Fraud holds"
+        ],
+        "open_questions": [
+          "Should checkout reuse one idempotency key for every retry of a checkout?",
+          "Should checkout look a payment up by key before showing an error?",
+          "How should the order service stop two captures for one order?"
+        ]
+      },
+      "trace": {
+        "step": "investigate",
+        "source": "rules",
+        "model": "deterministic rules",
+        "attempts": 0,
+        "checks": [],
+        "tokens": { "input": 0, "output": 0 },
+        "cost": 0,
+        "reliability": "low",
+        "fallbackReason": "AI is turned off in this environment."
+      },
+      "ms": 0
+    },
+    "verify": {
+      "data": {
+        "verdict": "consistent with hypothesis",
+        "reading": "Canary second authorizations went from 1 to 0 and stuck orders from 1 to 0, with 4 slow answers; the control had 7 and 6. No canary order was captured twice.",
+        "what_it_does_not_prove": [
+          "That the real processor answers like the lab's scripted one.",
+          "That it holds beyond 14 days of scripted traffic.",
+          "That other retry paths, such as saved carts, behave the same."
+        ],
+        "keep_watching": ["Detector hits on control stores.", "Orders held for another reason, like a lost webhook."],
+        "next_decision": "Keep the flag on the canary store for another 14 days; widen only if second authorizations stay at zero and declined cards still get a new key. A double capture on the canary reverses it."
+      },
+      "trace": {
+        "step": "verify",
+        "source": "rules",
+        "model": "deterministic rules",
+        "attempts": 0,
+        "checks": [],
+        "tokens": { "input": 0, "output": 0 },
+        "cost": 0,
+        "reliability": "low",
+        "fallbackReason": "AI is turned off in this environment."
+      },
+      "ms": 0
+    },
+    "handoff": {
+      "data": {
+        "title": "Orders stuck in Payment pending after a slow payment retry",
+        "severity": "S2",
+        "scope": "9 tickets, 9 orders, 3 channels, 21 days.",
+        "rules_triggered": ["code", "spread", "money"],
+        "reproduction": [
+          "Run the lab's reproduction test with the fix flag off: a slow first answer, then a retry with a new key.",
+          "It passes by showing the bug: two keys, two authorizations, one capture, and the order held in Payment pending.",
+          "Its app-race case shows the double capture: two webhooks less than 50 ms apart are both captured.",
+          "Ask the payment processor how often its first answer took over 8 s in the last 21 days."
+        ],
+        "evidence_attached": [
+          "Lab tests: second authorization reproduced; regression fails without the fix",
+          "Three checkout and order log excerpts",
+          "21-day channel table",
+          "First-answer times for the 9 orders",
+          "9 linked tickets"
+        ],
+        "ruled_out": [
+          "The checkout deploy (T-4007)",
+          "The processor or the card issuer duplicating",
+          "Customers paying twice on purpose",
+          "A delayed capture webhook (H-4109)",
+          "Fraud holds"
+        ],
+        "workaround_in_place": "Support releases held orders with RB-21 after the processor shows one capture, sends double captures to payments, and a proposed detector flags new cases.",
+        "the_ask": "Decide how checkout should retry a slow payment without creating a second authorization, and how the order service should stop two captures for one order.",
+        "hypothesis_note": "The second authorization is reproduced in a lab with a scripted payment processor and scripted shoppers. How the real processor answers under load is not confirmed."
+      },
+      "trace": {
+        "step": "handoff",
+        "source": "rules",
+        "model": "deterministic rules",
+        "attempts": 0,
+        "checks": [],
+        "tokens": { "input": 0, "output": 0 },
+        "cost": 0,
+        "reliability": "low",
+        "fallbackReason": "AI is turned off in this environment."
+      },
+      "ms": 0
+    },
+    "kb": {
+      "data": {
+        "title": "Order stuck in Payment pending with a second authorization after a slow checkout",
+        "applies_when": [
+          "Order says Payment pending although the customer paid once.",
+          "Customer's bank shows two pending holds for one order.",
+          "Checkout showed an error after a long spin, and the customer paid again."
+        ],
+        "how_to_confirm": [
+          "Processor: two authorizations for the order, each with its own idempotency key.",
+          "Checkout log: the first answer came after the 8 s timeout.",
+          "Processor: exactly one capture for the order."
+        ],
+        "steps": [
+          "Confirm the payment processor shows one capture for the order, before RB-21.",
+          "Apply RB-21: release the hold and void the extra authorization.",
+          "Link the ticket to the parent incident and tell the customer the extra hold drops off.",
+          "Flag the order for a payments review and note the voided authorization."
+        ],
+        "escalate_if": [
+          "The processor shows two settled captures.",
+          "The order has already shipped.",
+          "Only one authorization exists, as when a webhook was lost.",
+          "A fraud flag is on the order."
+        ],
+        "status_note": "ENG-5230 is on the canary store; until it is on everywhere, slow payments still create second authorizations.",
+        "related": ["T-4002", "T-4006", "T-4010", "T-4018", "T-4022", "RB-21", "ENG-5230"]
+      },
+      "trace": {
+        "step": "kb",
+        "source": "rules",
+        "model": "deterministic rules",
+        "attempts": 0,
+        "checks": [],
+        "tokens": { "input": 0, "output": 0 },
+        "cost": 0,
+        "reliability": "low",
+        "fallbackReason": "AI is turned off in this environment."
+      },
+      "ms": 1
+    },
+    "shiftnote": {
+      "data": {
+        "headline": "Queue started at 22; 8 approved for closure by runbook, and the second-authorization pattern is with engineering.",
+        "done": [
+          "8 tickets approved for runbook closure.",
+          "Payment pending pattern grouped and contained.",
+          "Detector query written; proposed to run every 15 minutes."
+        ],
+        "needs_you": [
+          "T-4005: Customer wants to change the delivery address for order Owner: India engineering on-call, by 07:00 ET.",
+          "T-4007: [SEV-2] Checkout HTTP 500 rate at 6.4% after a Owner: India engineering on-call, by 07:00 ET.",
+          "T-4009: Tracking for #50418 shows delivered this morning but the Owner: India engineering on-call, by 07:00 ET.",
+          "T-4011: Customer asks to change the address on #52011, but Owner: India engineering on-call, by 07:00 ET."
+        ],
+        "escalated": [
+          "ENG-5230: Orders stuck in Payment pending after a slow payment retry",
+          "RB-21 meanwhile for newly held orders, after one capture is confirmed."
+        ],
+        "watch": ["Detector candidates for second authorizations.", "Customers who report two holds or charges."]
+      },
+      "trace": {
+        "step": "shiftnote",
+        "source": "rules",
+        "model": "deterministic rules",
+        "attempts": 0,
+        "checks": [],
+        "tokens": { "input": 0, "output": 0 },
+        "cost": 0,
+        "reliability": "low",
+        "fallbackReason": "AI is turned off in this environment."
+      },
+      "ms": 0
+    },
+    "classify": {
+      "data": {
+        "component": "payments",
+        "severity": "S2",
+        "matches_known_pattern": true,
+        "matched_article": "Order stuck in Payment pending with a second authorization after a slow checkout",
+        "suggested_action": "Confirm the processor shows one capture, then apply RB-21, link the ticket to the parent incident and flag the order for payments review.",
+        "confirm": "Before RB-21, a person checks the processor shows one capture. The check above reads wording only.",
+        "escalate": false,
+        "why": "Rules fallback: matched \"Payment pending\" (stuck order hold)."
+      },
+      "trace": {
+        "step": "classify",
+        "source": "rules",
+        "model": "deterministic rules",
+        "attempts": 0,
+        "checks": [],
+        "tokens": { "input": 0, "output": 0 },
+        "cost": 0,
+        "reliability": "low",
+        "fallbackReason": "AI is turned off in this environment."
+      },
+      "ms": 1
+    },
+    "triage": [
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-4001",
+              "summary": "Tracking for order #48213 says delivered two days ago",
+              "component": "delivery",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-22",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"says delivered\" (delivered, not received).",
+              "evidence": "says delivered",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4002",
+              "summary": "Order #51102 stuck in Payment pending although the card",
+              "component": "payments",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-21",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"Payment pending\" (stuck order hold).",
+              "evidence": "Payment pending",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4003",
+              "summary": "Ceramic mug from order #51877 arrived broken in the",
+              "component": "product-issue",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-23",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"broken\" (damaged on arrival).",
+              "evidence": "broken",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4004",
+              "summary": "Refund for order #49920 was issued 8 business days",
+              "component": "returns-refunds",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-24",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"Refund\" (refund not visible).",
+              "evidence": "Refund",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4005",
+              "summary": "Customer wants to change the delivery address for order",
+              "component": "order-status",
+              "severity": "S3",
+              "action": "needs_human",
+              "runbook": "RB-25",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"change the delivery address\", but RB-25 doesn't apply (order already being packed: \"Packing\").",
+              "evidence": "change the delivery address",
+              "source": "rules",
+              "quote_verified": false
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "rules",
+          "model": "deterministic rules",
+          "attempts": 0,
+          "checks": [],
+          "tokens": { "input": 0, "output": 0 },
+          "cost": 0,
+          "reliability": "low",
+          "fallbackReason": "AI is turned off in this environment."
+        },
+        "ms": 1
+      },
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-4006",
+              "summary": "Order #51150 never reached the pick list, so its",
+              "component": "payments",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-21",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"Payment pending\" (stuck order hold).",
+              "evidence": "Payment pending",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4007",
+              "summary": "[SEV-2] Checkout HTTP 500 rate at 6.4% after a",
+              "component": "request-or-question",
+              "severity": "S4",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.3,
+              "reason": "Rules fallback: no rule matched, so a person decides.",
+              "evidence": "[SEV-2] Checkout HTTP 500 rate at",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4008",
+              "summary": "Customer cannot sign in and the password reset email",
+              "component": "account-access",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-26",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"cannot sign in\" (account access).",
+              "evidence": "cannot sign in",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4009",
+              "summary": "Tracking for #50418 shows delivered this morning but the",
+              "component": "delivery",
+              "severity": "S3",
+              "action": "needs_human",
+              "runbook": "RB-22",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"shows delivered\", but RB-22 doesn't apply (less than 48 hours: \"this morning\").",
+              "evidence": "shows delivered",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4010",
+              "summary": "Customer sent a screenshot of two settled charges on",
+              "component": "payments",
+              "severity": "S2",
+              "action": "escalation_candidate",
+              "runbook": "none",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"two settled charges\" (charged twice).",
+              "evidence": "two settled charges",
+              "source": "rules",
+              "quote_verified": false
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "rules",
+          "model": "deterministic rules",
+          "attempts": 0,
+          "checks": [],
+          "tokens": { "input": 0, "output": 0 },
+          "cost": 0,
+          "reliability": "low",
+          "fallbackReason": "AI is turned off in this environment."
+        },
+        "ms": 1
+      },
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-4011",
+              "summary": "Customer asks to change the address on #52011, but",
+              "component": "order-status",
+              "severity": "S3",
+              "action": "needs_human",
+              "runbook": "RB-25",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"change the address\", but RB-25 doesn't apply (order already shipped: \"dispatched\").",
+              "evidence": "change the address",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4012",
+              "summary": "Checkout blocks delivery to the customer's Belfast postcode for",
+              "component": "request-or-question",
+              "severity": "S4",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.3,
+              "reason": "Rules fallback: no rule matched, so a person decides.",
+              "evidence": "Checkout blocks delivery to the customer's",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4013",
+              "summary": "Order #51990 held at the pack station: the sage",
+              "component": "product-issue",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-23",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"damaged\" (damaged on arrival).",
+              "evidence": "damaged",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4014",
+              "summary": "Lamp from #50777 flickers when switched on. Customer says",
+              "component": "product-issue",
+              "severity": "S3",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"flickers\" (faulty item).",
+              "evidence": "flickers",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4015",
+              "summary": "Order #52401 has billing and delivery addresses in different",
+              "component": "payments",
+              "severity": "S2",
+              "action": "escalation_candidate",
+              "runbook": "none",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"different countries\" (possible fraud).",
+              "evidence": "different countries",
+              "source": "rules",
+              "quote_verified": false
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "rules",
+          "model": "deterministic rules",
+          "attempts": 0,
+          "checks": [],
+          "tokens": { "input": 0, "output": 0 },
+          "cost": 0,
+          "reliability": "low",
+          "fallbackReason": "AI is turned off in this environment."
+        },
+        "ms": 0
+      },
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-4016",
+              "summary": "Partial refund for #49655 failed in the admin tool",
+              "component": "returns-refunds",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-24",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"refund\" (refund not visible).",
+              "evidence": "refund",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4017",
+              "summary": "Glass vase from #51320 arrived chipped. Customer sent photos",
+              "component": "product-issue",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-23",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"chipped\" (damaged on arrival).",
+              "evidence": "chipped",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4018",
+              "summary": "Customer's banking app shows two pending holds of £42.00",
+              "component": "payments",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-21",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"pending holds\" (stuck order hold).",
+              "evidence": "pending holds",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4019",
+              "summary": "Product page for the oak side table shows the",
+              "component": "product-issue",
+              "severity": "S3",
+              "action": "escalation_candidate",
+              "runbook": "none",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"Product page\" (listing error).",
+              "evidence": "Product page",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4020",
+              "summary": "Customer wants to know if we can gift wrap",
+              "component": "request-or-question",
+              "severity": "S4",
+              "action": "needs_human",
+              "runbook": "none",
+              "confidence": 0.3,
+              "reason": "Rules fallback: no rule matched, so a person decides.",
+              "evidence": "Customer wants to know if we",
+              "source": "rules",
+              "quote_verified": false
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "rules",
+          "model": "deterministic rules",
+          "attempts": 0,
+          "checks": [],
+          "tokens": { "input": 0, "output": 0 },
+          "cost": 0,
+          "reliability": "low",
+          "fallbackReason": "AI is turned off in this environment."
+        },
+        "ms": 0
+      },
+      {
+        "data": {
+          "results": [
+            {
+              "id": "T-4021",
+              "summary": "Return parcel for #50190 was delivered to the warehouse",
+              "component": "returns-refunds",
+              "severity": "S3",
+              "action": "close_with_runbook",
+              "runbook": "RB-24",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"refund\" (refund not visible).",
+              "evidence": "refund",
+              "source": "rules",
+              "quote_verified": false
+            },
+            {
+              "id": "T-4022",
+              "summary": "Checkout showed 'Something went wrong' after the Pay button",
+              "component": "payments",
+              "severity": "S2",
+              "action": "close_with_runbook",
+              "runbook": "RB-21",
+              "confidence": 0.6,
+              "reason": "Rules fallback: matched \"Payment pending\" (stuck order hold).",
+              "evidence": "Payment pending",
+              "source": "rules",
+              "quote_verified": false
+            }
+          ]
+        },
+        "trace": {
+          "step": "triage",
+          "source": "rules",
+          "model": "deterministic rules",
+          "attempts": 0,
+          "checks": [],
+          "tokens": { "input": 0, "output": 0 },
+          "cost": 0,
+          "reliability": "low",
+          "fallbackReason": "AI is turned off in this environment."
+        },
+        "ms": 1
+      }
+    ]
+  }
+}

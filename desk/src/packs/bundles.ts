@@ -15,8 +15,10 @@ export interface PackBundle {
 
 export const EV_BUNDLE: PackBundle = { desk: EV_DESK, incident: EV_INCIDENT };
 
-const LOADERS: Partial<Record<PackId, () => Promise<PackBundle>>> = {
+/** Each industry's own bundle, other than EV's, loaded when it is picked (and by the recording scripts). */
+export const LOADERS: Partial<Record<PackId, () => Promise<PackBundle>>> = {
   "saas-support": () => import("./saas-desk").then((m) => m.SAAS_BUNDLE),
+  "e-commerce": () => import("./ecommerce-desk").then((m) => m.SHOP_BUNDLE),
 };
 
 /** Which bundle an industry shows: its own when it has an incident walkthrough, else EV's (its queue page is separate). */

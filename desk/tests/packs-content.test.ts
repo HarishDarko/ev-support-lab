@@ -22,7 +22,7 @@ const CASES = [
     ticket: /^T-40\d\d$/,
     history: /^H-41\d\d$/,
     runbook: /^RB-2\d$/,
-    hasIncident: false,
+    hasIncident: true,
   },
 ] as const;
 
@@ -90,10 +90,10 @@ describe("the rules' scores on the new packs (in-sample, against the reviewed la
     expect(s.history).toEqual({ same: 14, n: 15 });
   });
 
-  it("E-commerce: 7 of 21 fully right (6 strict); 10 of 15 on the closed tickets", () => {
+  it("E-commerce: 10 of 22 fully right (7 strict); 10 of 15 on the closed tickets", () => {
     const s = view(1);
-    expect(s.lenient).toEqual({ n: 21, fields: { component: 18, severity: 14, action: 14, runbook: 15 }, allFour: 7 });
-    expect(s.strict.allFour).toBe(6);
+    expect(s.lenient).toEqual({ n: 22, fields: { component: 18, severity: 16, action: 15, runbook: 16 }, allFour: 10 });
+    expect(s.strict.allFour).toBe(7);
     expect(s.history).toEqual({ same: 10, n: 15 });
   });
 });

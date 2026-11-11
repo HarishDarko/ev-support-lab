@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { MotionConfig } from "motion/react";
 import { useTheme } from "./theme";
 import { TopStrip, type Page } from "./components/TopStrip";
@@ -18,8 +18,7 @@ import { DEFAULT_PACK_ID, hasIncident, industryName } from "./packs/industry";
 import { IndustryProvider, useIndustry } from "./packs/IndustryContext";
 import { usePackBundle } from "./packs/bundles";
 import { IncidentContext, useIncident } from "./incident";
-// Other industries load only when picked, so the EV page carries none of their data.
-const PackDesk = lazy(() => import("./packs/PackDesk").then((m) => ({ default: m.PackDesk })));
+import { ShowcaseNote } from "./packs/ShowcaseNote";
 
 const NARROW = "(max-width: 999px)";
 const subscribe = (cb: () => void) => {
@@ -175,9 +174,9 @@ function Walkthrough({ linkedTab }: { linkedTab: DeskTab | null }) {
         theme={theme}
         onToggleTheme={toggle}
         aiLabel={aiLabel}
-        onAi={() =>
-          showcase ? openDesk("scorecard") : document.getElementById("pack-score")?.scrollIntoView({ block: "start" })
-        }
+        onAi={() => {
+          if (showcase) openDesk("scorecard");
+        }}
         page={page}
         onPage={onPage}
         showStages={showcase}
@@ -193,17 +192,10 @@ function Walkthrough({ linkedTab }: { linkedTab: DeskTab | null }) {
         ) : page === "notes" ? (
           <EngineeringNotes />
         ) : !showcase ? (
-          <Suspense
-            fallback={
-              <article className="page" aria-busy="true">
-                <p className="page-lede" role="status">
-                  Loading this industry&apos;s queue. It takes a moment.
-                </p>
-              </article>
-            }
-          >
-            <PackDesk id={industry.id} />
-          </Suspense>
+          // Every industry on offer has its incident walkthrough; one without it would show only this note.
+          <article className="page">
+            <ShowcaseNote />
+          </article>
         ) : narrow ? (
           <PhoneStory
             data={data}
