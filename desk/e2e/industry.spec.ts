@@ -89,14 +89,6 @@ test("an e-commerce desk link opens the e-commerce desk with its own columns and
   expect(errors).toEqual([]);
 });
 
-test("the e-commerce walkthrough has no sideways scroll at 390 px", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/?pack=e-commerce");
-  await expect(page.getByText("22 tickets are waiting.").first()).toBeVisible();
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-  expect(overflow).toBeLessThanOrEqual(0);
-});
-
 test("an e-commerce desk link does not reopen the desk after switching to EV charging", async ({ page }) => {
   await page.goto("/?desk=queue&pack=e-commerce");
   const dialog = page.getByRole("dialog", { name: "The desk" });

@@ -95,6 +95,10 @@ test("the e-commerce desk opens on its incident, with the lab's logs and the syn
 
   await dialog.getByRole("tab", { name: "Scorecard" }).click();
   await expect(dialog.getByText(/reference-labels\.e-commerce\.json/)).toBeVisible();
+  // The rules' score on the page is the one tests/packs-content.test.ts pins: 10 of 22 lenient, 7 strict.
+  const score = dialog.getByRole("table", { name: "Triage accuracy against the reviewed labels" });
+  await expect(score.getByRole("row", { name: /All four right/ })).toContainText("10 of 22 (45%)");
+  await expect(dialog.getByText(/the rules on 7 of 22 \(32%\)/)).toBeVisible();
   expect(errors).toEqual([]);
 });
 

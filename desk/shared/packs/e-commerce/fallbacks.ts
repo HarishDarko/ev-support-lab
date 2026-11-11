@@ -60,7 +60,7 @@ export function ruleInvestigate() {
         supports: ["Two keys for one order in the #51102 log.", "Every affected order's first answer took over 8 s."],
         against_or_gaps: [
           "The processor's own logs are not available to support.",
-          "Only three orders have our full logs.",
+          "Full logs exist for four of the nine orders.",
         ],
       },
       {

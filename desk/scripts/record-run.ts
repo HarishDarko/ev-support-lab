@@ -54,6 +54,13 @@ async function main(): Promise<void> {
   }
 
   const models = modelsOf(report.steps);
+  const rulesCalls = report.answered - report.aiAnswered;
+  // For another industry, a committed AI recording turns its live runs on, so it must be a whole AI run: one where
+  // some calls fell back to the rules is not written. EV keeps its old behaviour and only warns.
+  if (pack !== DEFAULT_PACK_ID && models.length && rulesCalls > 0)
+    throw new Error(
+      `${rulesCalls} of ${report.answered} calls fell back to rules (${report.fallbackReason}), so nothing was written. Fix the cause and record again.`,
+    );
   const recorded: RecordedRun = {
     recordedAt: new Date().toISOString(),
     source: models.length ? "ai" : "rules",
@@ -70,7 +77,6 @@ async function main(): Promise<void> {
   const options = (await prettier.resolveConfig(out)) ?? {};
   await writeFile(out, await prettier.format(JSON.stringify(recorded), { ...options, parser: "json" }), "utf8");
 
-  const rulesCalls = report.answered - report.aiAnswered;
   console.log(
     `Wrote ${out}\n  source: ${recorded.source}  models: ${models.join(", ") || "none"}  cost: $${recorded.totalCost.toFixed(4)}`,
   );

@@ -91,9 +91,10 @@ describe("live runs follow the committed recording", () => {
     expect([SAAS_DESK.liveRuns, SHOP_DESK.liveRuns]).toEqual([false, false]);
   });
 
-  it("an AI recording turns them on", () => {
+  it("a pack's own liveRuns flag still counts (EV charging), and no flag with no AI recording is off", () => {
     expect(liveAllowed("saas-support", {})).toBe(false);
     expect(liveAllowed("ev-charging", { liveRuns: true })).toBe(true);
+    // An AI recording turning a pack on is checked in tests/recorded-ai.test.ts, with that file mocked.
   });
 });
 
@@ -115,5 +116,15 @@ describe("npm run record -- <url> --pack <id>", () => {
     });
     expect(recordingFile("saas-support")).toBe("recorded-run.saas-support.json");
     expect(() => recordArgs(["http://127.0.0.1:8788", "--pack"])).toThrow(/--pack needs an industry id/);
+    expect(() => recordArgs(["http://127.0.0.1:8788", "--pack", "--x"])).toThrow(/--pack needs an industry id/);
+  });
+
+  it("refuses an option it does not know, so a typo never records (and pays for) the wrong industry", () => {
+    expect(() => recordArgs(["http://127.0.0.1:8788", "--pack=e-commerce"])).toThrow(
+      /Unknown option "--pack=e-commerce"/,
+    );
+    expect(() => recordArgs(["--pack=saas-support", "http://127.0.0.1:8788"])).toThrow(/Unknown option/);
+    expect(() => recordArgs(["http://127.0.0.1:8788", "-p", "saas-support"])).toThrow(/Unknown option "-p"/);
+    expect(() => recordArgs(["http://127.0.0.1:8788", "saas-support"])).toThrow(/Only one URL/);
   });
 });

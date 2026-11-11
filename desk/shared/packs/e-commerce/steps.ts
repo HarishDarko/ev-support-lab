@@ -1,7 +1,7 @@
 // E-commerce pack: the incident steps (investigate, handoff, verify, KB article, end-of-shift note, new-ticket
 // check). Each builds its prompt from the synthetic incident, validates the model's answer, and falls back to the
 // pack's rules. Server side only: the browser never imports this file. Live calls stay off for this pack until its
-// recording is reviewed (index.ts has no liveRuns), so today only the fallbacks answer.
+// committed recording is an AI one (functions/_lib/live-packs.ts), so today only the fallbacks answer.
 import { StepError, clip } from "../../../functions/_lib/errors";
 import { ValidationError, check, exceptionIn, exceptionNamesIn, quoted } from "../../../functions/_lib/checks";
 import { bool, groundingIn, knownIds, obj, runbookListOf, severity, str, strs } from "../../../functions/_lib/kit";

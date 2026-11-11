@@ -26,6 +26,18 @@ const total = I.breakdown.reduce(
 );
 const web = I.breakdown.find((b) => b.channel === "Web")!;
 const excerpts: IncidentLog[] = lab.logs.map((l) => ({ title: l.title, lines: l.lines as unknown as LogLine[] }));
+/** Milliseconds between the processor's two answers in the lab's captured double charge (T-4010). */
+const race = (() => {
+  const log = excerpts.find((l) => l.title.startsWith("T-4010:"))!;
+  const at = log.lines
+    .filter((x) => x[2].startsWith("authorization.succeeded"))
+    .map((x) => {
+      const [h, m, s] = x[0].split(":").map(Number) as [number, number, number];
+      return (h * 3600 + m * 60 + s) * 1000;
+    });
+  return Math.round(Math.max(...at) - Math.min(...at));
+})();
+const appRetrySeconds = lab.settings.appRetryMillis / 1000;
 
 const TRIGGER_WORDS: Record<string, string> = {
   code: "it needs a code change",
@@ -170,7 +182,7 @@ export const SHOP_INCIDENT: Incident = {
   },
   bars: {
     caption: `Slow first answers and the second authorizations they caused, by channel, ${WINDOW} days`,
-    columns: ["Channel", "Slow first answers that became a second authorization", "Second authorizations", "Checkouts"],
+    columns: ["Channel", "Slow first answers that became a second authorization", "Retried", "Checkouts"],
     rows: I.breakdown.map((b) => ({
       key: b.channel,
       length: (b.slow / slowMax) * 100,
@@ -308,7 +320,7 @@ export const SHOP_INCIDENT: Incident = {
       text: "second authorizations on the canary store",
     },
   },
-  storyFacts: { orders, lab: lab.windows },
+  storyFacts: { orders, race, lab: lab.windows },
   triggerWords,
   canaryOutcome,
   beats: {
@@ -330,7 +342,7 @@ export const SHOP_INCIDENT: Incident = {
     e3b: {
       claim: () => "In the app, the retry raced the first answer, and both were captured.",
       lede: () =>
-        "The app retried by itself 0.5 s after the timeout. Both answers arrived 20 ms apart, two workers each saw no capture yet, and the customer was charged twice.",
+        `The app retried by itself ${appRetrySeconds} s after the timeout. Both answers arrived ${race} ms apart, two workers each saw no capture yet, and the customer was charged twice.`,
     },
     e4: {
       claim: () => `${total.secondAuth} of ${total.slow} slow first answers became a second authorization.`,

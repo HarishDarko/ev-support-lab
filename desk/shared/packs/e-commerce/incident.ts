@@ -84,8 +84,6 @@ export const INCIDENT = {
     { channel: "iOS app", checkouts: 14100, slow: 4, newKey: 4, secondAuth: 4, stuck: 3, bothCaptured: 1 },
     { channel: "Android app", checkouts: 9800, slow: 2, newKey: 2, secondAuth: 2, stuck: 1, bothCaptured: 1 },
   ],
-  /** Of the 11 orders with a second authorization, the ones that reached support as tickets. */
-  ticketed: 9,
   /** Delivery log excerpts as the lab captured them (the first three in its experiment output), copied unchanged. */
   logs: [
     {

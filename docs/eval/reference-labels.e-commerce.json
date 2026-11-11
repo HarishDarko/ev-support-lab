@@ -23,6 +23,6 @@
     { "id": "T-4019", "component": ["product-issue"], "severity": ["S4"], "action": ["needs_human"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
     { "id": "T-4020", "component": ["request-or-question"], "severity": ["S4"], "action": ["info_only"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
     { "id": "T-4021", "component": ["returns-refunds"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
-    { "id": "T-4022", "component": ["payments"], "severity": ["S2", "S3"], "action": ["needs_human", "escalation_candidate", "close_with_runbook"], "runbook": ["RB-21", "none"], "why": "Relabelled 2026-11-11 (SD-15): majority answer first on severity (A:S2 B:S2 G:S3) and runbook (A:RB-21 B:none G:RB-21); action was a 3-way split (A:needs_human B:escalation_candidate G:close_with_runbook), decided by hand (see SD-15-ecommerce-label-adjudication.md)." }
+    { "id": "T-4022", "component": ["payments"], "severity": ["S2", "S3"], "action": ["needs_human", "escalation_candidate", "close_with_runbook"], "runbook": ["RB-21", "none"], "why": "Relabelled 2026-11-11 (SD-15): majority answer first on severity (A:S2 B:S2 G:S3) and runbook (A:RB-21 B:none G:RB-21); action was a 3-way split (A:needs_human B:escalation_candidate G:close_with_runbook), decided by hand: needs_human first, because the ticket does not say the processor shows one capture." }
   ]
 }

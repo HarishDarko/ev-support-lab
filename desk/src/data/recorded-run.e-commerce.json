@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-11-11T19:48:26.472Z",
+  "recordedAt": "2026-11-11T20:10:53.877Z",
   "source": "rules",
   "models": [],
   "totalCost": 0,
@@ -118,7 +118,7 @@
             ],
             "against_or_gaps": [
               "The processor's own logs are not available to support.",
-              "Only three orders have our full logs."
+              "Full logs exist for four of the nine orders."
             ]
           },
           {
@@ -267,7 +267,7 @@
         "reliability": "low",
         "fallbackReason": "AI is turned off in this environment."
       },
-      "ms": 1
+      "ms": 0
     },
     "shiftnote": {
       "data": {
@@ -324,7 +324,7 @@
         "reliability": "low",
         "fallbackReason": "AI is turned off in this environment."
       },
-      "ms": 1
+      "ms": 0
     },
     "triage": [
       {
@@ -701,7 +701,7 @@
           "reliability": "low",
           "fallbackReason": "AI is turned off in this environment."
         },
-        "ms": 1
+        "ms": 0
       }
     ]
   }
