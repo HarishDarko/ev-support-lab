@@ -231,4 +231,28 @@ export interface Incident {
   canaryOutcome: (f: Facts) => string;
   /** The escalation triggers as words, for the e1 beat. */
   triggerWords: readonly string[];
+  /** Where the two reading pages differ by industry. EV charging's own text is the default, so it leaves this out. */
+  pages?: IndustryPages;
+}
+
+/** The industry's own words on the operating model and engineering notes pages. */
+export interface IndustryPages {
+  /** The team that watches the product around the clock, as the operating model names it. */
+  monitor: {
+    /** In a sentence, e.g. "the status monitor". */
+    name: string;
+    /** The opening clause of the page's lede, before "and India engineering covers 23:30–08:30 ET". */
+    lede: string;
+    /** The 08:30 sync with that team. */
+    sync: { title: string; text: string };
+  };
+  notes: {
+    kicker: string;
+    /** The lab's stack and its folder in the repository. */
+    labStack: string;
+    labPath: string;
+    /** The AI check before the record-only runbook, in this industry's words. */
+    recordOnlyCheck: string;
+    notModelled: readonly string[];
+  };
 }

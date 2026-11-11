@@ -303,6 +303,30 @@ export const SAAS_INCIDENT: Incident = {
     summary: { n: `${before.canary.storms} → ${after.canary.storms}`, text: "token storms on the canary endpoints" },
   },
   storyFacts: { storms, lab: lab.windows },
+  pages: {
+    monitor: {
+      name: "the status monitor",
+      lede: "The status monitor watches the product around the clock",
+      sync: {
+        title: "Status monitor sync",
+        text: "Alerts and repeat offenders from the night: which accounts, which endpoints, which ones were paused before. During the day the status monitor reaches this shift directly, with an agreed time to acknowledge.",
+      },
+    },
+    notes: {
+      kicker: "Engineering notes · SaaS support",
+      labStack:
+        "Java 25, Spring Boot 4, PostgreSQL through Testcontainers, a webhook delivery service with a scripted identity provider and a scripted customer endpoint over HTTP.",
+      labPath: "lab-saas",
+      recordOnlyCheck:
+        "A closure must name a real runbook and fit the ticket, and a person approves it. A record-only runbook also needs a person to confirm a test delivery first.",
+      notModelled: [
+        "Real customers' identity providers: the lab's is scripted, with one active token per client and a limit of 100 token requests a minute.",
+        "A real delivery pool: the worker's threads are modelled in rounds, so a run repeats exactly.",
+        "Webhook signing beyond two contrast cases: an HMAC endpoint and a rotated signing secret.",
+        "Production traffic volumes, or anything about a real company's systems. Every account, ticket and number is synthetic.",
+      ],
+    },
+  },
   triggerWords,
   canaryOutcome,
   beats: {

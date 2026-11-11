@@ -321,6 +321,30 @@ export const SHOP_INCIDENT: Incident = {
     },
   },
   storyFacts: { orders, race, lab: lab.windows },
+  pages: {
+    monitor: {
+      name: "the site monitor",
+      lede: "The site monitor watches checkout around the clock",
+      sync: {
+        title: "Site monitor sync",
+        text: "Alerts and repeat offenders from the night: which orders, which channels, which payments were held before. During the day the site monitor reaches this shift directly, with an agreed time to acknowledge.",
+      },
+    },
+    notes: {
+      kicker: "Engineering notes · E-commerce",
+      labStack:
+        "Java 25, Spring Boot 4, PostgreSQL through Testcontainers, a checkout and order service with a scripted payment processor over HTTP and scripted shoppers.",
+      labPath: "lab-ecommerce",
+      recordOnlyCheck:
+        "A closure must name a real runbook and fit the ticket, and a person approves it. A record-only runbook also needs a person to confirm the processor shows one capture first.",
+      notModelled: [
+        "A real payment processor: the lab's answers at scripted times, honours Idempotency-Key, and sends its webhooks on a scripted clock.",
+        "Card networks, 3-D Secure, refunds and chargebacks.",
+        "Other retry paths, such as saved carts or a second checkout service.",
+        "Production traffic volumes, or anything about a real company's systems. Every store, order and number is synthetic.",
+      ],
+    },
+  },
   triggerWords,
   canaryOutcome,
   beats: {
