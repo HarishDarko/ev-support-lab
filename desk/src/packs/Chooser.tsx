@@ -6,7 +6,7 @@ import { INDUSTRY_OPTIONS } from "./industry";
 import "../pages/Page.css";
 import "./Chooser.css";
 
-/** Each industry's case, in one line. Every offered industry needs one. */
+/** Each industry's case, in one line. Every pack in the registry needs one, offered or not. */
 export const INDUSTRY_CASES = {
   "ev-charging": "A charging network: sessions stay open after a charger reconnects.",
   "saas-support":

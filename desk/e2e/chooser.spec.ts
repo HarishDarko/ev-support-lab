@@ -71,6 +71,24 @@ test("an old desk link lands on the chooser, then opens that tab in the industry
   expect(errors).toEqual([]);
 });
 
+test("Back, or the Support Desk name in the strip, returns to the chooser", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /^SaaS support/ }).click();
+  await expect(heading(page)).toHaveText("25 tickets are waiting.");
+  await page.goBack();
+  await expect(heading(page)).toHaveText("Pick an industry");
+  expect(new URL(page.url()).search).toBe("");
+  await page.goForward();
+  await expect(heading(page)).toHaveText("25 tickets are waiting.");
+
+  await page.getByRole("button", { name: "Support Desk, all industries" }).click();
+  await expect(heading(page)).toHaveText("Pick an industry");
+  await expect(page.locator("#stage")).toBeFocused();
+  expect(new URL(page.url()).search).toBe("");
+  await page.goBack();
+  await expect(heading(page)).toHaveText("25 tickets are waiting.");
+});
+
 test("an unknown industry in a link lands on the chooser too", async ({ page }) => {
   await page.goto("/?pack=telecom&desk=queue");
   await expect(heading(page)).toHaveText("Pick an industry");

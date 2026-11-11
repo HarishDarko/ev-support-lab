@@ -60,7 +60,7 @@ function Site() {
   const pickHere = useCallback(
     (next: PackId) => {
       pickedOnChooser.current = true;
-      pick(next);
+      pick(next, "push");
     },
     [pick],
   );
@@ -84,6 +84,10 @@ function Industry({ arrivalFocusRef }: { arrivalFocusRef: { current: boolean } }
   // walkthrough, and it must not open the desk again from the same link.
   const [link, setLink] = useState(() => ({ id, tab: requestedTab() }));
   if (link.tab && link.id !== id) setLink({ id, tab: null });
+  // Arriving from the chooser, focus waits on the loading screen (or its failure) until the walkthrough takes it.
+  useEffect(() => {
+    if (!bundle && arrivalFocusRef.current) document.getElementById("stage")?.focus();
+  }, [bundle, failed, arrivalFocusRef]);
   if (!bundle)
     return (
       <main id="stage" className="story" tabIndex={-1}>
