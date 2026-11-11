@@ -39,9 +39,11 @@ jobs:
       # Docker is available on the runner, so Testcontainers starts PostgreSQL itself.
       - name: Tests, including the experiment
         run: ./gradlew :lab-ecommerce:test --console=plain
-      - name: The experiment's output, when the tests fail
+      - name: Failure messages and the experiment's output, when the tests fail
         if: failure()
-        run: cat lab-ecommerce/build/experiment-computed.json || echo "the experiment did not finish"
+        run: |
+          grep -h -o '<failure message="[^"]*"' lab-ecommerce/build/test-results/test/*.xml | cut -c1-600 || true
+          cat lab-ecommerce/build/experiment-computed.json || echo "the experiment did not finish"
       - name: The regression test fails without the fix
         run: |
           report=lab-ecommerce/build/test-results/test/TEST-dev.shoplab.checkout.SecondAuthorizationRegressionTest.xml

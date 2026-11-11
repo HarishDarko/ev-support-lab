@@ -152,7 +152,7 @@ public class ShopStore {
     private List<Attempt> attempts(String where, Object param) {
         return jdbc.sql("""
                 select id, checkout_id, order_id, attempt_no, idempotency_key, card, sent_at, outcome, authorization_id
-                from payment_attempt """ + where + " order by id").param(param)
+                from payment_attempt""" + " " + where + " order by id").param(param)
                 .query((rs, n) -> new Attempt(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getInt(4),
                         rs.getString(5), rs.getString(6), rs.getTimestamp(7).toInstant(), rs.getString(8),
                         rs.getString(9)))

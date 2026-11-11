@@ -106,8 +106,8 @@ public final class ExperimentRunner {
             Instant at = from.plus(Duration.ofDays(x.day()))
                     .plusNanos(LocalTime.parse(x.time()).toNanoOfDay());
             out.add(new Shopper("co-" + x.order(), x.store(), x.order(), x.channel(), x.amountPence(), at,
-                    x.answerMillis(), x.repayAfterMillis(), x.declineFirst() ? "card-declining-" + x.order() : null,
-                    20_000, x.dropWebhooks(), x.title()));
+                    x.answerMillis(), x.repayAfterMillis(), x.declines() ? "card-declining-" + x.order() : null,
+                    20_000, x.dropsWebhooks(), x.title()));
         }
         return out;
     }

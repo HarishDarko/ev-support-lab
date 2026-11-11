@@ -42,8 +42,18 @@ public record ExperimentInputs(String start, int days, int firstHour, int lastHo
      * @param title if set, the order's log is recorded under this title
      */
     public record Scripted(String store, int day, String time, String order, String channel, int amountPence,
-            List<Long> answerMillis, Long repayAfterMillis, boolean declineFirst, boolean dropWebhooks,
-            String title) {}
+            List<Long> answerMillis, Long repayAfterMillis, Boolean declineFirst, Boolean dropWebhooks,
+            String title) {
+
+        /** Optional in the JSON, so not primitives (a missing primitive is an error for Jackson 3). */
+        public boolean declines() {
+            return Boolean.TRUE.equals(declineFirst);
+        }
+
+        public boolean dropsWebhooks() {
+            return Boolean.TRUE.equals(dropWebhooks);
+        }
+    }
 
     public static final JsonMapper MAPPER = JsonMapper.builder().build();
 
