@@ -15,6 +15,20 @@ function watchErrors(page: Page): string[] {
 
 const heading = (page: Page) => page.getByRole("heading", { level: 1 });
 
+/** Waits until no finite animation is running, so axe reads colours at rest, not halfway through a fade. */
+async function settled(page: Page): Promise<void> {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          document
+            .getAnimations()
+            .filter((a) => a.playState === "running" && a.effect?.getTiming().iterations !== Infinity).length,
+      ),
+    )
+    .toBe(0);
+}
+
 test("the SaaS walkthrough tells its own incident, beat by beat, with no live run", async ({ page }) => {
   const errors = watchErrors(page);
   await page.goto("/?pack=saas-support");
@@ -99,9 +113,11 @@ for (const scheme of ["light", "dark"] as const) {
       .click();
     await expect(heading(page)).toHaveText("One pattern, one incident: INC-0527.");
     const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+    await settled(page);
     expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([]);
     await page.keyboard.press("d");
     await expect(page.getByRole("dialog", { name: "The desk" })).toBeVisible();
+    await settled(page);
     expect((await new AxeBuilder({ page }).withTags(tags).analyze()).violations).toEqual([]);
   });
 }
