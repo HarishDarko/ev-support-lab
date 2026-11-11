@@ -74,7 +74,20 @@ Run from the repository root, Gradle runs it in `lab-ecommerce/`, so this writes
 
 Inputs are scripted in `src/main/resources/experiment/inputs.json`. Outcomes are computed from the database after each window and written to `experiment.json`. `expectedStory` holds the values of the first run; `ExperimentStoryTest` keeps the run equal to them and to `experiment.json`, and the support desk copies them.
 
-RESULTS_TABLE
+| Value (14 days) | Canary before | Canary after | Control before | Control after |
+| --- | --- | --- | --- | --- |
+| checkouts | 1,644 | 1,646 | 6,643 | 6,643 |
+| first answer after 8 s | 3 | 4 | 14 | 15 |
+| retried with a new key | 1 | 0 | 6 | 7 |
+| second authorization | 1 | 0 | 6 | 7 |
+| stuck in Payment pending (extra authorization) | 1 | 0 | 5 | 6 |
+| captured twice | 0 | 0 | 1 (£36.50) | 1 (£36.50) |
+| held for another reason (the webhook never came) | 0 | 0 | 1 | 0 |
+| new card after a decline, confirmed with one capture | 3 | 4 | 6 | 6 |
+| payments looked up by key after a timeout | 0 | 4 | 0 | 0 |
+| support detector hits (held, two keys within 60 s) | 1 | 0 | 6 | 7 |
+
+The slow answers and the shoppers' behaviour are scripted; what follows from them (the keys, the authorizations, the holds, the captures) is what the service did. The canary's 4 slow checkouts after the fix (a web shopper who paid again, an iOS retry, an Android retry that used to race, a 31 s answer) each ended with one authorization and one capture.
 
 ## Layout
 
