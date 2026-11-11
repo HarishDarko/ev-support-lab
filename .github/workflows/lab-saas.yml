@@ -1,0 +1,56 @@
+name: lab-saas
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "lab-saas/**"
+      - "gradle/**"
+      - "gradlew"
+      - "settings.gradle.kts"
+      - ".github/workflows/lab-saas.yml"
+  pull_request:
+    paths:
+      - "lab-saas/**"
+      - "gradle/**"
+      - "gradlew"
+      - "settings.gradle.kts"
+      - ".github/workflows/lab-saas.yml"
+
+concurrency:
+  group: lab-saas-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lab-saas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      # Any JDK runs the wrapper; the build provisions Java 25 through its toolchain.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      # Docker is available on the runner, so Testcontainers starts PostgreSQL itself.
+      - name: Tests, including the experiment
+        run: ./gradlew :lab-saas:test --console=plain
+      - name: The regression test fails without the fix
+        run: |
+          report=lab-saas/build/test-results/test/TEST-dev.saaslab.delivery.TokenStormRegressionTest.xml
+          rm -f "$report"
+          if ./gradlew :lab-saas:test --tests '*TokenStormRegressionTest' -Dlab.fix.enabled=false --console=plain; then
+            echo "TokenStormRegressionTest passed with the fix off; it no longer proves the fix." >&2
+            exit 1
+          fi
+          # Gradle writes every exception as a failure, so check it failed on an assertion, not a crash.
+          if ! grep -q 'type="org.opentest4j.AssertionFailedError"' "$report"; then
+            echo "TokenStormRegressionTest failed with the fix off, but not on an assertion:" >&2
+            grep -o 'type="[^"]*"' "$report" >&2 || echo "no test report at $report" >&2
+            exit 1
+          fi
+          echo "With the fix off, TokenStormRegressionTest fails on an assertion, as it should."
