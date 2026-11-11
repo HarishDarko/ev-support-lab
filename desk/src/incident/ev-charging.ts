@@ -92,6 +92,7 @@ export const EV_INCIDENT: Incident = {
   },
   timing: {
     title: "Seconds from unplug to connection drop",
+    idLabel: "Ticket",
     lede: `All ${sortedTimings().length} stuck sessions dropped between ${fastestDropSec()} and ${slowestDropSec()} seconds after the driver unplugged. The bar runs to ${DROP_WINDOW_SECONDS} s.`,
     caption: "Stuck sessions by seconds from unplug to websocket drop",
     groupLabel: "Firmware",

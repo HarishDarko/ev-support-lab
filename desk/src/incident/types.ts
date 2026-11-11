@@ -4,6 +4,12 @@
 // number is computed from the pack's synthetic data or its lab's experiment, never typed into a screen.
 import type { BeatId, Facts } from "../story/beats";
 
+/** The beats whose texts an incident's pack writes: evidence, verification and the knowledge-base close. */
+export type IncidentBeatId = Extract<
+  BeatId,
+  "e1" | "e2" | "e3" | "e3b" | "e4" | "e5" | "e6" | "v1" | "v2" | "v3" | "v4" | "c1"
+>;
+
 /** [time, actor, detail] */
 export type LogLine = readonly [time: string, actor: string, detail: string];
 
@@ -43,6 +49,8 @@ export interface TimingRow {
 
 export interface Timing {
   title: string;
+  /** The header of the id column, e.g. "Ticket". */
+  idLabel: string;
   lede: string;
   caption: string;
   groupLabel: string;
@@ -214,9 +222,7 @@ export interface Incident {
   /** The facts the pack's own beat texts read, added to the story's Facts as they are. */
   storyFacts: Record<string, unknown>;
   /** The pack's texts for the evidence, verification and close beats. */
-  beats: Partial<
-    Record<BeatId, { when?: (f: Facts) => string; claim: (f: Facts) => string; lede: (f: Facts) => string }>
-  >;
+  beats: Record<IncidentBeatId, { claim: (f: Facts) => string; lede: (f: Facts) => string }>;
   /** What happened on the canary, in words (the v3 beat and the board's result caption). */
   canaryOutcome: (f: Facts) => string;
   /** The escalation triggers as words, for the e1 beat. */

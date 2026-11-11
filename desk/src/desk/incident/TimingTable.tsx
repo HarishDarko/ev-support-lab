@@ -16,7 +16,7 @@ export function TimingTable() {
           <caption className="sr-only">{timing.caption}</caption>
           <thead>
             <tr>
-              <th scope="col">Ticket</th>
+              <th scope="col">{timing.idLabel}</th>
               <th scope="col">{timing.groupLabel}</th>
               <th scope="col" className="dk-num">
                 {timing.valueLabel}

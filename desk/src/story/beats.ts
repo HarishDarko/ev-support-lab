@@ -2,7 +2,7 @@
 // Every number in a claim is computed here from the synthetic data or the run, never typed into the UI.
 import { TICKETS } from "../data/synthetic";
 import { EV_INCIDENT } from "../incident/ev-charging";
-import type { Incident } from "../incident/types";
+import type { Incident, IncidentBeatId } from "../incident/types";
 import type { Stage } from "../stages";
 import { needsMeterCheck } from "../run/guardrail";
 import { priorUses, REPEAT_LIMIT, WINDOW_DAYS, type Lane, type StoryData } from "./data";
@@ -96,9 +96,9 @@ export function facts(data: StoryData, decisions: Decisions, incident: Incident 
 export const canaryOutcome = (f: Facts): string => f.incident.canaryOutcome(f);
 
 /** A beat whose text belongs to the incident's pack. */
-const fromIncident = (id: BeatId) => ({
-  claim: (f: Facts) => f.incident.beats[id]!.claim(f),
-  lede: (f: Facts) => f.incident.beats[id]!.lede(f),
+const fromIncident = (id: IncidentBeatId) => ({
+  claim: (f: Facts) => f.incident.beats[id].claim(f),
+  lede: (f: Facts) => f.incident.beats[id].lede(f),
 });
 
 const day0 = () => "Day 0";

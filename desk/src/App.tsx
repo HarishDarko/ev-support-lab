@@ -16,6 +16,7 @@ import { useStory } from "./story/useStory";
 import { MeterGateContext } from "./story/meterGate";
 import { hasIncident } from "./packs/industry";
 import { IndustryProvider, useIndustry } from "./packs/IndustryContext";
+import { useIncident } from "./incident";
 // Other industries load only when picked, so the EV page carries none of their data.
 const PackDesk = lazy(() => import("./packs/PackDesk").then((m) => ({ default: m.PackDesk })));
 
@@ -51,6 +52,7 @@ function Walkthrough() {
   const { theme, toggle } = useTheme();
   const narrow = useNarrow();
   const runApi = useRun();
+  const incident = useIncident();
   const industry = useIndustry();
   const showcase = hasIncident(industry.id);
   // A link with ?desk=<tab> opens the console at once.
@@ -72,7 +74,7 @@ function Walkthrough() {
 
   const { run, resultFor } = runApi;
   const data = useMemo(() => storyDataFromRun({ run, resultFor }), [run, resultFor]);
-  const f = facts(data, story.decisions);
+  const f = facts(data, story.decisions, incident);
   const { beat } = story;
   const meterGate = useMemo(
     () => ({ checked: new Set(story.decisions.meterChecked), confirm: story.confirmMeter }),
