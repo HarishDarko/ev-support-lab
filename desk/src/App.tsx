@@ -14,7 +14,7 @@ import { facts } from "./story/beats";
 import { storyDataFromRun } from "./story/fromRun";
 import { useStory } from "./story/useStory";
 import { MeterGateContext } from "./story/meterGate";
-import { hasIncident } from "./packs/industry";
+import { DEFAULT_PACK_ID, hasIncident, industryName } from "./packs/industry";
 import { IndustryProvider, useIndustry } from "./packs/IndustryContext";
 import { usePackBundle } from "./packs/bundles";
 import { IncidentContext, useIncident } from "./incident";
@@ -49,16 +49,27 @@ export function App() {
 
 /** The picked industry's run and incident around the walkthrough. A new industry starts its own run. */
 function Industry() {
-  const { id } = useIndustry();
+  const { id, pick } = useIndustry();
   const { bundle, failed } = usePackBundle(id);
+  // A ?desk= link opens the desk once, in the industry the page loaded on. Switching industry starts a new
+  // walkthrough, and it must not open the desk again from the same link.
+  const [link, setLink] = useState(() => ({ id, tab: requestedTab() }));
+  if (link.tab && link.id !== id) setLink({ id, tab: null });
   if (!bundle)
     return (
       <main id="stage" className="story" tabIndex={-1}>
         <article className="page" aria-busy={!failed}>
           {failed ? (
-            <p className="page-lede" role="alert">
-              This industry did not load. Reload the page to try again.
-            </p>
+            <>
+              <p className="page-lede" role="alert">
+                This industry did not load. Reload the page to try again.
+              </p>
+              <p>
+                <button type="button" className="btn" onClick={() => pick(DEFAULT_PACK_ID)}>
+                  Switch to {industryName(DEFAULT_PACK_ID)}
+                </button>
+              </p>
+            </>
           ) : (
             <p className="page-lede" role="status">
               Loading this industry&apos;s walkthrough. It takes a moment.
@@ -70,13 +81,13 @@ function Industry() {
   return (
     <IncidentContext.Provider value={bundle.incident}>
       <RunProvider key={bundle.desk.id} pack={bundle.desk}>
-        <Walkthrough />
+        <Walkthrough linkedTab={link.id === id ? link.tab : null} />
       </RunProvider>
     </IncidentContext.Provider>
   );
 }
 
-function Walkthrough() {
+function Walkthrough({ linkedTab }: { linkedTab: DeskTab | null }) {
   const { theme, toggle } = useTheme();
   const narrow = useNarrow();
   const runApi = useRun();
@@ -84,7 +95,7 @@ function Walkthrough() {
   const industry = useIndustry();
   const showcase = hasIncident(industry.id);
   // A link with ?desk=<tab> opens the console at once.
-  const [linked] = useState(requestedTab);
+  const [linked] = useState(linkedTab);
   // The desk sheet belongs to the EV walkthrough: a ?desk= link in another industry does not open it later.
   const [deskOpen, setDeskOpen] = useState(linked !== null && showcase);
   const [deskTab, setDeskTab] = useState<DeskTab>(linked ?? "queue");

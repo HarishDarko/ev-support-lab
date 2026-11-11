@@ -45,7 +45,11 @@ export function Classifier() {
         A new ticket arrives
       </h3>
       <p className="dk-lede">
-        Edit the ticket or use it as it is. It is checked against the article, live. Everything here is synthetic.
+        Edit the ticket or use it as it is.{" "}
+        {pack.liveRuns
+          ? "It is checked against the article, live."
+          : "Live runs are off for this industry, so the rules check it against the article."}{" "}
+        Everything here is synthetic.
       </p>
       <label htmlFor={field} className="classify-label">
         New ticket text
