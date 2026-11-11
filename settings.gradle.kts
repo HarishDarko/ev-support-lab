@@ -6,3 +6,4 @@ plugins {
 rootProject.name = "ev-support-lab"
 
 include("lab")
+include("lab-ecommerce")

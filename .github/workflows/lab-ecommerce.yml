@@ -1,0 +1,72 @@
+name: lab-ecommerce
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "lab-ecommerce/**"
+      - "gradle/**"
+      - "gradlew"
+      - "settings.gradle.kts"
+      - ".github/workflows/lab-ecommerce.yml"
+  pull_request:
+    paths:
+      - "lab-ecommerce/**"
+      - "gradle/**"
+      - "gradlew"
+      - "settings.gradle.kts"
+      - ".github/workflows/lab-ecommerce.yml"
+
+concurrency:
+  group: lab-ecommerce-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lab-ecommerce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      # Any JDK runs the wrapper; the build provisions Java 25 through its toolchain.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      # Docker is available on the runner, so Testcontainers starts PostgreSQL itself.
+      - name: Tests, including the experiment
+        run: ./gradlew :lab-ecommerce:test --console=plain
+      - name: The experiment's output, when the tests fail
+        if: failure()
+        run: cat lab-ecommerce/build/experiment-computed.json || echo "the experiment did not finish"
+      - name: The regression test fails without the fix
+        run: |
+          report=lab-ecommerce/build/test-results/test/TEST-dev.shoplab.checkout.SecondAuthorizationRegressionTest.xml
+          rm -f "$report"
+          if ./gradlew :lab-ecommerce:test --tests '*SecondAuthorizationRegressionTest' -Dlab.fix.enabled=false --console=plain; then
+            echo "SecondAuthorizationRegressionTest passed with the fix off; it no longer proves the fix." >&2
+            exit 1
+          fi
+          if [ ! -f "$report" ]; then
+            echo "SecondAuthorizationRegressionTest failed with the fix off, but it wrote no report at $report (it never ran)." >&2
+            exit 1
+          fi
+          tests=$(grep -o '<testsuite [^>]*' "$report" | grep -o ' tests="[0-9]*"' | grep -o '[0-9]*')
+          failures=$(grep -o '<testsuite [^>]*' "$report" | grep -o ' failures="[0-9]*"' | grep -o '[0-9]*')
+          types=$(grep -o ' type="[^"]*"' "$report" | sort | uniq -c)
+          echo "With the fix off: $tests tests, $failures failed; failure types:"
+          echo "$types"
+          # Gradle writes every exception as a failure (errors="0" always), so look at each failure's type:
+          # every one must be an assertion, or the test is crashing, not proving anything.
+          if [ -z "$types" ] || grep -o ' type="[^"]*"' "$report" | grep -qv ' type="org.opentest4j.AssertionFailedError"'; then
+            echo "SecondAuthorizationRegressionTest failed with the fix off, but not only on assertions." >&2
+            exit 1
+          fi
+          if [ "$failures" != "$tests" ]; then
+            echo "With the fix off, only $failures of $tests scenarios failed; each one should." >&2
+            exit 1
+          fi
+          echo "With the fix off, SecondAuthorizationRegressionTest fails on an assertion in all $tests scenarios, as it should."

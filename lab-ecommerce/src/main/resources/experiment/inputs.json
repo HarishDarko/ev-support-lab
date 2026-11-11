@@ -1,0 +1,91 @@
+{
+  "start": "2026-01-05T05:00:00Z",
+  "days": 14,
+  "firstHour": 7,
+  "lastHour": 23,
+  "stores": [
+    { "id": "store-north", "name": "North (synthetic)", "checkoutsPerDay": 117 },
+    { "id": "store-south", "name": "South (synthetic)", "checkoutsPerDay": 118 },
+    { "id": "store-east", "name": "East (synthetic)", "checkoutsPerDay": 119 },
+    { "id": "store-west", "name": "West (synthetic)", "checkoutsPerDay": 117 },
+    { "id": "store-central", "name": "Central (synthetic)", "checkoutsPerDay": 119 }
+  ],
+  "canary": ["store-north"],
+  "control": ["store-south", "store-east", "store-west", "store-central"],
+  "channels": ["web", "web", "ios", "web", "android", "web", "ios", "web"],
+  "amountsPence": [5800, 3650, 4200, 2999, 7450, 1899, 6200, 2450, 3375],
+  "answerMillis": [1200, 1400, 900, 1700, 2100, 1300, 2600, 1100, 1500, 3200],
+  "windows": [
+    {
+      "name": "before",
+      "fixOnCanary": false,
+      "shoppers": [
+        { "store": "store-north", "day": 1, "time": "11:20:05.000", "order": "47002", "channel": "web", "amountPence": 4200, "answerMillis": [9300] },
+        { "store": "store-north", "day": 6, "time": "19:44:10.000", "order": "47003", "channel": "web", "amountPence": 2999, "answerMillis": [8700] },
+        { "store": "store-north", "day": 9, "time": "13:05:40.000", "order": "47110", "channel": "web", "amountPence": 6200, "answerMillis": [9400, 1600], "repayAfterMillis": 21000 },
+        { "store": "store-north", "day": 2, "time": "10:31:00.000", "order": "47201", "channel": "web", "amountPence": 3650, "answerMillis": [1200, 1500], "declineFirst": true },
+        { "store": "store-north", "day": 7, "time": "16:02:30.000", "order": "47202", "channel": "ios", "amountPence": 1899, "answerMillis": [1300, 1400], "declineFirst": true },
+        { "store": "store-north", "day": 12, "time": "20:45:15.000", "order": "47203", "channel": "web", "amountPence": 5800, "answerMillis": [1100, 1700], "declineFirst": true },
+
+        { "store": "store-south", "day": 3, "time": "14:02:11.200", "order": "51102", "channel": "web", "amountPence": 5800, "answerMillis": [10100, 1500], "repayAfterMillis": 12000, "title": "T-4002: web, order #51102, paid again after the error (synthetic)" },
+        { "store": "store-east", "day": 5, "time": "16:31:02.000", "order": "47611", "channel": "web", "amountPence": 4200, "answerMillis": [8900, 1300], "repayAfterMillis": 34000 },
+        { "store": "store-west", "day": 11, "time": "10:12:44.000", "order": "47612", "channel": "web", "amountPence": 7450, "answerMillis": [13900, 1400], "repayAfterMillis": 9000 },
+        { "store": "store-central", "day": 4, "time": "08:15:20.000", "order": "47620", "channel": "ios", "amountPence": 3375, "answerMillis": [8400, 1500] },
+        { "store": "store-south", "day": 8, "time": "21:03:33.000", "order": "47621", "channel": "android", "amountPence": 2450, "answerMillis": [9800, 1700] },
+        { "store": "store-east", "day": 10, "time": "09:15:02.000", "order": "51209", "channel": "ios", "amountPence": 3650, "answerMillis": [12700, 4220], "title": "T-4010: iOS app, order #51209, captured twice (synthetic)" },
+        { "store": "store-south", "day": 1, "time": "12:00:01.000", "order": "47630", "channel": "web", "amountPence": 1899, "answerMillis": [9100] },
+        { "store": "store-east", "day": 2, "time": "18:22:13.000", "order": "47631", "channel": "web", "amountPence": 6200, "answerMillis": [8300] },
+        { "store": "store-west", "day": 3, "time": "07:45:50.000", "order": "47632", "channel": "web", "amountPence": 2999, "answerMillis": [11200] },
+        { "store": "store-central", "day": 5, "time": "20:10:09.000", "order": "47633", "channel": "web", "amountPence": 4200, "answerMillis": [9600] },
+        { "store": "store-south", "day": 6, "time": "13:33:31.000", "order": "47634", "channel": "web", "amountPence": 5800, "answerMillis": [8100] },
+        { "store": "store-east", "day": 9, "time": "15:05:05.000", "order": "47635", "channel": "web", "amountPence": 3375, "answerMillis": [10400] },
+        { "store": "store-west", "day": 12, "time": "11:11:11.000", "order": "47636", "channel": "web", "amountPence": 2450, "answerMillis": [8800] },
+        { "store": "store-central", "day": 13, "time": "17:17:17.000", "order": "47637", "channel": "web", "amountPence": 7450, "answerMillis": [12200] },
+        { "store": "store-south", "day": 2, "time": "09:40:00.000", "order": "47701", "channel": "web", "amountPence": 4200, "answerMillis": [1200, 1500], "declineFirst": true },
+        { "store": "store-east", "day": 4, "time": "12:10:00.000", "order": "47702", "channel": "android", "amountPence": 2999, "answerMillis": [1400, 1300], "declineFirst": true },
+        { "store": "store-west", "day": 6, "time": "15:25:00.000", "order": "47703", "channel": "web", "amountPence": 5800, "answerMillis": [1100, 1600], "declineFirst": true },
+        { "store": "store-central", "day": 8, "time": "18:55:00.000", "order": "47704", "channel": "ios", "amountPence": 3650, "answerMillis": [1300, 1200], "declineFirst": true },
+        { "store": "store-south", "day": 10, "time": "11:05:00.000", "order": "47705", "channel": "web", "amountPence": 1899, "answerMillis": [1500, 1400], "declineFirst": true },
+        { "store": "store-east", "day": 12, "time": "21:35:00.000", "order": "47706", "channel": "web", "amountPence": 6200, "answerMillis": [1200, 1500], "declineFirst": true },
+        { "store": "store-west", "day": 7, "time": "11:40:03.000", "order": "48266", "channel": "web", "amountPence": 2450, "answerMillis": [1400], "dropWebhooks": true, "title": "H-4109: web, order #48266, the webhook never came (synthetic)" }
+      ]
+    },
+    {
+      "name": "after",
+      "fixOnCanary": true,
+      "shoppers": [
+        { "store": "store-north", "day": 2, "time": "14:40:10.000", "order": "52101", "channel": "web", "amountPence": 5800, "answerMillis": [10600, 1500], "repayAfterMillis": 15000, "title": "Canary, fix on: web, order #52101, paid again after a slow answer (synthetic)" },
+        { "store": "store-north", "day": 5, "time": "10:05:00.000", "order": "52102", "channel": "ios", "amountPence": 3650, "answerMillis": [8600, 1500] },
+        { "store": "store-north", "day": 8, "time": "19:19:19.000", "order": "52103", "channel": "android", "amountPence": 4200, "answerMillis": [12900, 4200], "title": "Canary, fix on: Android app, order #52103, the retry that used to race (synthetic)" },
+        { "store": "store-north", "day": 12, "time": "09:30:30.000", "order": "52104", "channel": "web", "amountPence": 7450, "answerMillis": [31000, 1500], "repayAfterMillis": 25000 },
+        { "store": "store-north", "day": 1, "time": "12:12:00.000", "order": "52111", "channel": "web", "amountPence": 2999, "answerMillis": [1200, 1500], "declineFirst": true, "title": "Canary, fix on: web, order #52111, a new card after a decline (synthetic)" },
+        { "store": "store-north", "day": 4, "time": "17:48:00.000", "order": "52112", "channel": "ios", "amountPence": 1899, "answerMillis": [1300, 1400], "declineFirst": true },
+        { "store": "store-north", "day": 9, "time": "08:20:00.000", "order": "52113", "channel": "web", "amountPence": 6200, "answerMillis": [1100, 1700], "declineFirst": true },
+        { "store": "store-north", "day": 13, "time": "21:05:00.000", "order": "52114", "channel": "android", "amountPence": 3375, "answerMillis": [1400, 1200], "declineFirst": true },
+
+        { "store": "store-south", "day": 1, "time": "12:12:12.000", "order": "52201", "channel": "web", "amountPence": 4200, "answerMillis": [9200, 1400], "repayAfterMillis": 18000 },
+        { "store": "store-east", "day": 4, "time": "15:15:15.000", "order": "52202", "channel": "web", "amountPence": 3375, "answerMillis": [11000, 1500], "repayAfterMillis": 10000 },
+        { "store": "store-west", "day": 9, "time": "20:20:20.000", "order": "52388", "channel": "web", "amountPence": 6200, "answerMillis": [13900, 1500], "repayAfterMillis": 9000, "title": "T-4022: web, order #52388, paid again after the error (synthetic)" },
+        { "store": "store-central", "day": 12, "time": "13:13:13.000", "order": "52204", "channel": "web", "amountPence": 2999, "answerMillis": [10300, 1500], "repayAfterMillis": 14000 },
+        { "store": "store-south", "day": 3, "time": "09:09:09.000", "order": "52211", "channel": "ios", "amountPence": 5800, "answerMillis": [8500, 1500] },
+        { "store": "store-central", "day": 6, "time": "22:02:02.000", "order": "51388", "channel": "android", "amountPence": 4200, "answerMillis": [9800, 1700], "title": "T-4018: Android app, order #51388, two holds on the card (synthetic)" },
+        { "store": "store-east", "day": 10, "time": "18:45:30.000", "order": "52213", "channel": "ios", "amountPence": 3650, "answerMillis": [12700, 4230] },
+        { "store": "store-south", "day": 0, "time": "15:00:00.000", "order": "52230", "channel": "web", "amountPence": 1899, "answerMillis": [8200] },
+        { "store": "store-east", "day": 2, "time": "10:10:10.000", "order": "52231", "channel": "web", "amountPence": 7450, "answerMillis": [9900] },
+        { "store": "store-west", "day": 3, "time": "19:30:00.000", "order": "52232", "channel": "web", "amountPence": 2450, "answerMillis": [12400] },
+        { "store": "store-central", "day": 5, "time": "08:08:08.000", "order": "52233", "channel": "web", "amountPence": 5800, "answerMillis": [8600] },
+        { "store": "store-south", "day": 7, "time": "14:14:14.000", "order": "52234", "channel": "web", "amountPence": 3650, "answerMillis": [10700] },
+        { "store": "store-east", "day": 8, "time": "16:16:16.000", "order": "52235", "channel": "web", "amountPence": 4200, "answerMillis": [9400] },
+        { "store": "store-west", "day": 11, "time": "11:22:33.000", "order": "52236", "channel": "web", "amountPence": 2999, "answerMillis": [8900] },
+        { "store": "store-central", "day": 13, "time": "20:20:02.000", "order": "52237", "channel": "web", "amountPence": 6200, "answerMillis": [11800] },
+        { "store": "store-south", "day": 2, "time": "13:50:00.000", "order": "52301", "channel": "web", "amountPence": 4200, "answerMillis": [1200, 1500], "declineFirst": true },
+        { "store": "store-east", "day": 5, "time": "09:35:00.000", "order": "52302", "channel": "ios", "amountPence": 2999, "answerMillis": [1400, 1300], "declineFirst": true },
+        { "store": "store-west", "day": 7, "time": "17:15:00.000", "order": "52303", "channel": "web", "amountPence": 5800, "answerMillis": [1100, 1600], "declineFirst": true },
+        { "store": "store-central", "day": 9, "time": "12:45:00.000", "order": "52304", "channel": "android", "amountPence": 3650, "answerMillis": [1300, 1200], "declineFirst": true },
+        { "store": "store-south", "day": 11, "time": "19:05:00.000", "order": "52305", "channel": "web", "amountPence": 1899, "answerMillis": [1500, 1400], "declineFirst": true },
+        { "store": "store-east", "day": 13, "time": "10:25:00.000", "order": "52306", "channel": "web", "amountPence": 6200, "answerMillis": [1200, 1500], "declineFirst": true }
+      ]
+    }
+  ],
+  "expectedStory": {}
+}
