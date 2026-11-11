@@ -14,11 +14,10 @@ import { facts } from "./story/beats";
 import { storyDataFromRun } from "./story/fromRun";
 import { useStory } from "./story/useStory";
 import { MeterGateContext } from "./story/meterGate";
-import { DEFAULT_PACK_ID, hasIncident, industryName } from "./packs/industry";
+import { DEFAULT_PACK_ID, industryName } from "./packs/industry";
 import { IndustryProvider, useIndustry } from "./packs/IndustryContext";
 import { usePackBundle } from "./packs/bundles";
 import { IncidentContext, useIncident } from "./incident";
-import { ShowcaseNote } from "./packs/ShowcaseNote";
 
 const NARROW = "(max-width: 999px)";
 const subscribe = (cb: () => void) => {
@@ -91,12 +90,9 @@ function Walkthrough({ linkedTab }: { linkedTab: DeskTab | null }) {
   const narrow = useNarrow();
   const runApi = useRun();
   const incident = useIncident();
-  const industry = useIndustry();
-  const showcase = hasIncident(industry.id);
   // A link with ?desk=<tab> opens the console at once.
   const [linked] = useState(linkedTab);
-  // The desk sheet belongs to the EV walkthrough: a ?desk= link in another industry does not open it later.
-  const [deskOpen, setDeskOpen] = useState(linked !== null && showcase);
+  const [deskOpen, setDeskOpen] = useState(linked !== null);
   const [deskTab, setDeskTab] = useState<DeskTab>(linked ?? "queue");
   // When the desk opens from a link, the opener takes focus in the same commit, before the sheet records what
   // to return focus to on close.
@@ -129,7 +125,7 @@ function Walkthrough({ linkedTab }: { linkedTab: DeskTab | null }) {
 
   // D opens the desk on the tab that holds this beat's evidence.
   useEffect(() => {
-    if (!showcase || deskOpen || page !== "walkthrough") return;
+    if (deskOpen || page !== "walkthrough") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.altKey || e.ctrlKey || e.metaKey || e.defaultPrevented) return;
       if ((e.target as HTMLElement | null)?.closest("input, textarea, select, [contenteditable='true']")) return;
@@ -139,7 +135,7 @@ function Walkthrough({ linkedTab }: { linkedTab: DeskTab | null }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [showcase, deskOpen, page, beat.desk, openDesk]);
+  }, [deskOpen, page, beat.desk, openDesk]);
 
   // On a phone the stage in view drives the top strip, and the strip scrolls to a stage.
   const [phoneStage, setPhoneStage] = useState(0);
@@ -155,9 +151,8 @@ function Walkthrough({ linkedTab }: { linkedTab: DeskTab | null }) {
     window.scrollTo({ top: 0 });
   };
 
-  const aiLabel = !showcase
-    ? "Rules · no recorded run yet"
-    : runApi.source === "live"
+  const aiLabel =
+    runApi.source === "live"
       ? liveSpendText(runApi.spent, runApi.unpriced)
       : run.recording.source === "ai"
         ? "AI · recorded run"
@@ -174,12 +169,9 @@ function Walkthrough({ linkedTab }: { linkedTab: DeskTab | null }) {
         theme={theme}
         onToggleTheme={toggle}
         aiLabel={aiLabel}
-        onAi={() => {
-          if (showcase) openDesk("scorecard");
-        }}
+        onAi={() => openDesk("scorecard")}
         page={page}
         onPage={onPage}
-        showStages={showcase}
       />
       <main
         id="stage"
@@ -191,11 +183,6 @@ function Walkthrough({ linkedTab }: { linkedTab: DeskTab | null }) {
           <OperatingModel />
         ) : page === "notes" ? (
           <EngineeringNotes />
-        ) : !showcase ? (
-          // Every industry on offer has its incident walkthrough; one without it would show only this note.
-          <article className="page">
-            <ShowcaseNote />
-          </article>
         ) : narrow ? (
           <PhoneStory
             data={data}
@@ -230,7 +217,7 @@ function Walkthrough({ linkedTab }: { linkedTab: DeskTab | null }) {
           </>
         )}
       </main>
-      {showcase && !narrow && page === "walkthrough" && (
+      {!narrow && page === "walkthrough" && (
         <ControlBar
           index={story.index}
           actionPending={actionPending}
@@ -242,7 +229,7 @@ function Walkthrough({ linkedTab }: { linkedTab: DeskTab | null }) {
       )}
       <MeterGateContext.Provider value={meterGate}>
         <DeskSheet
-          open={showcase && deskOpen}
+          open={deskOpen}
           tab={deskTab}
           ticket={deskTicket}
           onClose={() => setDeskOpen(false)}

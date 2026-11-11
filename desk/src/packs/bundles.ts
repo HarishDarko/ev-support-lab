@@ -6,7 +6,6 @@ import type { PackId } from "../../shared/packs";
 import { EV_INCIDENT } from "../incident/ev-charging";
 import type { Incident } from "../incident/types";
 import { EV_DESK, type DeskPack } from "../run/pack";
-import { hasIncident } from "./industry";
 
 export interface PackBundle {
   desk: DeskPack;
@@ -21,8 +20,8 @@ export const LOADERS: Partial<Record<PackId, () => Promise<PackBundle>>> = {
   "e-commerce": () => import("./ecommerce-desk").then((m) => m.SHOP_BUNDLE),
 };
 
-/** Which bundle an industry shows: its own when it has an incident walkthrough, else EV's (its queue page is separate). */
-const ownBundle = (id: PackId): boolean => hasIncident(id) && id !== EV_BUNDLE.desk.id && Boolean(LOADERS[id]);
+/** Which bundle an industry shows: EV's is in the page; every other offered industry loads its own. */
+const ownBundle = (id: PackId): boolean => id !== EV_BUNDLE.desk.id && Boolean(LOADERS[id]);
 
 /**
  * The bundle for the picked industry. Null while an industry's own bundle is loading; `failed` when it did not load.

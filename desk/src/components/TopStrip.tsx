@@ -22,27 +22,16 @@ interface Props {
   page: Page;
   onPage: (page: Page) => void;
   /** The walkthrough's stages; hidden for an industry with no walkthrough. */
-  showStages?: boolean;
 }
 
 /** The 52 px top strip: name, stage nav, synthetic-data label, where the AI answers come from, theme toggle. */
-export function TopStrip({
-  stageIndex,
-  onStage,
-  theme,
-  onToggleTheme,
-  aiLabel,
-  onAi,
-  page,
-  onPage,
-  showStages = true,
-}: Props) {
+export function TopStrip({ stageIndex, onStage, theme, onToggleTheme, aiLabel, onAi, page, onPage }: Props) {
   return (
     <header className="strip">
       <span className="strip-name">Support Desk</span>
       <nav className="strip-nav" aria-label="Walkthrough and pages">
         <ol>
-          {(showStages ? STAGES : []).map((stage, i) => (
+          {STAGES.map((stage, i) => (
             <li key={stage.id}>
               <button
                 type="button"

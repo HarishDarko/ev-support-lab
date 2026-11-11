@@ -1,5 +1,6 @@
 // Which industry the desk shows. A `?pack=<id>` link wins, then the visitor's last pick, then the default.
-// Only complete packs (synthetic data, keyword rules and reviewed labels) can be picked; anything else falls back.
+// Only complete packs (synthetic data, keyword rules and reviewed labels) with their incident walkthrough can be
+// picked; anything else falls back.
 import type { PackId } from "../../shared/packs";
 import { CATALOG, CATALOG_DEFAULT_ID as DEFAULT_PACK_ID } from "../../shared/packs/catalog";
 
@@ -8,9 +9,9 @@ export interface IndustryOption {
   name: string;
 }
 
-/** The industries the menu offers: complete packs only, the default first. */
+/** The industries the menu offers: complete packs with their incident walkthrough, the default first. */
 export const INDUSTRY_OPTIONS: readonly IndustryOption[] = (Object.keys(CATALOG) as PackId[])
-  .filter((id) => CATALOG[id].complete === true)
+  .filter((id) => CATALOG[id].complete === true && CATALOG[id].hasIncident === true)
   .sort((a, b) => Number(b === DEFAULT_PACK_ID) - Number(a === DEFAULT_PACK_ID))
   .map((id) => ({ id, name: CATALOG[id].name }));
 
@@ -46,9 +47,6 @@ export function fieldLabel(id: PackId, key: string, fallback: string): string {
   const fields: readonly { key: string; label: string }[] = CATALOG[id].fields ?? [];
   return fields.find((f) => f.key === key)?.label ?? fallback;
 }
-
-/** The industry has a step-by-step incident walkthrough. */
-export const hasIncident = (id: PackId): boolean => CATALOG[id].hasIncident === true;
 
 export const industryName = (id: PackId): string => CATALOG[id].name;
 export { DEFAULT_PACK_ID };

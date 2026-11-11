@@ -1,6 +1,7 @@
-// What the desk shows for an industry with no incident and no recorded AI run yet: the keyword rules' triage of its
-// queue, its patterns, the knowledge base article and new-ticket check built from them, and the rules' score against
-// the reviewed labels. Pure functions over the pack, so the tests pin the same numbers the page shows.
+// The keyword rules' view of a pack: their triage of its queue, its patterns, the knowledge base article and
+// new-ticket check built from them, and the rules' score against the reviewed labels. Pure functions over the pack;
+// tests/packs-content.test.ts pins each pack's rules score through it, and the desk's scorecard shows the same score
+// from the rules' recorded run (each pack's e2e checks the page).
 import { ruleTriageFor, rulePatternsFor, type RuleTriageResult } from "../../functions/_lib/rule-engine";
 import { shortChainSteps } from "../../functions/_lib/short-chain";
 import { topPattern } from "../../functions/_lib/top-pattern";
