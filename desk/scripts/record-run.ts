@@ -6,9 +6,10 @@
 //
 // Against a server started with MOCK=1 this writes a rules-only run, and the file says so.
 // Against a server with a model key it writes an AI run and spends real money (about $0.12 to $0.15), so that is a
-// deliberate, separate step and never part of CI. For an industry whose live runs are still off, the local server
-// needs ALLOW_PACK_RECORDING=1 (see functions/api/[step].ts). The script never reads or writes any key or .dev.vars
-// file.
+// deliberate, separate step and never part of CI. For an industry whose live runs are still off, start the local
+// server with the recording switch as a binding: `npx wrangler pages dev dist --ip 127.0.0.1 --port 8788
+// --binding ALLOW_PACK_RECORDING=1` (an environment variable alone is not a binding; see functions/_lib/live-packs.ts).
+// The script never reads or writes any key or .dev.vars file.
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import prettier from "prettier";
@@ -55,11 +56,13 @@ async function main(): Promise<void> {
 
   const models = modelsOf(report.steps);
   const rulesCalls = report.answered - report.aiAnswered;
-  // For another industry, a committed AI recording turns its live runs on, so it must be a whole AI run: one where
-  // some calls fell back to the rules is not written. EV keeps its old behaviour and only warns.
-  if (pack !== DEFAULT_PACK_ID && models.length && rulesCalls > 0)
+  // For another industry, a committed AI recording turns its live runs on, so this script writes only a whole AI run:
+  // one where any call fell back to the rules (no key, a rate limit, a failed check, or a MOCK=1 server) is not
+  // written, so it can never overwrite that pack's recording with a partly or wholly rules one. A rules-only recording
+  // for such a pack comes from scripts/record-rules-run.ts. EV keeps its old behaviour and only warns.
+  if (pack !== DEFAULT_PACK_ID && rulesCalls > 0)
     throw new Error(
-      `${rulesCalls} of ${report.answered} calls fell back to rules (${report.fallbackReason}), so nothing was written. Fix the cause and record again.`,
+      `${rulesCalls} of ${report.answered} calls fell back to rules (${report.fallbackReason}), so nothing was written. Fix the cause and record again; for a rules-only recording use scripts/record-rules-run.ts.`,
     );
   const recorded: RecordedRun = {
     recordedAt: new Date().toISOString(),
