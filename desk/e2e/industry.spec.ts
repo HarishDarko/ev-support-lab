@@ -1,5 +1,5 @@
-// SD-11 and SD-13: the Industry choice. Three complete industries: EV charging (the full walkthrough), SaaS support
-// and e-commerce (queue, patterns, article, new-ticket check and scorecard from the keyword rules).
+// SD-11, SD-13 and SD-15: the Industry choice. Three complete industries: EV charging and SaaS support (the full
+// incident walkthrough), and e-commerce (queue, patterns, article, new-ticket check and scorecard from the rules).
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -41,29 +41,37 @@ test("the Industry menu offers the three complete industries, EV charging first"
   await expect(page.getByText("40 tickets are waiting.").first()).toBeVisible();
 });
 
-test("picking SaaS support shows its queue and scorecard, keeps the pick on reload, and switches back", async ({
+test("picking SaaS support shows its own walkthrough, keeps the pick on reload, and switches back", async ({
   page,
 }) => {
   const errors = watchErrors(page);
   await page.goto("/");
   await menu(page).selectOption("saas-support");
   await expect(page).toHaveURL(/\?pack=saas-support(#.*)?$/);
-  await expect(page.getByRole("heading", { name: "21 tickets are waiting." })).toBeVisible();
-  const queue = page.getByRole("table", { name: "Open tickets with the rules' triage for each" });
-  await expect(queue.getByRole("row")).toHaveCount(22);
-  await expect(queue.getByRole("columnheader", { name: "Account" })).toBeVisible();
-  await expect(queue.getByRole("row", { name: /T-3004/ })).toContainText("RB-14");
-  const score = page.getByRole("table", { name: "Keyword rules against the reviewed labels" });
-  await expect(score.getByRole("row", { name: /All four right/ })).toContainText("6 of 21");
-  await expect(page.getByText(/in-sample/)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("25 tickets are waiting.");
 
   await page.reload();
-  await expect(page.getByRole("heading", { name: "21 tickets are waiting." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("25 tickets are waiting.");
   await expect(menu(page)).toHaveValue("saas-support");
 
-  await page.getByRole("button", { name: "Switch to EV charging" }).click();
+  await menu(page).selectOption("ev-charging");
   await expect(page).not.toHaveURL(/pack=/);
   await expect(page.getByText("40 tickets are waiting.").first()).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("a SaaS desk link opens the SaaS desk with its own columns and scorecard", async ({ page }) => {
+  const errors = watchErrors(page);
+  await page.goto("/?desk=queue&pack=saas-support");
+  const dialog = page.getByRole("dialog", { name: "The desk" });
+  await expect(dialog).toBeVisible();
+  const table = dialog.getByRole("table").first();
+  await expect(table.getByRole("row")).toHaveCount(26);
+  await expect(table.getByRole("columnheader", { name: "Account" })).toBeVisible();
+  await expect(table.getByRole("columnheader", { name: "Plan" })).toBeVisible();
+  await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveValue("saas-support");
+  await dialog.getByRole("tab", { name: "Scorecard" }).click();
+  await expect(dialog.getByText(/reference-labels\.saas-support\.json/)).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -89,10 +97,10 @@ test("the e-commerce desk has no sideways scroll at 390 px", async ({ page }) =>
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test("in SaaS support the rules button jumps to the scorecard, and the EV desk does not pop open later", async ({
+test("in e-commerce the rules button jumps to the scorecard, and the EV desk does not pop open later", async ({
   page,
 }) => {
-  await page.goto("/?desk=queue&pack=saas-support");
+  await page.goto("/?desk=queue&pack=e-commerce");
   await expect(page.getByRole("heading", { name: "21 tickets are waiting." })).toBeVisible();
   await expect(page.getByRole("dialog", { name: "The desk" })).toHaveCount(0);
   await page.getByRole("button", { name: "Rules · no recorded run yet" }).click();
