@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
-import { NEW_TICKET_EXAMPLE } from "../data/synthetic";
 import { source } from "../data/lab";
+import { useRun } from "../run";
 import type { Lab, TestRun } from "../incident/types";
 import { canaryOutcome, type Facts } from "../story/beats";
 import type { StoryData } from "../story/data";
@@ -289,6 +289,7 @@ export function ProveNode({ data, f }: { data: StoryData; f: Facts }) {
 // ---- c1: the article, and the next ticket ----
 
 export function ArticleNode({ data }: { data: StoryData }) {
+  const { pack } = useRun();
   const kb = data.kb;
   const c = data.classify;
   return (
@@ -323,7 +324,7 @@ export function ArticleNode({ data }: { data: StoryData }) {
         transition={{ ...enter.transition, delay: 0.15 }}
       >
         <p className="node-kicker">A new ticket arrives</p>
-        <blockquote className="ticket-text">{NEW_TICKET_EXAMPLE}</blockquote>
+        <blockquote className="ticket-text">{pack.newTicketExample}</blockquote>
         <dl className="classify">
           <div>
             <dt>Matches</dt>

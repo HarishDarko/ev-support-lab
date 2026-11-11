@@ -1,8 +1,15 @@
-import { TICKETS } from "../../data/synthetic";
-import { costByStep, formatSeconds, formatTokens, formatUsd, runCost, runLabel, useRun } from "../../run";
+import { useMemo } from "react";
 import {
-  LABELS_REVIEWED,
-  REFERENCE_LABELS,
+  costByStep,
+  formatSeconds,
+  formatTokens,
+  formatUsd,
+  runCost,
+  runLabel,
+  useRun,
+  type DeskPack,
+} from "../../run";
+import {
   SCORE_FIELDS,
   historyCheck,
   rulesAnswers,
@@ -14,9 +21,6 @@ import {
 import { SourceLink } from "../ui/SourceLink";
 import "./ScorecardTab.css";
 
-/** Where the reference labels live in the repository. */
-const REFERENCE_LABELS_PATH = "docs/eval/reference-labels.json";
-
 const FIELD_LABEL: Record<ScoreField, string> = {
   component: "Component",
   severity: "Severity",
@@ -24,10 +28,12 @@ const FIELD_LABEL: Record<ScoreField, string> = {
   runbook: "Runbook",
 };
 
-// The rules and the closed tickets are fixed data, so these are computed once.
-const RULES_LENIENT = scoreTriage(REFERENCE_LABELS, rulesAnswers());
-const RULES_STRICT = scoreTriage(REFERENCE_LABELS, rulesAnswers(), "strict");
-const HISTORY_CHECK = historyCheck();
+// The rules and the closed tickets are fixed data, so these are computed once per pack.
+const rulesScores = (pack: DeskPack) => ({
+  lenient: scoreTriage(pack.labels.labels, rulesAnswers(pack)),
+  strict: scoreTriage(pack.labels.labels, rulesAnswers(pack), "strict"),
+  history: historyCheck(pack),
+});
 
 const share = (k: number, n: number) => (n ? `${k} of ${n} (${Math.round((100 * k) / n)}%)` : "–");
 
@@ -36,17 +42,20 @@ const share = (k: number, n: number) => (n ? `${k} of ${n} (${Math.round((100 * 
  * with the rules' check on older tickets they were not written from. Then what this run cost, per step.
  */
 export function ScorecardTab() {
-  const { run } = useRun();
+  const { pack, run } = useRun();
+  const rules = useMemo(() => rulesScores(pack), [pack]);
+  const { labels, reviewed, path } = pack.labels;
+  const queued = pack.tickets.length;
   const answers = triageAnswers(run);
-  const lenient = scoreTriage(REFERENCE_LABELS, answers);
-  const strict = scoreTriage(REFERENCE_LABELS, answers, "strict");
+  const lenient = scoreTriage(labels, answers);
+  const strict = scoreTriage(labels, answers, "strict");
   // Tickets where the model's answer failed a check and the rules answered instead; they count in this run's column.
   const fallbacks = run.steps.triage
     .flatMap((b) => b.data.results)
     .filter((r) => r.source === "rules")
     .map((r) => r.id);
   const [runLow, runHigh] = wilson95(lenient.allFour, lenient.n);
-  const [rulesLow, rulesHigh] = wilson95(RULES_LENIENT.allFour, RULES_LENIENT.n);
+  const [rulesLow, rulesHigh] = wilson95(rules.lenient.allFour, rules.lenient.n);
   const overlap = runLow <= rulesHigh && rulesLow <= runHigh;
   const rows = costByStep(run.steps);
   const total = runCost(run.steps);
@@ -61,9 +70,8 @@ export function ScorecardTab() {
           Model accuracy
         </h3>
         <p className="dk-lede">
-          How well this run triaged the {TICKETS.length} tickets, scored against reference labels reviewed on{" "}
-          {LABELS_REVIEWED}, next to the keyword rules the desk falls back to. A ticket is fully right only when all
-          four fields match.
+          How well this run triaged the {queued} tickets, scored against reference labels reviewed on {reviewed}, next
+          to the keyword rules the desk falls back to. A ticket is fully right only when all four fields match.
         </p>
         <div className="dk-scroll">
           <table className="dk-table">
@@ -84,7 +92,7 @@ export function ScorecardTab() {
                 <tr key={f}>
                   <th scope="row">{FIELD_LABEL[f]}</th>
                   <td className="dk-num">{share(lenient.fields[f], lenient.n)}</td>
-                  <td className="dk-num">{share(RULES_LENIENT.fields[f], RULES_LENIENT.n)}</td>
+                  <td className="dk-num">{share(rules.lenient.fields[f], rules.lenient.n)}</td>
                 </tr>
               ))}
             </tbody>
@@ -92,7 +100,7 @@ export function ScorecardTab() {
               <tr>
                 <th scope="row">All four right</th>
                 <td className="dk-num">{share(lenient.allFour, lenient.n)}</td>
-                <td className="dk-num">{share(RULES_LENIENT.allFour, RULES_LENIENT.n)}</td>
+                <td className="dk-num">{share(rules.lenient.allFour, rules.lenient.n)}</td>
               </tr>
             </tfoot>
           </table>
@@ -100,7 +108,7 @@ export function ScorecardTab() {
         <p className="dk-note">
           Where the labels accept two answers, either counts. Counting only the reviewers&apos; majority answer, this
           run is fully right on {share(strict.allFour, strict.n)} tickets and the rules on{" "}
-          {share(RULES_STRICT.allFour, RULES_STRICT.n)}.
+          {share(rules.strict.allFour, rules.strict.n)}.
           {fallbacks.length > 0 &&
             ` This run's column includes ${fallbacks.length} ticket${fallbacks.length > 1 ? "s" : ""} (${fallbacks.join(", ")}) where the model's answer failed a check and the rules answered instead.`}
         </p>
@@ -114,9 +122,9 @@ export function ScorecardTab() {
 
         <h4 className="dk-h4">The rules&apos; score is in-sample</h4>
         <p className="dk-lede">
-          The keyword rules were written while looking at these {TICKETS.length} tickets, and some of them copy a
-          ticket&apos;s exact words, so they have seen the test. On the older closed tickets, which they were not
-          written from, they pick the same runbook as the real resolution less often.
+          The keyword rules were written while looking at these {queued} tickets, and some of them copy a ticket&apos;s
+          exact words, so they have seen the test. On the older closed tickets, which they were not written from, they
+          pick the same runbook as the real resolution less often.
         </p>
         <div className="dk-scroll">
           <table className="dk-table">
@@ -132,7 +140,7 @@ export function ScorecardTab() {
             <tbody>
               <tr>
                 <th scope="row">Same runbook as the real resolution, older closed tickets</th>
-                <td className="dk-num">{share(HISTORY_CHECK.same, HISTORY_CHECK.n)}</td>
+                <td className="dk-num">{share(rules.history.same, rules.history.n)}</td>
               </tr>
             </tbody>
           </table>
@@ -141,10 +149,10 @@ export function ScorecardTab() {
         <h4 className="dk-h4">Method</h4>
         <ol className="dk-list">
           <li>
-            Reference answers for the {TICKETS.length} synthetic tickets are in{" "}
-            <SourceLink path={REFERENCE_LABELS_PATH}>reference-labels.json</SourceLink>. Three AI reviewers labelled
-            every ticket separately, from the ticket text and the label definitions only: two separate Claude runs and
-            one Gemini run. None saw the earlier draft labels, the rules or any model&apos;s answers. They are not fully
+            Reference answers for the {queued} synthetic tickets are in{" "}
+            <SourceLink path={path}>{path.split("/").pop()}</SourceLink>. Three AI reviewers labelled every ticket
+            separately, from the ticket text and the label definitions only: two separate Claude runs and one Gemini
+            run. None saw the earlier draft labels, the rules or any model&apos;s answers. They are not fully
             independent: the two Claude reviewers agreed with each other more often than with Gemini, and the model
             scored here is also Claude, so the labels may lean towards how Claude reads a ticket.
           </li>
@@ -157,7 +165,7 @@ export function ScorecardTab() {
             Each triage answer is compared field by field: component, severity, action and runbook. Every field is
             scored on its own.
           </li>
-          <li>Cost per ticket is the cost of the triage step below divided by {TICKETS.length}, at list price.</li>
+          <li>Cost per ticket is the cost of the triage step below divided by {queued}, at list price.</li>
         </ol>
       </section>
 

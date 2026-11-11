@@ -1,6 +1,5 @@
 import { useId, useState } from "react";
 import { blockClass, pillTone } from "../ui/origin";
-import { NEW_TICKET_EXAMPLE } from "../../data/synthetic";
 import { MAX_TICKET_CHARS, originOf, provenanceOfStep, useRun, type ClassifyModel, type StepResult } from "../../run";
 import { Pill } from "../ui/Pill";
 import { ProvenanceNote } from "../ui/ProvenanceNote";
@@ -15,11 +14,11 @@ interface Checked {
 
 /** A new ticket, checked against the article. The one place a visitor types their own text. */
 export function Classifier() {
-  const { run, classify, label } = useRun();
+  const { pack, run, classify, label } = useRun();
   const field = useId();
-  const [text, setText] = useState(NEW_TICKET_EXAMPLE);
+  const [text, setText] = useState(pack.newTicketExample);
   const [checked, setChecked] = useState<Checked>({
-    text: NEW_TICKET_EXAMPLE,
+    text: pack.newTicketExample,
     answer: run.steps.classify,
     recorded: true,
   });

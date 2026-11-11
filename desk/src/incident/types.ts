@@ -147,6 +147,9 @@ export interface Incident {
   recordOnlyRunbook: string;
   /** What the pack calls the places tickets come from, plural (for EV: "sites"). */
   placeWord: string;
+  /** The queue beats' pack words: who raised the tickets, and the check a person makes before the record-only
+   * runbook (after "wait until a person"). */
+  queue: { raisedBy: string; check: string };
 
   /** The pattern facts above the escalation line, before the record-only runbook's own row. */
   patternFacts: readonly (readonly [value: string, label: string, detail: string])[];

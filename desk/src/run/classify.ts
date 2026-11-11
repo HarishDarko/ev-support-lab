@@ -1,7 +1,7 @@
 // The new-ticket check: the one place a visitor types their own text. It is live-only; if the call fails the
 // answer comes from the deterministic rules, and its trace says so.
-import { ruleClassify } from "../../functions/_lib/rules";
 import type { PostStep } from "./live";
+import { EV_DESK, type DeskPack } from "./pack";
 import type { ClassifyModel, KbModel, StepResult } from "./types";
 
 export const MAX_TICKET_CHARS = 600;
@@ -11,16 +11,18 @@ export async function classifyTicket(
   text: string,
   article: KbModel,
   signal?: AbortSignal,
+  pack: DeskPack = EV_DESK,
 ): Promise<StepResult<ClassifyModel>> {
   const started = performance.now();
+  const body = pack.requestPack ? { text, article, pack: pack.requestPack } : { text, article };
   try {
-    const answer = (await post("classify", { text, article }, signal)) as StepResult<ClassifyModel>;
+    const answer = (await post("classify", body, signal)) as StepResult<ClassifyModel>;
     return { ...answer, live: true };
   } catch (error) {
     if (signal?.aborted) throw error;
     return {
       live: true,
-      data: ruleClassify(text, article),
+      data: pack.ruleClassify(text, article),
       ms: Math.round(performance.now() - started),
       trace: {
         step: "classify",
