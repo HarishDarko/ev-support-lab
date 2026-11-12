@@ -1,8 +1,10 @@
 name: lab-saas
 
+# One run per commit: pushes run only on main; branches run through their pull request.
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - "lab-saas/**"
       - "gradle/**"
@@ -30,27 +32,40 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      # Any JDK runs the wrapper; the build provisions Java 25 through its toolchain.
+      # Java 25 is the build's toolchain, so Gradle uses this JDK instead of provisioning another one.
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: "25"
       - uses: gradle/actions/setup-gradle@v4
       # Docker is available on the runner, so Testcontainers starts PostgreSQL itself.
       - name: Tests, including the experiment
         run: ./gradlew :lab-saas:test --console=plain
+      # With the fix off the regression test must fail on its assertions. A Gradle or Docker error, or a filter that
+      # matches no test, must not count as that failure, so the step reads the test report instead of the exit code.
       - name: The regression test fails without the fix
         run: |
           report=lab-saas/build/test-results/test/TEST-dev.saaslab.delivery.TokenStormRegressionTest.xml
-          rm -f "$report"
-          if ./gradlew :lab-saas:test --tests '*TokenStormRegressionTest' -Dlab.fix.enabled=false --console=plain; then
-            echo "TokenStormRegressionTest passed with the fix off; it no longer proves the fix." >&2
+          rm -rf lab-saas/build/test-results/test
+          set +e
+          ./gradlew :lab-saas:test --tests '*TokenStormRegressionTest' -Dlab.fix.enabled=false --console=plain
+          set -e
+          if [ ! -f "$report" ]; then
+            echo "::error::No report for TokenStormRegressionTest: the test did not run with the fix off." >&2
             exit 1
           fi
-          # Gradle writes every exception as a failure, so check it failed on an assertion, not a crash.
-          if ! grep -q 'type="org.opentest4j.AssertionFailedError"' "$report"; then
-            echo "TokenStormRegressionTest failed with the fix off, but not on an assertion:" >&2
-            grep -o 'type="[^"]*"' "$report" >&2 || echo "no test report at $report" >&2
+          attr() { grep -o "$1=\"[0-9]*\"" "$report" | head -n 1 | tr -dc '0-9'; }
+          tests=$(attr tests); failures=$(attr failures); errors=$(attr errors)
+          echo "With the fix off: tests=$tests failures=$failures errors=$errors"
+          if [ "${tests:-0}" -eq 0 ] || [ "${failures:-0}" -eq 0 ] || [ "${errors:-0}" -ne 0 ]; then
+            echo "::error::TokenStormRegressionTest must fail on its assertions with the fix off (failures above 0, errors 0)." >&2
             exit 1
           fi
-          echo "With the fix off, TokenStormRegressionTest fails on an assertion, as it should."
+          # Gradle reports every exception as a failure, so also check each failure is an assertion, not a crash.
+          types=$(grep -E '^\s*<failure ' "$report" | grep -oE ' type="[^"]*"' | sed 's/ type="//; s/"$//')
+          other=$(printf '%s\n' "$types" | grep -vE '^(org\.opentest4j\.AssertionFailedError|java\.lang\.AssertionError|org\.assertj\.core\.error\..+)?$' || true)
+          echo "Failure types: $(printf '%s ' $types)"
+          if [ -n "$other" ]; then
+            echo "::error::With the fix off the test failed for another reason: $other" >&2
+            exit 1
+          fi

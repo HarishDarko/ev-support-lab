@@ -1,8 +1,10 @@
 name: lab-ecommerce
 
+# One run per commit: pushes run only on main; branches run through their pull request.
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - "lab-ecommerce/**"
       - "gradle/**"
@@ -30,11 +32,11 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      # Any JDK runs the wrapper; the build provisions Java 25 through its toolchain.
+      # Java 25 is the build's toolchain, so Gradle uses this JDK instead of provisioning another one.
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: "25"
       - uses: gradle/actions/setup-gradle@v4
       # Docker is available on the runner, so Testcontainers starts PostgreSQL itself.
       - name: Tests, including the experiment

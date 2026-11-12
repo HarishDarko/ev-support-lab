@@ -1,7 +1,9 @@
 name: desk
 
+# One run per commit: pushes run only on main (where the deploy is); branches run through their pull request.
 on:
   push:
+    branches: [main]
     paths:
       - "desk/**"
       - "docs/eval/**"
@@ -22,7 +24,11 @@ permissions:
 
 jobs:
   desk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    # Playwright's own image has Chromium and its system packages, so no apt install on every run. Its version
+    # must match @playwright/test in desk/package-lock.json; the first step below checks that.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
     timeout-minutes: 15
     defaults:
       run:
@@ -41,6 +47,14 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Check the browser image matches the Playwright version
+        run: |
+          want="$(node -p "require('@playwright/test/package.json').version")"
+          if [ "$want" != "1.63.0" ]; then
+            echo "::error::@playwright/test is $want; change the container image tag in .github/workflows/desk.yml to v$want-noble."
+            exit 1
+          fi
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -52,25 +66,6 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Read the Playwright version
-        id: playwright
-        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Playwright browsers
-        id: browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
-
-      - name: Install Playwright browser
-        if: steps.browsers.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-
-      - name: Install Playwright system dependencies
-        if: steps.browsers.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
 
       - name: End-to-end tests (MOCK=1, no API key, no spend)
         run: npx playwright test
@@ -96,7 +91,7 @@ jobs:
   deploy:
     needs: desk
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
       group: desk-deploy-production
