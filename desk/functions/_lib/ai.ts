@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { DEFAULT_PACK } from "../../shared/packs";
 import { StepError } from "./errors";
+import { isLocalUrl } from "./local";
 import type { Env, JsonSchema, Usage } from "./types";
 
 export { StepError, clip } from "./errors";
@@ -128,25 +129,44 @@ export async function callJSON(
 // where the count stays approximate.
 const admitted = new Map<string, number>();
 
-// Coarse abuse guard: the link may be forwarded. Counts calls per IP per hour and per day overall.
+// On a public host a paid call needs a working counter: with no binding, or a read that fails, the call is refused
+// and the rules answer. On a local host (a test, or `wrangler pages dev` whose simulated KV fails) it is let through.
+const COUNTER_DOWN = "Live runs are paused: the usage counter is unavailable.";
+
+/** A limit from the environment, or the default when it is unset or not a number (so it never turns into NaN). */
+function limitOf(value: string | undefined, fallback: number): number {
+  const n = Number(value);
+  return value !== undefined && value.trim() !== "" && Number.isFinite(n) ? n : fallback;
+}
+
+// Coarse abuse guard: the link may be forwarded. Counts model calls per IP per hour and per day overall.
 export async function rateLimit(env: Env, request: Request): Promise<void> {
+  const local = isLocalUrl(request.url);
   const kv = env.DESK_KV;
-  if (!kv) return;
+  if (!kv) {
+    if (local) return;
+    throw new StepError(COUNTER_DOWN, 503);
+  }
   const ip = request.headers.get("cf-connecting-ip") ?? "local";
   const now = new Date();
   const hour = now.toISOString().slice(0, 13);
   const day = now.toISOString().slice(0, 10);
-  const perIp = Number(env.RL_PER_IP_HOUR ?? 80);
-  const perDay = Number(env.RL_GLOBAL_DAY ?? 400);
+  const perIp = limitOf(env.RL_PER_IP_HOUR, 80);
+  const perDay = limitOf(env.RL_GLOBAL_DAY, 400);
   const ipKey = `rl:${ip}:${hour}`;
   const dayKey = `rl:all:${day}`;
-  // Best effort: across isolates KV is still last write wins (and one write per key per second), so a counting
-  // failure never blocks a call. The hard cap is the spend limit on the API key itself.
+  // Across isolates KV is still last write wins (and one write per key per second), so the count is approximate;
+  // the hard cap is the spend limit on the API key itself. A failed read, or a stored count that is not a number,
+  // blocks the call on a public host.
   let stored: number[];
   try {
     stored = (await Promise.all([kv.get(ipKey), kv.get(dayKey)])).map((v) => Number(v ?? 0));
   } catch {
-    return;
+    stored = [NaN];
+  }
+  if (!stored.every(Number.isFinite)) {
+    if (local) return;
+    throw new StepError(COUNTER_DOWN, 503);
   }
   // From here to the reservation there is no await, so no other call in this isolate can slip in between.
   for (const key of admitted.keys()) if (!key.endsWith(`:${hour}`) && key !== dayKey) admitted.delete(key);
@@ -156,6 +176,8 @@ export async function rateLimit(env: Env, request: Request): Promise<void> {
   if (dayCount >= perDay) throw new StepError("Today's live-run budget for this demo is used up.", 429);
   admitted.set(ipKey, ipCount + 1);
   admitted.set(dayKey, dayCount + 1);
+  // A failed write does not block the call: the reservation above already counts it in this isolate, and parallel
+  // calls would otherwise trip KV's limit of one write per key per second.
   await Promise.allSettled([
     kv.put(ipKey, String(ipCount + 1), { expirationTtl: 3700 }),
     kv.put(dayKey, String(dayCount + 1), { expirationTtl: 90000 }),

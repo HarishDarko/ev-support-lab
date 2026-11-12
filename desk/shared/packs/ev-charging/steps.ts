@@ -5,7 +5,6 @@ import { StepError, clip, fenced } from "../../../functions/_lib/errors";
 import { ValidationError, check, exceptionIn, exceptionNamesIn, quoted } from "../../../functions/_lib/checks";
 import { bool, groundingIn, knownIds, obj, runbookListOf, severity, str, strs } from "../../../functions/_lib/kit";
 import type { StepInput } from "../../../functions/_lib/types";
-import type { ShiftSummary } from "../types";
 import {
   COMPONENTS,
   ENGINEERING_CHANGE,
@@ -368,7 +367,7 @@ ${clip(input?.summary, 8000)}`;
   validate(data: ShiftnoteModel, _input: StepInput, prompt: string) {
     return { data, checks: grounding(data, prompt) };
   },
-  fallback: (input: StepInput) => ruleShiftnote(input?.summary as ShiftSummary | null | undefined),
+  fallback: (input: StepInput) => ruleShiftnote(input?.summary),
 };
 
 // ---- classify ----

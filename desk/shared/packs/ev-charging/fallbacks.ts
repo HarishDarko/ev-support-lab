@@ -1,8 +1,8 @@
 // EV charging pack: the deterministic fallback for the incident steps (investigate, handoff, verify, KB, shift
 // note, new-ticket check). Built only from the synthetic data, so it never invents anything.
 import { exceptionIn } from "../../../functions/_lib/checks";
+import { shiftSummaryOf } from "../../../functions/_lib/errors";
 import { ruleTriageFor } from "../../../functions/_lib/rule-engine";
-import type { ShiftSummary } from "../types";
 import { ENGINEERING_CHANGE, HERO, TICKETS, VERIFICATION } from "./data";
 import { RUNBOOK_EXCEPTIONS } from "./guardrails";
 import { TRIAGE_RULES } from "./triage-rules";
@@ -146,8 +146,8 @@ export function ruleKb() {
   };
 }
 
-export function ruleShiftnote(summary?: ShiftSummary | null) {
-  const s = summary ?? {};
+export function ruleShiftnote(summary?: unknown) {
+  const s = shiftSummaryOf(summary);
   return {
     headline: `Queue started at ${s.open_at_start ?? TICKETS.length}; ${s.approved_for_closure ?? 0} approved for closure by runbook, and the stuck-session pattern is with engineering.`,
     done: [

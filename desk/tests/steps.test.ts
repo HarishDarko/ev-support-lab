@@ -227,9 +227,9 @@ describe("pattern validation", () => {
 
   it("puts earlier triage results into the prompt", () => {
     const p = STEPS.patterns.build({
-      triage: [{ id: "T-2041", component: "session-state", severity: "S2", action: "x" }, null],
+      triage: [{ id: "T-2041", component: "session-state", severity: "S2", action: "needs_human" }, null],
     });
-    expect(p).toContain("| triage: session-state, S2, x");
+    expect(p).toContain("| triage: session-state, S2, needs_human");
   });
 });
 

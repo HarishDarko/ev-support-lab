@@ -96,13 +96,24 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
   };
   try {
     if (env.MOCK === "1") throw new StepError("AI is turned off in this environment.", 503);
-    await rateLimit(env, request);
     // Time budget per step: the fallback must arrive while the viewer is still on the screen.
     const budget = step.deep ? 40_000 : 15_000;
     let lastError: unknown;
     for (let attempt = 1; attempt <= 2; attempt += 1) {
-      const left = budget - (Date.now() - started);
-      if (attempt > 1 && left < budget / 2) break; // not enough time for a useful retry
+      if (attempt > 1 && budget - (Date.now() - started) < budget / 2) break; // not enough time for a useful retry
+      // Every model call counts against the limits, a retry too, so retries do not double the calls a day's budget
+      // allows. A refused retry is noted in the checks; the first attempt's failure stays the fallback reason.
+      // Reading the counter takes time too, so the call is skipped if none is left.
+      let left: number;
+      try {
+        await rateLimit(env, request);
+        left = budget - (Date.now() - started);
+        if (left <= 0) throw new StepError("No time was left for the model call.", 504);
+      } catch (error) {
+        if (attempt === 1) throw error;
+        trace.checks.push(check("Retry refused", false, (error as Error).message));
+        break;
+      }
       trace.attempts = attempt;
       try {
         const res = await callJSON(env, {

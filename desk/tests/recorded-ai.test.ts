@@ -30,7 +30,13 @@ async function post(pack: string, ids: string[]) {
     method: "POST",
     body: JSON.stringify({ ids, pack }),
   });
-  const res = await onRequestPost({ request, env: { ANTHROPIC_API_KEY: "test-key" }, params: { step: "triage" } });
+  // A public host: the rate limiter fails closed there without a counter, so the test gives it one.
+  const kv = { get: () => Promise.resolve(null), put: () => Promise.resolve() };
+  const res = await onRequestPost({
+    request,
+    env: { ANTHROPIC_API_KEY: "test-key", DESK_KV: kv },
+    params: { step: "triage" },
+  });
   return res.status;
 }
 

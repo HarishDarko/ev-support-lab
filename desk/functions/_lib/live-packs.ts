@@ -2,6 +2,7 @@
 import saasRecording from "../../src/data/recorded-run.saas-support.json";
 import shopRecording from "../../src/data/recorded-run.e-commerce.json";
 import type { PackId } from "../../shared/packs";
+import { isLocalUrl } from "./local";
 import type { Env } from "./types";
 
 /**
@@ -18,8 +19,6 @@ export function liveAllowed(id: PackId, pack: { liveRuns?: boolean }): boolean {
   return pack.liveRuns === true || RECORDED_AI[id] === true;
 }
 
-const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
-
 /**
  * The recording switch: the binding ALLOW_PACK_RECORDING=1 (`wrangler pages dev ... --binding ALLOW_PACK_RECORDING=1`;
  * a shell environment variable is not a binding) lets a local server call the model for a pack whose live
@@ -28,10 +27,5 @@ const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
  * it cannot turn on in production even if the variable were set there.
  */
 export function recordingAllowed(env: Env, url: string): boolean {
-  if (env.ALLOW_PACK_RECORDING !== "1") return false;
-  try {
-    return LOCAL_HOSTS.has(new URL(url).hostname);
-  } catch {
-    return false;
-  }
+  return env.ALLOW_PACK_RECORDING === "1" && isLocalUrl(url);
 }

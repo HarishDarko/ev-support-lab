@@ -5,15 +5,16 @@ compatibility_flags = ["nodejs_compat"]
 
 # Rate-limit counters. Created with:
 #   npx wrangler kv namespace create DESK_KV
-# (namespace "DESK_KV").
+# (namespace "DESK_KV"). On a public host a live call is refused, and the rules answer, when this binding is
+# missing or cannot be read.
 [[kv_namespaces]]
 binding = "DESK_KV"
 id = "8abcc4c3e61b4010853bd8ad50d8bccf"
 
-# Caps on live model calls. A full "Run it live" is 15 calls (about $0.13 at list price), so 120 a day is about
-# 8 live runs when a run's calls are counted one each. They are when they reach the same isolate (functions/_lib/ai.ts
-# reserves before the call); calls spread over isolates or locations meet only in KV, which can undercount them, so
-# a busy day can allow more. The API key's spend limit in the Anthropic console is the real ceiling.
+# Caps on live model calls, each call counted, a retry too. A full "Run it live" is 15 calls (about $0.13 at list
+# price), so 120 a day is about 8 live runs when a run's calls are counted one each. They are when they reach the
+# same isolate (functions/_lib/ai.ts reserves before the call); calls spread over isolates or locations meet only in
+# KV, which can undercount them, so a busy day can allow more. The API key's spend limit in the Anthropic console is the real ceiling.
 [vars]
 RL_PER_IP_HOUR = "45"
 RL_GLOBAL_DAY = "120"

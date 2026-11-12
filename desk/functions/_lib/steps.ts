@@ -5,7 +5,7 @@ import { INCIDENT_SOURCES, INCIDENT_STEPS, type IncidentPackId } from "../../sha
 import type { Pack, PackHistoryItem, PackTicket } from "../../shared/packs/types";
 import { ValidationError, check, exceptionIn, mentions, quoted } from "./checks";
 import { StepError } from "./errors";
-import { bool, obj, runbookListOf, severity, str, strs, type Step } from "./kit";
+import { SEVERITIES, TRIAGE_ACTIONS, bool, obj, runbookListOf, severity, str, strs, type Step } from "./kit";
 import { ruleTriageFor, rulePatternsFor } from "./rule-engine";
 import { shortChainSteps } from "./short-chain";
 import type { StepInput } from "./types";
@@ -55,6 +55,12 @@ export function queueSteps<C extends string, T extends PackTicket, H extends Pac
   const ticketById: Record<string, T> = Object.fromEntries(pack.tickets.map((t) => [t.id, t]));
   const ticketIds = new Set<string>(pack.tickets.map((t) => t.id));
   const historyIds = new Set<string>(pack.history.map((h) => h.id));
+  // The values a triage row may carry back into a prompt, one list per field.
+  const triageFields = [
+    new Set<unknown>(pack.components),
+    new Set<unknown>(SEVERITIES),
+    new Set<unknown>(TRIAGE_ACTIONS),
+  ];
 
   const triage = {
     deep: false,
@@ -67,7 +73,7 @@ export function queueSteps<C extends string, T extends PackTicket, H extends Pac
           summary: str,
           component: { type: "string", enum: pack.components },
           severity,
-          action: { type: "string", enum: ["close_with_runbook", "needs_human", "escalation_candidate", "info_only"] },
+          action: { type: "string", enum: [...TRIAGE_ACTIONS] },
           runbook: { type: "string", enum: [...runbookIds, "none"] },
           confidence: { type: "number" },
           reason: str,
@@ -217,14 +223,18 @@ ${pack.tickets
     }),
     build(input: StepInput): string {
       const triageIn: ClientTriage[] = Array.isArray(input?.triage) ? (input.triage as ClientTriage[]) : [];
-      const byId = Object.fromEntries(
-        triageIn.filter((r) => ticketIds.has(r?.id as string)).map((r) => [r!.id as string, r!]),
-      );
+      // The client sends its triage rows back, so each value goes into the prompt only if the triage step itself
+      // could give it in that field: one of this pack's components, S1 to S4, or a known action. Anything else is
+      // dropped and shown as "-"; a row with nothing left adds nothing.
+      const byId: Record<string, string> = {};
+      for (const r of triageIn) {
+        if (!ticketIds.has(r?.id as string)) continue;
+        const values = [r!.component, r!.severity, r!.action].map((v, i) => (triageFields[i]!.has(v) ? v : "-"));
+        if (values.some((v) => v !== "-")) byId[r!.id as string] = values.join(", ");
+        else delete byId[r!.id as string];
+      }
       const open = pack.tickets
-        .map(
-          (t) =>
-            `${pack.prompts.ticketLine(t)}${byId[t.id] ? ` | triage: ${String(byId[t.id]!.component)}, ${String(byId[t.id]!.severity)}, ${String(byId[t.id]!.action)}` : ""}`,
-        )
+        .map((t) => `${pack.prompts.ticketLine(t)}${byId[t.id] ? ` | triage: ${byId[t.id]}` : ""}`)
         .join("\n");
       return `Group these open tickets into patterns: tickets that describe the same underlying problem. Then find earlier closed tickets with the same problem.
 
