@@ -96,9 +96,9 @@ describe("the live chain's timing for each industry (SD-04 on the pack-aware run
       // Every call takes 1 s here: the rules-only recordings of SaaS and e-commerce have near-zero step times.
       const { post, startOf } = timedPost((step, body) => {
         bodies.push(body);
-        if (step !== "triage") return { ...own[step], ms: 1000 } as StepResult<unknown>;
+        if (step !== "triage") return { ...own[step], ms: 1000 };
         const ids = (body as { ids: string[] }).ids;
-        return { ...own.triage[batches.findIndex((b) => b[0] === ids[0])]!, ms: 1000 } as StepResult<unknown>;
+        return { ...own.triage[batches.findIndex((b) => b[0] === ids[0])]!, ms: 1000 };
       });
       const done = runChain({ post, base: own, pack });
       await vi.runAllTimersAsync();
