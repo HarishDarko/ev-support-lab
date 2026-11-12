@@ -1,10 +1,10 @@
-import { NO_LIVE_RUNS, chainSeconds, liveSpendText, originCounts, formatUsd, useRun, indexRun } from "../../run";
+import { NO_LIVE_RUNS, liveSpendText, originCounts, formatUsd, useRun, indexRun } from "../../run";
 import { useMemo } from "react";
 import "./RunBar.css";
 
 /** What this run is, who decided the tickets, and the "Run it live" button. */
 export function RunBar() {
-  const { pack, run, label, source, status, spent, unpriced, message, progress, announcement, runLive } = useRun();
+  const { pack, run, label, source, status, spent, unpriced, message, statusText, announcement, runLive } = useRun();
   const who = useMemo(() => originCounts(indexRun(run, pack)), [run, pack]);
   const running = status === "running";
 
@@ -35,13 +35,7 @@ export function RunBar() {
           {announcement}
         </p>
         <p className="runbar-status">
-          {running && progress
-            ? progress.settled > 0 && progress.ai === 0
-              ? `No model has answered yet; the rules are answering: ${progress.settled} of ${progress.total} answers in. ${liveSpendText(spent, unpriced)}`
-              : `Asking the model: ${progress.settled} of ${progress.total} answers in, usually about ${chainSeconds(pack.recorded().steps)} seconds in all. ${liveSpendText(spent, unpriced)}`
-            : source === "live" || spent > 0
-              ? liveSpendText(spent, unpriced)
-              : ""}
+          {running ? statusText : source === "live" || spent > 0 ? liveSpendText(spent, unpriced) : ""}
         </p>
       </div>
       {message && (

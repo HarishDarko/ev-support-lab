@@ -1,8 +1,10 @@
-// The live runner: the chain the prototype ran (prototype/public/desk.js: runTriage, chain) against /api/*.
+// The live runner: the chain the prototype ran (prototype/public/desk.js: runTriage, chain) against /api/*, with
+// the investigation and the verification started at once, since they read nothing from earlier steps:
 //
-//   triage (all batches in parallel) -> patterns -> investigate -> verify
-//                                                                -> handoff -> kb -> classify
-//                                                                           -> shiftnote
+//   at the start:                  triage (all batches in parallel), investigate, verify
+//   after triage:                  patterns
+//   after investigate:             handoff -> kb -> classify
+//   after triage and the handoff:  shiftnote
 //
 // The same function drives `npm run record`, so a recording and a visitor's live run cannot differ.
 // Answers are reported one at a time as they land. An answer is merged unless it is a rules fallback that would
@@ -78,6 +80,8 @@ export interface ChainOptions {
   /** Results to fall back on and compare against. Absent when recording from nothing. */
   base?: RunSteps;
   onUpdate?: (update: ChainUpdate) => void;
+  /** A call was sent and is waiting for its answer. */
+  onStart?: (step: StepKey, batch?: number) => void;
   signal?: AbortSignal;
   /** The pack to run, and its incident for the shift summary. Both default to EV charging. */
   pack?: DeskPack;
@@ -99,6 +103,7 @@ export async function runChain({
   post,
   base,
   onUpdate,
+  onStart,
   signal,
   pack = EV_DESK,
   incident,
@@ -124,11 +129,9 @@ export async function runChain({
   async function settle(step: StepKey, body: unknown, batch?: number): Promise<void> {
     if (signal?.aborted) return;
     try {
-      const result = await post(
-        step,
-        pack.requestPack ? { ...(body as object), pack: pack.requestPack } : body,
-        signal,
-      );
+      const answer = post(step, pack.requestPack ? { ...(body as object), pack: pack.requestPack } : body, signal);
+      onStart?.(step, batch);
+      const result = await answer;
       settled += 1;
       report.answered += 1;
       report.spent += result.trace.cost;
@@ -169,30 +172,31 @@ export async function runChain({
       .flatMap((t) => t?.data.results ?? [])
       .map(({ id, component, severity, action }) => ({ id, component, severity, action }));
 
-  await Promise.all(batches.map((ids, i) => settle("triage", { ids }, i)));
-  await single("patterns", ["triage"], () => ({ triage: triageRows() }));
-  await single("investigate", [], () => ({}));
+  const triaged = Promise.all(batches.map((ids, i) => settle("triage", { ids }, i)));
+  const handedOff = (async () => {
+    await single("investigate", [], () => ({}));
+    await single("handoff", ["investigate"], () => ({ investigation: singles.investigate?.data }));
+  })();
+  const verified = single("verify", [], () => ({}));
   await Promise.all([
-    single("verify", [], () => ({})),
-    (async () => {
-      await single("handoff", ["investigate"], () => ({ investigation: singles.investigate?.data }));
-      await Promise.all([
-        (async () => {
-          const article = () => ({ investigation: singles.investigate?.data, handoff: singles.handoff?.data });
-          await single("kb", ["investigate", "handoff"], article);
-          await single("classify", ["kb"], () => ({ text: pack.newTicketExample, article: singles.kb?.data }));
-        })(),
-        single("shiftnote", ["triage", "handoff"], () => ({
-          summary: shiftSummary(
-            indexTriage(triage as StepResult<TriageData>[], pack),
-            singles.handoff!.data.title,
-            undefined,
-            incident,
-            pack,
-          ),
-        })),
-      ]);
-    })(),
+    verified,
+    triaged.then(() => single("patterns", ["triage"], () => ({ triage: triageRows() }))),
+    handedOff.then(async () => {
+      const article = () => ({ investigation: singles.investigate?.data, handoff: singles.handoff?.data });
+      await single("kb", ["investigate", "handoff"], article);
+      await single("classify", ["kb"], () => ({ text: pack.newTicketExample, article: singles.kb?.data }));
+    }),
+    Promise.all([triaged, handedOff]).then(() =>
+      single("shiftnote", ["triage", "handoff"], () => ({
+        summary: shiftSummary(
+          indexTriage(triage as StepResult<TriageData>[], pack),
+          singles.handoff!.data.title,
+          undefined,
+          incident,
+          pack,
+        ),
+      })),
+    ),
   ]);
 
   if (triage.every(Boolean) && SINGLE_KEYS.every((k) => singles[k])) {

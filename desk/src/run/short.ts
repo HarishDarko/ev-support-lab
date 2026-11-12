@@ -1,9 +1,10 @@
 // The live runner for a pack with no incident (the short chain):
 //
 //   triage (all batches in parallel) -> patterns -> knowledge base article -> new-ticket check
-//                                                                         -> end-of-shift note
+//                                    -> end-of-shift note (it needs only the triage rows)
 //
-// Every request names its pack. The EV chain (live.ts) is separate and unchanged.
+// Every request names its pack. The EV chain (live.ts) is separate.
+// Kept for SD-14: no pack except EV may make paid calls yet (functions/api/[step].ts), so today only tests run this.
 import { topPattern } from "../../functions/_lib/top-pattern";
 import { BATCH_SIZE, type PostStep } from "./live";
 import type { PatternsData, StepKey, StepResult, TriageData } from "./types";
@@ -68,35 +69,36 @@ export async function runShortChain({ pack, post, onUpdate, signal }: ShortChain
   const triage = await Promise.all(batches.map((ids) => call("triage", { ids })));
   report.results.triage = triage.filter((t): t is StepResult<TriageData> => t !== null);
   const rows = report.results.triage.flatMap((t) => t.data.results);
-  const patterns = await call("patterns", {
-    triage: rows.map(({ id, component, severity, action }) => ({ id, component, severity, action })),
-  });
-  if (patterns) report.results.patterns = patterns;
-
   const summary = {
     open_at_start: pack.ticketIds.length,
     approved_for_closure: rows.filter((r) => r.action === "close_with_runbook").length,
     needs_a_person: rows.filter((r) => r.action === "needs_human").map((r) => `${r.id}: ${r.summary}`),
   };
-  if (signal?.aborted) return report;
-  const pattern = patterns ? topPattern((patterns.data as PatternsData).patterns) : null;
-  const kb = pattern ? await call("kb", { pattern }) : null;
-  if (!patterns) fail("kb", "Skipped: no result yet for patterns.");
-  else if (!pattern) fail("kb", "Skipped: no recurring pattern to write an article about.");
-  if (kb) report.results.kb = kb;
-  if (signal?.aborted) return report;
 
-  const skipClassify = !kb
-    ? "Skipped: no article to check a new ticket against."
-    : !pack.newTicketExample
-      ? "Skipped: this industry has no example ticket."
-      : null;
-  if (skipClassify) fail("classify", skipClassify);
-  const [classify, shiftnote] = await Promise.all([
-    skipClassify ? Promise.resolve(null) : call("classify", { text: pack.newTicketExample, article: kb!.data }),
-    call("shiftnote", { summary }),
-  ]);
-  if (classify) report.results.classify = classify;
+  async function articleAndCheck(): Promise<void> {
+    const patterns = await call("patterns", {
+      triage: rows.map(({ id, component, severity, action }) => ({ id, component, severity, action })),
+    });
+    if (patterns) report.results.patterns = patterns;
+    if (signal?.aborted) return;
+    const pattern = patterns ? topPattern((patterns.data as PatternsData).patterns) : null;
+    const kb = pattern ? await call("kb", { pattern }) : null;
+    if (!patterns) fail("kb", "Skipped: no result yet for patterns.");
+    else if (!pattern) fail("kb", "Skipped: no recurring pattern to write an article about.");
+    if (kb) report.results.kb = kb;
+    if (signal?.aborted) return;
+
+    const skipClassify = !kb
+      ? "Skipped: no article to check a new ticket against."
+      : !pack.newTicketExample
+        ? "Skipped: this industry has no example ticket."
+        : null;
+    if (skipClassify) fail("classify", skipClassify);
+    const classify = skipClassify ? null : await call("classify", { text: pack.newTicketExample, article: kb!.data });
+    if (classify) report.results.classify = classify;
+  }
+
+  const [, shiftnote] = await Promise.all([articleAndCheck(), call("shiftnote", { summary })]);
   if (shiftnote) report.results.shiftnote = shiftnote;
   return report;
 }

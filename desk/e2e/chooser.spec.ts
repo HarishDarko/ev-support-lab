@@ -66,8 +66,12 @@ test("an old desk link lands on the chooser, then opens that tab in the industry
     "aria-selected",
     "true",
   );
-  await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveValue("saas-support");
   await expect(page).toHaveURL(/\?desk=kb&pack=saas-support(#.*)?$/);
+  // No Industry menu inside the desk (PR #5): the strip's menu names the industry once the desk is closed.
+  await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Industry" }).first()).toHaveValue("saas-support");
   expect(errors).toEqual([]);
 });
 
@@ -96,9 +100,13 @@ test("an unknown industry in a link lands on the chooser too", async ({ page }) 
   const dialog = page.getByRole("dialog", { name: "The desk" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("tab", { name: "Queue" })).toHaveAttribute("aria-selected", "true");
-  await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveValue("e-commerce");
   // The unknown value is replaced in place: ?pack=telecom&desk=queue becomes ?pack=e-commerce&desk=queue.
   await expect(page).toHaveURL(/\?pack=e-commerce&desk=queue(#.*)?$/);
+  // No Industry menu inside the desk (PR #5): the strip's menu names the industry once the desk is closed.
+  await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: "Industry" }).first()).toHaveValue("e-commerce");
 });
 
 test("when an industry fails to load, the page says so and goes back to the chooser", async ({ page }) => {

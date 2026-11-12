@@ -31,7 +31,12 @@ for (const link of [
     await expect(table.getByRole("row")).toHaveCount(41);
     await expect(table.getByRole("columnheader", { name: "Site" })).toBeVisible();
     await expect(table.getByRole("columnheader", { name: "Firmware" })).toBeVisible();
-    await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveValue("ev-charging");
+    // The Industry menu lives in the top strip only: picking another industry from inside the desk hid the desk
+    // without closing it.
+    await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(menu(page)).toHaveValue("ev-charging");
     expect(errors).toEqual([]);
   });
 }
@@ -73,9 +78,13 @@ test("a SaaS desk link opens the SaaS desk with its own columns and scorecard", 
   await expect(table.getByRole("row")).toHaveCount(26);
   await expect(table.getByRole("columnheader", { name: "Account" })).toBeVisible();
   await expect(table.getByRole("columnheader", { name: "Plan" })).toBeVisible();
-  await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveValue("saas-support");
+  // No Industry menu inside the desk (PR #5): the strip's menu names the industry once the desk is closed.
+  await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveCount(0);
   await dialog.getByRole("tab", { name: "Scorecard" }).click();
   await expect(dialog.getByText(/reference-labels\.saas-support\.json/)).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(menu(page)).toHaveValue("saas-support");
   expect(errors).toEqual([]);
 });
 
@@ -88,9 +97,13 @@ test("an e-commerce desk link opens the e-commerce desk with its own columns and
   await expect(table.getByRole("row")).toHaveCount(23);
   await expect(table.getByRole("columnheader", { name: "Order" })).toBeVisible();
   await expect(table.getByRole("columnheader", { name: "Channel" })).toBeVisible();
-  await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveValue("e-commerce");
+  // No Industry menu inside the desk (PR #5): the strip's menu names the industry once the desk is closed.
+  await expect(dialog.getByRole("combobox", { name: "Industry" })).toHaveCount(0);
   await dialog.getByRole("tab", { name: "Scorecard" }).click();
   await expect(dialog.getByText(/reference-labels\.e-commerce\.json/)).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(menu(page)).toHaveValue("e-commerce");
   expect(errors).toEqual([]);
 });
 
@@ -104,4 +117,20 @@ test("an e-commerce desk link does not reopen the desk after switching to EV cha
   await menu(page).selectOption("ev-charging");
   await expect(page.getByText("40 tickets are waiting.").first()).toBeVisible();
   await expect(dialog).toHaveCount(0);
+});
+
+test("switching industry after closing the desk keeps it closed", async ({ page }) => {
+  const errors = watchErrors(page);
+  await openFromChooser(page, "/?desk=queue");
+  const dialog = page.getByRole("dialog", { name: "The desk" });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await menu(page).selectOption("saas-support");
+  await expect(page.getByRole("heading", { name: "25 tickets are waiting." })).toBeVisible();
+  await menu(page).selectOption("ev-charging");
+  await expect(page.getByText("40 tickets are waiting.").first()).toBeVisible();
+  await expect(dialog).toHaveCount(0);
+  await expect(menu(page)).toHaveValue("ev-charging");
+  expect(errors).toEqual([]);
 });

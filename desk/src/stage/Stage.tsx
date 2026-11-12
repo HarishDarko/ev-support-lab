@@ -126,12 +126,6 @@ export function RunControl({ api }: { api: RunApi }) {
     <div className="run-control">
       <p className="run-label">
         <span className="mono">{api.label}</span>
-        {api.progress && (
-          <span className="muted">
-            {" "}
-            · {api.progress.settled} of {api.progress.total} calls answered
-          </span>
-        )}
       </p>
       {api.pack.liveRuns ? (
         <button type="button" className="btn btn--small" onClick={() => void api.runLive()} disabled={running}>
@@ -140,6 +134,8 @@ export function RunControl({ api }: { api: RunApi }) {
       ) : (
         <p className="run-message">{NO_LIVE_RUNS}</p>
       )}
+      {/* Visible text that changes every second, so it is not a live region. */}
+      {api.statusText && <p className="run-status">{api.statusText}</p>}
       {api.message && (
         <p className="run-message" role="status">
           {api.message}
