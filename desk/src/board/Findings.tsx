@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
-import { HERO, NEW_TICKET_EXAMPLE } from "../data/synthetic";
-import { LAB, source, type TestRun } from "../data/lab";
+import { source } from "../data/lab";
+import { useRun } from "../run";
+import type { Lab, TestRun } from "../incident/types";
 import { canaryOutcome, type Facts } from "../story/beats";
 import type { StoryData } from "../story/data";
 import { DUR, EASE, enter, stagger } from "./motion";
@@ -55,21 +56,14 @@ export function Hypotheses({ data, f }: { data: StoryData; f: Facts }) {
       <motion.article className="node node-contain" {...enter} transition={{ ...enter.transition, delay: 0.2 }}>
         <p className="node-kicker">Support acts now</p>
         <ul className="contain-list">
-          <li>
-            <strong>{HERO.openIds.length} open sessions corrected</strong> under {HERO.incidentId}: each closed at its
-            own last meter value, idle fees reversed, invoice flagged for billing review.
-          </li>
-          <li>
-            <strong>Detector proposed</strong>, read-only, every 15 minutes: an open session with no meter change for 30
-            minutes and a reconnect near unplug becomes a candidate for a person.
-          </li>
-          <li>
-            <strong>The tickets stay open</strong> on the incident. None is closed as a one-off.
-          </li>
+          {f.incident.containment.board.map((line) => (
+            <li key={line.lead}>
+              <strong>{line.lead}</strong>
+              {line.rest}
+            </li>
+          ))}
         </ul>
-        <p className="caption">
-          Containment corrects records with {f.heldRunbook}. It does not change why sessions stay open.
-        </p>
+        <p className="caption">{f.incident.containment.boardCaption(f.heldRunbook)}</p>
       </motion.article>
     </div>
   );
@@ -77,19 +71,17 @@ export function Hypotheses({ data, f }: { data: StoryData; f: Facts }) {
 
 // ---- e6 and v2: the lab ----
 
-export function LabNode({ variant }: { variant: "repro" | "fix" }) {
+export function LabNode({ lab, variant }: { lab: Lab; variant: "repro" | "fix" }) {
   return (
     <motion.article
       layoutId={variant === "repro" ? "node-repro" : "node-fix"}
       className="node node-lab"
       transition={{ layout: { duration: DUR.slow, ease: EASE } }}
     >
-      <p className="node-kicker">
-        {variant === "repro" ? "Reproduction lab · Java 25 · OCPP 2.0.1" : "The change · behind a flag per station"}
-      </p>
+      <p className="node-kicker">{variant === "repro" ? lab.reproKicker : lab.fixKicker}</p>
       {variant === "fix" && (
         <ol className="rules">
-          {LAB.rules.map((r, i) => (
+          {lab.rules.map((r, i) => (
             <motion.li key={r.name} {...enter} transition={{ ...enter.transition, delay: stagger(i, 0.06) }}>
               <span className="rule-n">{i + 1}</span>
               <span>
@@ -100,37 +92,39 @@ export function LabNode({ variant }: { variant: "repro" | "fix" }) {
         </ol>
       )}
       <div className="testruns">
-        {(variant === "repro" ? [LAB.reproduction] : [LAB.regression, LAB.edgeCases]).map((t, ti) => (
-          <TestRunView key={t.className} t={t} start={0.2 + ti * 0.2} />
+        {(variant === "repro" ? [lab.reproduction] : [lab.regression, lab.edgeCases]).map((t, ti) => (
+          <TestRunView key={t.className} t={t} task={lab.testTask} start={0.2 + ti * 0.2} />
         ))}
       </div>
       {variant === "fix" && (
         <p className="testrun-note">
-          With the flag forced off, {LAB.regression.className} fails. That is how it proves the change.
+          With the flag forced off, {lab.regression.className} fails. That is how it proves the change.
         </p>
       )}
       <p className="links">
         <a
-          href={source(variant === "repro" ? LAB.reproduction.path : LAB.regression.path)}
+          href={source(variant === "repro" ? lab.reproduction.path : lab.regression.path)}
           target="_blank"
           rel="noreferrer"
         >
           Read the test
         </a>
         {variant === "fix" &&
-          LAB.adrs.map((a) => (
+          lab.adrs.map((a) => (
             <a key={a.path} href={source(a.path)} target="_blank" rel="noreferrer">
               {a.title}
             </a>
           ))}
         {variant === "repro" && (
           <>
-            <a href={source(LAB.readme)} target="_blank" rel="noreferrer">
+            <a href={source(lab.readme)} target="_blank" rel="noreferrer">
               How the lab works
             </a>
-            <a href={LAB.precedent.url} target="_blank" rel="noreferrer">
-              Related public fix: {LAB.precedent.title}
-            </a>
+            {lab.precedent && (
+              <a href={lab.precedent.url} target="_blank" rel="noreferrer">
+                Related public fix: {lab.precedent.title}
+              </a>
+            )}
           </>
         )}
       </p>
@@ -138,10 +132,10 @@ export function LabNode({ variant }: { variant: "repro" | "fix" }) {
   );
 }
 
-function TestRunView({ t, start }: { t: TestRun; start: number }) {
+function TestRunView({ t, task, start }: { t: TestRun; task: string; start: number }) {
   return (
     <div className="testrun" role="group" aria-label={`${t.className}, flag ${t.flag}`}>
-      <p className="testrun-cmd" title={`./gradlew :lab:test --tests ${t.className}`}>
+      <p className="testrun-cmd" title={`./gradlew ${task} --tests ${t.className}`}>
         {t.className}
         <span className="testrun-flag">flag {t.flag}</span>
       </p>
@@ -214,17 +208,10 @@ export function HandoffNode({ data, sent }: { data: StoryData; sent: boolean }) 
 // ---- v3: canary against control ----
 
 export function ResultBars({ f }: { f: Facts }) {
-  const v = f.v;
-  const max = Math.max(v.canary.before.stuck, v.control.before.stuck, v.canary.after.stuck, v.control.after.stuck, 1);
-  const groups = [
-    { name: `Canary · ${v.canary.sites} sites · fix on`, before: v.canary.before, after: v.canary.after, tone: "ok" },
-    {
-      name: `Control · ${v.control.sites} sites · fix off`,
-      before: v.control.before,
-      after: v.control.after,
-      tone: "bad",
-    },
-  ];
+  const v = f.incident.verification;
+  const { groups, unit, caption } = v.bars;
+  const max = Math.max(...groups.flatMap((g) => g.arms.map((a) => a.value)), 1);
+  const outcome = canaryOutcome(f);
   return (
     <motion.figure
       layoutId="node-result"
@@ -235,37 +222,31 @@ export function ResultBars({ f }: { f: Facts }) {
         {groups.map((g, gi) => (
           <div key={g.name} className="result-group">
             <p className="node-sub">{g.name}</p>
-            {(
-              [
-                ["Before", g.before],
-                ["After", g.after],
-              ] as const
-            ).map(([label, arm], ri) => (
-              <div key={label} className="result-row">
+            {g.arms.map((arm, ri) => (
+              <div key={arm.label} className="result-row">
                 <span className="result-label">
-                  {label} · {v.windowDays} d
+                  {arm.label} · {v.windowDays} d
                 </span>
                 <span className="result-track">
                   <motion.span
-                    className={`result-bar${label === "After" ? ` result-bar--${g.tone}` : ""}`}
-                    style={{ width: `${(arm.stuck / max) * 100}%` }}
+                    className={`result-bar${arm.label === "After" ? ` result-bar--${g.tone}` : ""}`}
+                    style={{ width: `${(arm.value / max) * 100}%` }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
                     transition={{ duration: DUR.slow, ease: EASE, delay: 0.15 + gi * 0.2 + ri * 0.1 }}
                   />
                 </span>
                 <span className="result-num">
-                  <strong>{arm.stuck}</strong> stuck
+                  <strong>{arm.value}</strong> {unit}
                 </span>
-                <span className="result-ctx muted">{arm.dropsNearUnplug} drops near unplug</span>
+                <span className="result-ctx muted">{arm.context}</span>
               </div>
             ))}
           </div>
         ))}
       </div>
       <figcaption className="caption">
-        {canaryOutcome(f).replace(/^on/, "On")}. Sessions flagged for a person are counted separately, not as stuck.
-        Computed by the lab's experiment from scripted, synthetic inputs.
+        {outcome.charAt(0).toUpperCase() + outcome.slice(1)}. {caption}
       </figcaption>
     </motion.figure>
   );
@@ -274,14 +255,7 @@ export function ResultBars({ f }: { f: Facts }) {
 // ---- v4: what it proves and doesn't ----
 
 export function ProveNode({ data, f }: { data: StoryData; f: Facts }) {
-  const c = f.v.correctness;
-  const held = [
-    `${c.falseClosures} false closures: no reconciled session had rising energy or an ongoing report`,
-    `${c.duplicateCharges} duplicate charges`,
-    `${c.lateEndedApplied} of ${c.lateEndedArrived} late Ended events applied once`,
-    `${c.newerTransactionSkips} newer-transaction skip, left for a person`,
-    `${c.invoicesReviewed} provisional invoices reviewed, ${c.invoicesAdjusted} adjusted`,
-  ];
+  const held = f.incident.verification.held;
   return (
     <div className="prove">
       <motion.section className="node node--attn" {...enter}>
@@ -293,9 +267,9 @@ export function ProveNode({ data, f }: { data: StoryData; f: Facts }) {
         </ul>
       </motion.section>
       <motion.section className="node node--ok" {...enter} transition={{ ...enter.transition, delay: 0.08 }}>
-        <p className="node-kicker">Checks that held · {c.canarySessions.toLocaleString("en-US")} canary sessions</p>
+        <p className="node-kicker">{held.title}</p>
         <ul>
-          {held.map((s) => (
+          {held.lines.map((s) => (
             <li key={s}>{s}</li>
           ))}
         </ul>
@@ -317,6 +291,7 @@ export function ProveNode({ data, f }: { data: StoryData; f: Facts }) {
 // ---- c1: the article, and the next ticket ----
 
 export function ArticleNode({ data }: { data: StoryData }) {
+  const { pack } = useRun();
   const kb = data.kb;
   const c = data.classify;
   return (
@@ -351,7 +326,7 @@ export function ArticleNode({ data }: { data: StoryData }) {
         transition={{ ...enter.transition, delay: 0.15 }}
       >
         <p className="node-kicker">A new ticket arrives</p>
-        <blockquote className="ticket-text">{NEW_TICKET_EXAMPLE}</blockquote>
+        <blockquote className="ticket-text">{pack.newTicketExample}</blockquote>
         <dl className="classify">
           <div>
             <dt>Matches</dt>

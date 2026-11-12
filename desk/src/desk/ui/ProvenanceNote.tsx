@@ -1,4 +1,4 @@
-import { CHECK_SCOPE, costText, formatSeconds, formatTokens, type Provenance, type StepKey } from "../../run";
+import { CHECK_SCOPE, costText, formatSeconds, formatTokens, useRun, type Provenance, type StepKey } from "../../run";
 import { pillTone } from "./origin";
 import { Pill } from "./Pill";
 import "./ProvenanceNote.css";
@@ -15,7 +15,7 @@ interface Props {
  * model, attempts, latency, tokens, cost and every check that ran.
  */
 export function ProvenanceNote({ provenance: p, step, title = "How this was produced" }: Props) {
-  const scope = CHECK_SCOPE[step];
+  const scope = useRun().pack.checkScope?.[step] ?? CHECK_SCOPE[step];
   return (
     <details className="dk-prov">
       <summary className="prov-summary">

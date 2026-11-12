@@ -1,6 +1,6 @@
-// The e-commerce pack: the internal support desk of a made-up online homeware shop. No incident: it runs the short
-// chain. Everything in this folder is synthetic data made up for a prototype.
-import type { Pack, RunbookExceptionRule, TriageRule } from "../types";
+// The e-commerce pack: the internal support desk of a made-up online homeware shop, with the second-authorization
+// incident (INC-0539). Everything in this folder is synthetic data made up for a prototype.
+import type { Pack } from "../types";
 import {
   COMPONENTS,
   HISTORY,
@@ -11,121 +11,11 @@ import {
   type ShopHistoryItem,
   type ShopTicket,
 } from "./data";
+import { CHANGE_REF, INCIDENT_ID } from "./incident";
 import { META } from "./meta";
+import { EXCEPTIONS, RULES } from "./rules";
 
-const RULES: TriageRule<Component>[] = [
-  {
-    re: /payment pending/i,
-    component: "payments",
-    severity: "S2",
-    action: "close_with_runbook",
-    runbook: "RB-21",
-    why: "stuck order hold",
-  },
-  {
-    re: /says delivered|shows delivered/i,
-    component: "delivery",
-    severity: "S3",
-    action: "close_with_runbook",
-    runbook: "RB-22",
-    why: "delivered, not received",
-  },
-  {
-    re: /broken|chipped|cracked|damaged/i,
-    component: "product-issue",
-    severity: "S3",
-    action: "close_with_runbook",
-    runbook: "RB-23",
-    why: "damaged on arrival",
-  },
-  {
-    re: /refund/i,
-    component: "returns-refunds",
-    severity: "S3",
-    action: "close_with_runbook",
-    runbook: "RB-24",
-    why: "refund not visible",
-  },
-  {
-    re: /change (?:the )?(?:delivery )?address/i,
-    component: "order-status",
-    severity: "S3",
-    action: "close_with_runbook",
-    runbook: "RB-25",
-    why: "address change",
-  },
-  {
-    re: /cannot sign in|password reset/i,
-    component: "account-access",
-    severity: "S3",
-    action: "close_with_runbook",
-    runbook: "RB-26",
-    why: "account access",
-  },
-  {
-    re: /checkout error|error rate/i,
-    component: "payments",
-    severity: "S1",
-    action: "info_only",
-    runbook: "none",
-    why: "alert cleared",
-  },
-  {
-    re: /failed card attempts|different countries/i,
-    component: "payments",
-    severity: "S2",
-    action: "escalation_candidate",
-    runbook: "none",
-    why: "possible fraud",
-  },
-  {
-    re: /wrong (?:colour|item|size)|picked with/i,
-    component: "order-status",
-    severity: "S3",
-    action: "needs_human",
-    runbook: "none",
-    why: "warehouse pick error",
-  },
-  {
-    re: /wrong dimensions|product page/i,
-    component: "product-issue",
-    severity: "S3",
-    action: "escalation_candidate",
-    runbook: "none",
-    why: "listing error",
-  },
-  {
-    re: /flickers|stopped working|faulty/i,
-    component: "product-issue",
-    severity: "S3",
-    action: "needs_human",
-    runbook: "none",
-    why: "faulty item",
-  },
-];
-
-const EXCEPTIONS: Record<string, RunbookExceptionRule[]> = {
-  "RB-21": [
-    {
-      name: "customer charged twice",
-      test: (text) => /charged twice|double charge|two captures|two settled charges/i.exec(text)?.[0],
-    },
-    { name: "order already shipped", test: (text) => /already shipped|dispatched/i.exec(text)?.[0] },
-  ],
-  "RB-22": [{ name: "less than 48 hours", test: (text) => /this morning|today|yesterday/i.exec(text)?.[0] }],
-  "RB-24": [
-    {
-      name: "refund issued under 5 business days ago",
-      test: (text) => /yesterday|today|[1-4] business days? ago/i.exec(text)?.[0],
-    },
-  ],
-  "RB-25": [
-    { name: "order already shipped", test: (text) => /dispatched|already shipped|shipped yesterday/i.exec(text)?.[0] },
-    { name: "order already being packed", test: (text) => /\bpacking\b|label printed/i.exec(text)?.[0] },
-  ],
-};
-
-const SYSTEM = `You work inside an internal production-support desk for an online homeware shop. The support desk serves internal teams (customer care, payments ops, the warehouse, fraud, marketplace ops, the site monitor), not customers directly.
+export const SYSTEM = `You work inside an internal production-support desk for an online homeware shop. The support desk serves internal teams (customer care, payments ops, the warehouse, fraud, marketplace ops, the site monitor), not customers directly.
 
 Everything you are given is synthetic data made up for a prototype.
 
@@ -146,7 +36,7 @@ export const E_COMMERCE = {
   runbooks: RUNBOOKS,
   tickets: TICKETS,
   history: HISTORY,
-  extraIds: [],
+  extraIds: [INCIDENT_ID, CHANGE_REF],
   rules: RULES,
   componentTerms: {
     "order-status": ["order", "address", "picked", "status", "shipped"],
@@ -158,7 +48,7 @@ export const E_COMMERCE = {
     "request-or-question": [],
   },
   runbookTerms: {
-    "RB-21": ["payment pending", "authorization"],
+    "RB-21": ["payment pending", "pending hold", "authorization"],
     "RB-22": ["delivered"],
     "RB-23": ["broken", "chipped", "cracked", "damaged"],
     "RB-24": ["refund"],

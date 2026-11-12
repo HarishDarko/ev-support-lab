@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode, Ref } from "react";
-import type { RunApi } from "../run";
+import { NO_LIVE_RUNS, type RunApi } from "../run";
 import { STAGES } from "../stages";
 import { BEATS, type Beat, type Facts } from "../story/beats";
 import { DUR, EASE } from "../board/motion";
@@ -133,9 +133,13 @@ export function RunControl({ api }: { api: RunApi }) {
           </span>
         )}
       </p>
-      <button type="button" className="btn btn--small" onClick={() => void api.runLive()} disabled={running}>
-        {running ? "Running live…" : "Run it live"}
-      </button>
+      {api.pack.liveRuns ? (
+        <button type="button" className="btn btn--small" onClick={() => void api.runLive()} disabled={running}>
+          {running ? "Running live…" : "Run it live"}
+        </button>
+      ) : (
+        <p className="run-message">{NO_LIVE_RUNS}</p>
+      )}
       {api.message && (
         <p className="run-message" role="status">
           {api.message}
