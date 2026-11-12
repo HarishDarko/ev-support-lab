@@ -22,7 +22,10 @@ export const obj = (properties: Record<string, unknown>): JsonSchema => ({
 export const str = { type: "string" };
 export const strs = { type: "array", items: str };
 export const bool = { type: "boolean" };
-export const severity = { type: "string", enum: ["S1", "S2", "S3", "S4"] };
+export const SEVERITIES = ["S1", "S2", "S3", "S4"] as const;
+export const severity = { type: "string", enum: [...SEVERITIES] };
+/** The actions triage may give a ticket. */
+export const TRIAGE_ACTIONS = ["close_with_runbook", "needs_human", "escalation_candidate", "info_only"] as const;
 
 /** Every id a step may cite: the pack's tickets, history, runbooks and its extra ids. */
 export function knownIds(pack: {
