@@ -1,7 +1,6 @@
 // Triage accuracy: answers scored against the reviewed reference labels, field by field. Pure functions.
 import labelsJson from "../../../docs/eval/reference-labels.json";
-import { ruleTriage } from "../../functions/_lib/rules";
-import { HISTORY, TICKETS } from "../data/synthetic";
+import { EV_DESK, type DeskPack } from "./pack";
 import type { Run } from "./types";
 
 export const SCORE_FIELDS = ["component", "severity", "action", "runbook"] as const;
@@ -57,21 +56,21 @@ export function triageAnswers(run: Run): TriageAnswer[] {
 }
 
 /** The keyword rules' answers for the open queue. */
-export function rulesAnswers(): TriageAnswer[] {
-  return TICKETS.map((t) => ruleTriage(t));
+export function rulesAnswers(pack: DeskPack = EV_DESK): TriageAnswer[] {
+  return pack.tickets.map((t) => pack.ruleTriage(t));
 }
 
 /**
  * The rules were written while looking at the open queue, so their score there is in-sample. This checks them on
  * the older closed tickets instead: does the rules' runbook match the one named in the real resolution?
  */
-export function historyCheck(): { same: number; n: number } {
+export function historyCheck(pack: DeskPack = EV_DESK): { same: number; n: number } {
   let same = 0;
-  for (const h of HISTORY) {
+  for (const h of pack.history) {
     const resolved = /^(RB-\d{2})/.exec(h.resolution)?.[1] ?? "none";
-    if (ruleTriage(h).runbook === resolved) same += 1;
+    if (pack.ruleTriage(h).runbook === resolved) same += 1;
   }
-  return { same, n: HISTORY.length };
+  return { same, n: pack.history.length };
 }
 
 /** The Wilson 95% interval for k right out of n, in whole percent. */

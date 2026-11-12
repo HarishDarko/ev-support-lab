@@ -121,6 +121,13 @@ export async function callJSON(
   return { data, ...spent, ms: Date.now() - started };
 }
 
+// Calls this isolate has let through, per counter key (this hour's per-IP keys and today's total). KV has no atomic
+// increment: parallel calls that read the same stored value used to write the same count, so a full run of 15
+// calls added only about 6 to 8. Reserving here, with no await between the check and the reservation, makes calls
+// that share an isolate count one each. Calls on other isolates or in other locations still meet only in KV,
+// where the count stays approximate.
+const admitted = new Map<string, number>();
+
 // Coarse abuse guard: the link may be forwarded. Counts calls per IP per hour and per day overall.
 export async function rateLimit(env: Env, request: Request): Promise<void> {
   const kv = env.DESK_KV;
@@ -133,19 +140,22 @@ export async function rateLimit(env: Env, request: Request): Promise<void> {
   const perDay = Number(env.RL_GLOBAL_DAY ?? 400);
   const ipKey = `rl:${ip}:${hour}`;
   const dayKey = `rl:all:${day}`;
-  // Best effort: KV counters are approximate under parallel calls (last write wins, one write per key per second),
-  // so a counting failure never blocks a call. The hard cap is the spend limit on the API key itself.
-  let ipCount: number, dayCount: number;
+  // Best effort: across isolates KV is still last write wins (and one write per key per second), so a counting
+  // failure never blocks a call. The hard cap is the spend limit on the API key itself.
+  let stored: number[];
   try {
-    [ipCount, dayCount] = (await Promise.all([kv.get(ipKey), kv.get(dayKey)])).map((v) => Number(v ?? 0)) as [
-      number,
-      number,
-    ];
+    stored = (await Promise.all([kv.get(ipKey), kv.get(dayKey)])).map((v) => Number(v ?? 0));
   } catch {
     return;
   }
+  // From here to the reservation there is no await, so no other call in this isolate can slip in between.
+  for (const key of admitted.keys()) if (!key.endsWith(`:${hour}`) && key !== dayKey) admitted.delete(key);
+  const ipCount = Math.max(stored[0] ?? 0, admitted.get(ipKey) ?? 0);
+  const dayCount = Math.max(stored[1] ?? 0, admitted.get(dayKey) ?? 0);
   if (ipCount >= perIp) throw new StepError("Too many live runs from this connection this hour.", 429);
   if (dayCount >= perDay) throw new StepError("Today's live-run budget for this demo is used up.", 429);
+  admitted.set(ipKey, ipCount + 1);
+  admitted.set(dayKey, dayCount + 1);
   await Promise.allSettled([
     kv.put(ipKey, String(ipCount + 1), { expirationTtl: 3700 }),
     kv.put(dayKey, String(dayCount + 1), { expirationTtl: 90000 }),

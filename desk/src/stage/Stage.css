@@ -190,7 +190,8 @@
   color: var(--fg-2);
   font-size: var(--text-13);
 }
-.run-message {
+.run-message,
+.run-status {
   flex-basis: 100%;
   margin: 0;
   color: var(--fg-2);

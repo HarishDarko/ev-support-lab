@@ -94,7 +94,7 @@ export interface Pack<
     /** The triage prompt's notes on components and actions. */
     componentGuide: string;
     actionGuide: string;
-    ticketLine: (t: T) => string;
-    historyLine: (h: H) => string;
+    ticketLine(t: T): string;
+    historyLine(h: H): string;
   };
 }

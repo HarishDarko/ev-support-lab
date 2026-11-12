@@ -27,6 +27,7 @@ vi.mock("@anthropic-ai/sdk", () => {
 
 import Anthropic from "@anthropic-ai/sdk";
 import { onRequestPost, onRequestGet } from "../functions/api/[step]";
+import { rateLimit, type StepError } from "../functions/_lib/ai";
 
 const MockSdk = Anthropic as unknown as {
   APIError: new (status: number) => Error;
@@ -324,5 +325,54 @@ describe("rate limiting", () => {
     sdk.beta.mockResolvedValueOnce(reply(verifyOut, { model: "claude-sonnet-5-5" }));
     const r = await post("verify", {}, { ...live, DESK_KV: kv });
     expect(r.body.trace.source).toBe("ai");
+  });
+});
+
+describe("rate limiting under parallel calls", () => {
+  // A KV whose reads see the value at the moment they are sent and answer a moment later, as over the network, so
+  // parallel calls all read before any of them writes.
+  const slowKv = () => {
+    const store = new Map<string, string>();
+    const kv: KVLike = {
+      get: (k) => {
+        const value = store.get(k) ?? null;
+        return new Promise((resolve) => setTimeout(() => resolve(value), 1));
+      },
+      put: (k, v) => {
+        store.set(k, v);
+        return Promise.resolve();
+      },
+    };
+    return { kv, store };
+  };
+  const request = (ip: string) => new Request("https://desk.test/api/triage", { headers: { "cf-connecting-ip": ip } });
+
+  it("counts 8 parallel calls (a run's triage batches) as 8, not 1", async () => {
+    const { kv, store } = slowKv();
+    const env = { DESK_KV: kv, RL_PER_IP_HOUR: "100", RL_GLOBAL_DAY: "1000" };
+    const results = await Promise.allSettled(Array.from({ length: 8 }, () => rateLimit(env, request("5.6.7.8"))));
+    expect(results.every((r) => r.status === "fulfilled")).toBe(true);
+    const hour = new Date().toISOString().slice(0, 13);
+    expect(store.get(`rl:5.6.7.8:${hour}`)).toBe("8");
+  });
+
+  it("lets exactly the limit through when parallel calls cross it", async () => {
+    const { kv } = slowKv();
+    const env = { DESK_KV: kv, RL_PER_IP_HOUR: "5", RL_GLOBAL_DAY: "1000" };
+    const results = await Promise.allSettled(Array.from({ length: 8 }, () => rateLimit(env, request("9.9.9.9"))));
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(5);
+    const refused = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+    expect(refused).toHaveLength(3);
+    expect(refused.every((r) => (r.reason as StepError).status === 429)).toBe(true);
+  });
+
+  it("still trusts a higher count in KV, written by another isolate", async () => {
+    const { kv, store } = slowKv();
+    const hour = new Date().toISOString().slice(0, 13);
+    store.set(`rl:4.4.4.4:${hour}`, "44");
+    const env = { DESK_KV: kv, RL_PER_IP_HOUR: "45", RL_GLOBAL_DAY: "1000" };
+    const results = await Promise.allSettled([rateLimit(env, request("4.4.4.4")), rateLimit(env, request("4.4.4.4"))]);
+    expect(results.map((r) => r.status)).toEqual(["fulfilled", "rejected"]);
+    expect(store.get(`rl:4.4.4.4:${hour}`)).toBe("45");
   });
 });

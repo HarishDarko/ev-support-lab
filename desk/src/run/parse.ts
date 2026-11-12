@@ -33,8 +33,11 @@ function expectStepResult(value: unknown, where: string): Json {
   return value;
 }
 
-/** Throws a clear error unless `raw` is a complete recorded run covering all 40 tickets exactly once. */
-export function parseRecordedRun(raw: unknown): RecordedRun {
+/**
+ * Throws a clear error unless `raw` is a complete recorded run covering every ticket exactly once (by default the
+ * 40 EV tickets).
+ */
+export function parseRecordedRun(raw: unknown, ticketIds: readonly string[] = TICKETS.map((t) => t.id)): RecordedRun {
   if (!isObject(raw)) return fail("the file", "must be an object");
   expectString(raw["recordedAt"], "recordedAt");
   if (raw["source"] !== "ai" && raw["source"] !== "rules") fail("source", 'must be "ai" or "rules"');
@@ -60,7 +63,7 @@ export function parseRecordedRun(raw: unknown): RecordedRun {
       seen.push(r["id"]);
     }
   });
-  const expected = TICKETS.map((t) => t.id);
+  const expected = ticketIds;
   const missing = expected.filter((id) => !seen.includes(id));
   const extra = seen.filter((id, i) => !expected.includes(id) || seen.indexOf(id) !== i);
   if (missing.length || extra.length)

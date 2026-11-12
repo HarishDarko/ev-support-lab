@@ -219,7 +219,7 @@ describe("runShortChain (the client side, with a fake server)", () => {
     return { data, trace: { source: "rules", cost: 0 } as StepResult<unknown>["trace"], ms: 1 };
   };
 
-  it("runs triage, patterns, the article, then the check and the note, naming the pack every time", async () => {
+  it("runs triage, then patterns beside the note, then the article and the check, naming the pack every time", async () => {
     const calls: [StepKey, Record<string, unknown>][] = [];
     const report = await runShortChain({
       pack: { id: STUB.id, ticketIds: STUB.tickets.map((t) => t.id), newTicketExample: STUB.newTicketExample },
@@ -228,11 +228,12 @@ describe("runShortChain (the client side, with a fake server)", () => {
         return Promise.resolve(answer(step, body as { ids?: string[] }));
       },
     });
-    expect(calls.map(([s]) => s)).toEqual(["triage", "patterns", "kb", "classify", "shiftnote"]);
+    expect(calls.map(([s]) => s)).toEqual(["triage", "patterns", "shiftnote", "kb", "classify"]);
     expect(calls.every(([, b]) => b["pack"] === "stub-shop")).toBe(true);
-    expect(calls[2]![1]["pattern"]).toEqual(pattern);
-    expect(calls[3]![1]).toMatchObject({ text: STUB.newTicketExample, article });
-    expect(calls[4]![1]["summary"]).toEqual({
+    const body = (step: StepKey) => calls.find(([s]) => s === step)![1];
+    expect(body("kb")["pattern"]).toEqual(pattern);
+    expect(body("classify")).toMatchObject({ text: STUB.newTicketExample, article });
+    expect(body("shiftnote")["summary"]).toEqual({
       open_at_start: 4,
       approved_for_closure: 3,
       needs_a_person: ["T-4004: T-4004"],

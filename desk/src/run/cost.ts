@@ -84,20 +84,25 @@ export function runLabel(run: Run): string {
     : `Recorded run, AI (${models.join(", ")}), ${date}`;
 }
 
-/** "Live · $0.04 so far", as the top strip shows it. */
 /** "Live · $0.04 so far", with a plus when some call had no list price (the figure is then a floor). */
 export const liveSpendText = (spent: number, unpriced = false): string =>
   `Live · ${formatUsdShort(spent)}${unpriced ? "+" : ""} so far`;
 
 /**
- * Roughly how long a full live run takes, from a run's own step times: the slowest triage batch, then patterns and
- * the investigation, then the verification beside the handoff and what follows it. Rounded to whole seconds.
+ * Roughly how long a full live run takes, from a run's own step times and the chain in live.ts: triage, the
+ * investigation and the verification start together; patterns waits for triage; the handoff for the
+ * investigation; the article and the new-ticket check follow the handoff; the shift note waits for triage and the
+ * handoff. A model from one run's times, not a measurement. Rounded to whole seconds.
  */
 export function chainSeconds(steps: RunSteps): number {
   const ms = (k: Exclude<StepKey, "triage">) => steps[k].ms;
   const triage = Math.max(0, ...steps.triage.map((b) => b.ms));
-  const afterHandoff = Math.max(ms("kb") + ms("classify"), ms("shiftnote"));
-  return Math.round(
-    (triage + ms("patterns") + ms("investigate") + Math.max(ms("verify"), ms("handoff") + afterHandoff)) / 1000,
+  const handoff = ms("investigate") + ms("handoff");
+  const end = Math.max(
+    triage + ms("patterns"),
+    ms("verify"),
+    handoff + ms("kb") + ms("classify"),
+    Math.max(triage, handoff) + ms("shiftnote"),
   );
+  return Math.round(end / 1000);
 }

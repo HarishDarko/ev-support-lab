@@ -1,30 +1,50 @@
-// Records a run: drives the whole chain against a running `wrangler pages dev` and writes
-// src/data/recorded-run.json, which the app shows by default so the viewer never waits on a network call.
+// Records a run: drives the whole chain against a running `wrangler pages dev` and writes the recorded run the app
+// shows by default, so the viewer never waits on a network call.
 //
-//   npm run record -- http://127.0.0.1:8788
+//   npm run record -- http://127.0.0.1:8788                      EV charging: src/data/recorded-run.json
+//   npm run record -- http://127.0.0.1:8788 --pack saas-support  that industry: src/data/recorded-run.<pack>.json
 //
 // Against a server started with MOCK=1 this writes a rules-only run, and the file says so.
-// Against a server with a model key it writes an AI run and spends real money (about $0.15), so that is a
-// deliberate, separate step and never part of CI. The script never reads or writes any key or .dev.vars file.
+// Against a server with a model key it writes an AI run and spends real money (about $0.12 to $0.15), so that is a
+// deliberate, separate step and never part of CI. For an industry whose live runs are still off, start the local
+// server with the recording switch as a binding: `npx wrangler pages dev dist --ip 127.0.0.1 --port 8788
+// --binding ALLOW_PACK_RECORDING=1` (an environment variable alone is not a binding; see functions/_lib/live-packs.ts).
+// The script never reads or writes any key or .dev.vars file.
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import prettier from "prettier";
-import { CHAIN_CALLS, postTo, runChain } from "../src/run/live";
+import { DEFAULT_PACK_ID, isPackId } from "../shared/packs";
+import { EV_BUNDLE, LOADERS, type PackBundle } from "../src/packs/bundles";
+import { chainCalls, postTo, runChain } from "../src/run/live";
 import { modelsOf, runCost } from "../src/run/cost";
 import { parseRecordedRun } from "../src/run/parse";
 import type { RecordedRun } from "../src/run/types";
+import { recordArgs, recordingFile } from "./record-args";
 
-const OUT = fileURLToPath(new URL("../src/data/recorded-run.json", import.meta.url));
+async function bundleFor(pack: string): Promise<PackBundle> {
+  if (pack === DEFAULT_PACK_ID) return EV_BUNDLE;
+  const load = isPackId(pack) ? LOADERS[pack] : undefined;
+  if (!load)
+    throw new Error(
+      `No industry named "${pack}". Use one of: ${[DEFAULT_PACK_ID, ...Object.keys(LOADERS)].join(", ")}.`,
+    );
+  return load();
+}
 
 async function main(): Promise<void> {
-  const baseUrl = (process.argv[2] ?? "http://127.0.0.1:8788").replace(/\/+$/, "");
-  console.log(`Recording ${CHAIN_CALLS} calls against ${baseUrl} ...`);
+  const { baseUrl, pack } = recordArgs(process.argv.slice(2));
+  const { desk, incident } = await bundleFor(pack);
+  const out = fileURLToPath(new URL(`../src/data/${recordingFile(pack)}`, import.meta.url));
+  const calls = chainCalls(desk);
+  console.log(`Recording ${calls} calls for ${desk.id} against ${baseUrl} ...`);
 
   const report = await runChain({
     post: postTo(baseUrl),
+    // EV sends its requests exactly as before (no pack named, no incident passed); another industry names itself.
+    ...(pack === DEFAULT_PACK_ID ? {} : { pack: desk, incident }),
     onUpdate: (u) =>
       console.log(
-        `  ${String(u.settled).padStart(2)}/${CHAIN_CALLS}  ${u.step}${u.batch === undefined ? "" : ` #${u.batch + 1}`}  ${
+        `  ${String(u.settled).padStart(2)}/${calls}  ${u.step}${u.batch === undefined ? "" : ` #${u.batch + 1}`}  ${
           u.outcome === "failed" ? `FAILED: ${u.message}` : u.result.trace.source
         }`,
       ),
@@ -35,6 +55,15 @@ async function main(): Promise<void> {
   }
 
   const models = modelsOf(report.steps);
+  const rulesCalls = report.answered - report.aiAnswered;
+  // For another industry, a committed AI recording turns its live runs on, so this script writes only a whole AI run:
+  // one where any call fell back to the rules (no key, a rate limit, a failed check, or a MOCK=1 server) is not
+  // written, so it can never overwrite that pack's recording with a partly or wholly rules one. A rules-only recording
+  // for such a pack comes from scripts/record-rules-run.ts. EV keeps its old behaviour and only warns.
+  if (pack !== DEFAULT_PACK_ID && rulesCalls > 0)
+    throw new Error(
+      `${rulesCalls} of ${report.answered} calls fell back to rules (${report.fallbackReason}), so nothing was written. Fix the cause and record again; for a rules-only recording use scripts/record-rules-run.ts.`,
+    );
   const recorded: RecordedRun = {
     recordedAt: new Date().toISOString(),
     source: models.length ? "ai" : "rules",
@@ -42,14 +71,17 @@ async function main(): Promise<void> {
     totalCost: runCost(report.steps),
     steps: report.steps,
   };
-  parseRecordedRun(recorded); // the same check the app applies on load
+  // The same check the app applies on load, against this industry's tickets.
+  parseRecordedRun(
+    recorded,
+    desk.tickets.map((t) => t.id),
+  );
 
-  const options = (await prettier.resolveConfig(OUT)) ?? {};
-  await writeFile(OUT, await prettier.format(JSON.stringify(recorded), { ...options, parser: "json" }), "utf8");
+  const options = (await prettier.resolveConfig(out)) ?? {};
+  await writeFile(out, await prettier.format(JSON.stringify(recorded), { ...options, parser: "json" }), "utf8");
 
-  const rulesCalls = report.answered - report.aiAnswered;
   console.log(
-    `Wrote ${OUT}\n  source: ${recorded.source}  models: ${models.join(", ") || "none"}  cost: $${recorded.totalCost.toFixed(4)}`,
+    `Wrote ${out}\n  source: ${recorded.source}  models: ${models.join(", ") || "none"}  cost: $${recorded.totalCost.toFixed(4)}`,
   );
   if (recorded.source === "ai" && rulesCalls > 0)
     console.warn(`  Warning: ${rulesCalls} of ${report.answered} calls fell back to rules (${report.fallbackReason}).`);
