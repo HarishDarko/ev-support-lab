@@ -1,8 +1,9 @@
 // The Scorecard says how uncertain 40 tickets are, and which answers in "this run" came from the rules.
 import { test, expect } from "@playwright/test";
+import { openFromChooser } from "./chooser";
 
 test("the scorecard states the overlapping 95% ranges and the three rules fallbacks", async ({ page }) => {
-  await page.goto("/?desk=scorecard");
+  await openFromChooser(page, "/?desk=scorecard");
   const dialog = page.getByRole("dialog", { name: "The desk" });
   await expect(dialog.getByTestId("score-uncertainty")).toContainText("between 55% and 82%");
   await expect(dialog.getByTestId("score-uncertainty")).toContainText("between 45% and 74%");

@@ -1,15 +1,8 @@
 import { motion } from "motion/react";
-import { ESCALATION_LINE, HERO } from "../data/synthetic";
 import { REPEAT_LIMIT, WINDOW_DAYS } from "../story/data";
 import type { Facts } from "../story/beats";
 import { Tile } from "./TileField";
 import { EASE, stagger } from "./motion";
-
-const fwSplit = () => {
-  const counts = new Map<string, number>();
-  for (const d of HERO.unplugToDropSec) counts.set(d.fw, (counts.get(d.fw) ?? 0) + 1);
-  return [...counts].sort((a, b) => b[1] - a[1]);
-};
 
 interface Props {
   expanded: boolean;
@@ -23,38 +16,27 @@ interface Props {
  */
 export function PatternNode({ expanded, f, onOpen }: Props) {
   const held = f.lanes.held;
+  const incident = f.incident;
   return (
     <motion.article
       layoutId="node-incident"
       className={`node node-pattern${expanded ? " node-pattern--open" : ""}`}
       transition={{ layout: { duration: 0.35, ease: EASE } }}
-      aria-label={expanded ? `Incident ${f.incident.incidentId}` : "Held pattern"}
+      aria-label={expanded ? `Incident ${incident.id}` : "Held pattern"}
     >
       <motion.p layout="position" className="node-kicker">
-        {expanded ? `${f.incident.incidentId} · Incident` : "Pattern · held"}
+        {expanded ? `${incident.id} · Incident` : "Pattern · held"}
       </motion.p>
       <motion.h3 layout="position" className="node-title">
-        {f.incident.name}
+        {incident.name}
       </motion.h3>
 
       {expanded && (
         <motion.dl className="facts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-          <div>
-            <dt>Tickets</dt>
-            <dd>{f.incident.totalTickets}</dd>
-          </div>
-          <div>
-            <dt>Sites</dt>
-            <dd>{f.incident.sites.length}</dd>
-          </div>
-          <div>
-            <dt>Days</dt>
-            <dd>{-f.incident.firstSeenDay}</dd>
-          </div>
-          {fwSplit().map(([fw, n]) => (
-            <div key={fw}>
-              <dt>{fw}</dt>
-              <dd>{n}</dd>
+          {incident.boardFacts.map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
             </div>
           ))}
         </motion.dl>
@@ -73,7 +55,7 @@ export function PatternNode({ expanded, f, onOpen }: Props) {
           />
         ))}
         {expanded &&
-          f.incident.historyIds.map((id, i) => (
+          incident.historyIds.map((id, i) => (
             <motion.li
               key={id}
               className="tile tile--history"
@@ -96,8 +78,8 @@ export function PatternNode({ expanded, f, onOpen }: Props) {
         >
           <p className="node-sub">The escalation line · proposed</p>
           <ul className="checks">
-            {ESCALATION_LINE.escalateWhenAny.map((r) => {
-              const fired = ESCALATION_LINE.heroTriggers.includes(r.key);
+            {incident.escalation.escalateWhenAny.map((r) => {
+              const fired = incident.escalation.fired.includes(r.key);
               return (
                 <li key={r.key} className={fired ? "check check--fired" : "check"}>
                   <span className="check-mark" aria-hidden="true">
@@ -113,8 +95,8 @@ export function PatternNode({ expanded, f, onOpen }: Props) {
       ) : (
         <motion.div layout="position" className="node-body">
           <p>
-            {f.heldRunbook} closed this symptom {f.prior} times in {WINDOW_DAYS} days at {f.priorSites} sites, each time
-            as a one-off.
+            {f.heldRunbook} closed this symptom {f.prior} times in {WINDOW_DAYS} days at {f.priorSites}{" "}
+            {incident.placeWord}, each time as a one-off.
           </p>
           <p className="node-rule">
             Rule: a record-only runbook is not applied again after {REPEAT_LIMIT} closures in its scope in {WINDOW_DAYS}{" "}

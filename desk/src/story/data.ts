@@ -1,15 +1,8 @@
 // What the story needs from a run, in one shape. The run model (src/run) supplies it from a recorded
-// or live run; rulesStoryData() builds the same shape from the deterministic rules, so the story
-// always has something true to show.
-import {
-  ruleClassify,
-  ruleHandoff,
-  ruleInvestigate,
-  ruleKb,
-  ruleShiftnote,
-  ruleTriage,
-  ruleVerify,
-} from "../../functions/_lib/rules";
+// or live run; rulesStoryData() builds the same shape from a pack's deterministic rules (EV charging unless told
+// otherwise), so the story always has something true to show.
+import { REPEAT_LIMIT, WINDOW_DAYS, priorUses, repeatRuleHolds } from "../run/guardrail";
+import { EV_DESK, type DeskPack } from "../run/pack";
 import type {
   ClassifyModel,
   HandoffModel,
@@ -18,7 +11,6 @@ import type {
   ShiftnoteModel,
   VerifyModel,
 } from "../../functions/_lib/steps";
-import { HISTORY, NEW_TICKET_EXAMPLE, RUNBOOKS, TICKETS } from "../data/synthetic";
 
 export type Lane = "close" | "person" | "escalate" | "info" | "held";
 export type Provenance = "ai" | "rules";
@@ -46,35 +38,30 @@ export interface StoryData {
 }
 
 // The repeat rule (same values as the prototype and the triage prompt): a record-only runbook is not applied
-// again once it has closed tickets in its own scope REPEAT_LIMIT or more times in WINDOW_DAYS.
-export const REPEAT_LIMIT = 3;
-export const WINDOW_DAYS = 21;
+// again once it has closed tickets in its own scope REPEAT_LIMIT or more times in WINDOW_DAYS. It lives in the run
+// model's guardrail; the story reads the same one.
+export { REPEAT_LIMIT, WINDOW_DAYS, priorUses };
 
-export const priorUses = (runbook: string) =>
-  HISTORY.filter((h) => h.day >= -WINDOW_DAYS && h.resolution.startsWith(`${runbook}:`));
-
-const RECORD_ONLY = new Set(RUNBOOKS.filter((r) => r.recordOnly).map((r) => r.id));
-
-export function laneFor(action: string, runbook: string): Lane {
-  if (action === "close_with_runbook")
-    return RECORD_ONLY.has(runbook) && priorUses(runbook).length >= REPEAT_LIMIT ? "held" : "close";
+export function laneFor(action: string, runbook: string, pack: DeskPack = EV_DESK): Lane {
+  if (action === "close_with_runbook") return repeatRuleHolds(runbook, pack) ? "held" : "close";
   if (action === "escalation_candidate") return "escalate";
   if (action === "info_only") return "info";
   return "person";
 }
 
-export function rulesStoryData(): StoryData {
-  const tickets = TICKETS.map((t) => {
-    const r = ruleTriage(t);
+export function rulesStoryData(pack: DeskPack = EV_DESK): StoryData {
+  const rules = pack.fallbacks;
+  const tickets = pack.tickets.map((t) => {
+    const r = pack.ruleTriage(t);
     return {
       id: t.id,
-      lane: laneFor(r.action, r.runbook),
+      lane: laneFor(r.action, r.runbook, pack),
       runbook: r.runbook,
       quote: r.evidence,
       provenance: "rules" as const,
     };
   });
-  const kb = ruleKb();
+  const kb = rules.kb();
   const approved = tickets.filter((t) => t.lane === "close").length;
   return {
     source: "rules",
@@ -87,13 +74,13 @@ export function rulesStoryData(): StoryData {
       shiftnote: "rules",
     },
     tickets,
-    investigation: ruleInvestigate(),
-    handoff: ruleHandoff(),
-    verify: ruleVerify(),
+    investigation: rules.investigate(),
+    handoff: rules.handoff(),
+    verify: rules.verify(),
     kb,
-    classify: ruleClassify(NEW_TICKET_EXAMPLE, kb),
-    shiftnote: ruleShiftnote({
-      open_at_start: TICKETS.length,
+    classify: pack.ruleClassify(pack.newTicketExample, kb),
+    shiftnote: rules.shiftnote({
+      open_at_start: pack.tickets.length,
       approved_for_closure: approved,
       needs_a_person: tickets.filter((t) => t.lane === "person").map((t) => t.id),
     }),

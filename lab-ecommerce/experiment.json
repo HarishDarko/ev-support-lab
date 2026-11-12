@@ -1,0 +1,263 @@
+{
+  "windows" : {
+    "before" : {
+      "canary" : {
+        "stores" : 1,
+        "checkouts" : 1644,
+        "slowFirstAnswer" : 3,
+        "retriedWithNewKey" : 1,
+        "secondAuthorization" : 1,
+        "stuck" : 1,
+        "bothCaptured" : 0,
+        "doubleChargedPence" : 0,
+        "heldOther" : 0,
+        "confirmed" : 1643,
+        "newCardAfterDecline" : 3,
+        "lookups" : 0,
+        "detectorHits" : 1
+      },
+      "control" : {
+        "stores" : 4,
+        "checkouts" : 6643,
+        "slowFirstAnswer" : 14,
+        "retriedWithNewKey" : 6,
+        "secondAuthorization" : 6,
+        "stuck" : 5,
+        "bothCaptured" : 1,
+        "doubleChargedPence" : 3650,
+        "heldOther" : 1,
+        "confirmed" : 6636,
+        "newCardAfterDecline" : 6,
+        "lookups" : 0,
+        "detectorHits" : 6
+      }
+    },
+    "after" : {
+      "canary" : {
+        "stores" : 1,
+        "checkouts" : 1646,
+        "slowFirstAnswer" : 4,
+        "retriedWithNewKey" : 0,
+        "secondAuthorization" : 0,
+        "stuck" : 0,
+        "bothCaptured" : 0,
+        "doubleChargedPence" : 0,
+        "heldOther" : 0,
+        "confirmed" : 1646,
+        "newCardAfterDecline" : 4,
+        "lookups" : 4,
+        "detectorHits" : 0
+      },
+      "control" : {
+        "stores" : 4,
+        "checkouts" : 6643,
+        "slowFirstAnswer" : 15,
+        "retriedWithNewKey" : 7,
+        "secondAuthorization" : 7,
+        "stuck" : 6,
+        "bothCaptured" : 1,
+        "doubleChargedPence" : 3650,
+        "heldOther" : 0,
+        "confirmed" : 6636,
+        "newCardAfterDecline" : 6,
+        "lookups" : 0,
+        "detectorHits" : 7
+      }
+    }
+  },
+  "logs" : [ {
+    "title" : "T-4002: web, order #51102, paid again after the error (synthetic)",
+    "lines" : [ [ "14:02:11.200", "checkout-web", "POST /authorizations  order=#51102  £58.00  idem_key=ck_51102_a1" ], [ "14:02:19.200", "checkout-web", "no answer after 8.0 s -> shows \"Something went wrong\"" ], [ "14:02:21.300", "processor", "authorization.succeeded  au_96F9  idem_key=ck_51102_a1  (answered in 10.1 s)" ], [ "14:02:21.300", "order-svc", "#51102 captured au_96F9 £58.00" ], [ "14:02:31.200", "shopper", "taps Pay again" ], [ "14:02:31.200", "checkout-web", "POST /authorizations  order=#51102  £58.00  idem_key=ck_51102_a2" ], [ "14:02:32.700", "checkout-web", "authorized au_96FA in 1.5 s -> shows the order confirmation" ], [ "14:02:32.700", "processor", "authorization.succeeded  au_96FA  idem_key=ck_51102_a2  (answered in 1.5 s)" ], [ "14:02:32.700", "order-svc", "#51102 extra authorization au_96FA on a captured order -> hold: Payment pending" ] ]
+  }, {
+    "title" : "T-4010: iOS app, order #51209, captured twice (synthetic)",
+    "lines" : [ [ "09:15:02.000", "checkout-app", "POST /authorizations  order=#51209  £36.50  idem_key=ck_51209_a1" ], [ "09:15:10.000", "checkout-app", "no answer after 8.0 s -> shows \"Something went wrong\"" ], [ "09:15:10.000", "app", "automatic retry, 500 ms after the timeout" ], [ "09:15:10.500", "checkout-app", "POST /authorizations  order=#51209  £36.50  idem_key=ck_51209_a2" ], [ "09:15:14.700", "processor", "authorization.succeeded  au_A681  idem_key=ck_51209_a1  (answered in 12.7 s)" ], [ "09:15:14.720", "checkout-app", "authorized au_A682 in 4.2 s -> shows the order confirmation" ], [ "09:15:14.720", "processor", "authorization.succeeded  au_A682  idem_key=ck_51209_a2  (answered in 4.2 s)" ], [ "09:15:14.720", "order-svc", "#51209 captured au_A682 £36.50" ], [ "09:15:14.720", "order-svc", "#51209 captured au_A681 £36.50" ], [ "09:15:14.720", "order-svc", "#51209 two captures -> hold: Payment pending" ] ]
+  }, {
+    "title" : "H-4109: web, order #48266, the webhook never came (synthetic)",
+    "lines" : [ [ "11:40:03.000", "checkout-web", "POST /authorizations  order=#48266  £24.50  idem_key=ck_48266_a1" ], [ "11:40:04.400", "checkout-web", "authorized au_9FE6 in 1.4 s -> shows the order confirmation" ], [ "11:40:34.400", "order-svc", "#48266 authorization webhook not received in 30 s -> hold: Payment pending" ] ]
+  }, {
+    "title" : "Canary, fix on: web, order #52101, paid again after a slow answer (synthetic)",
+    "lines" : [ [ "14:40:10.000", "checkout-web", "POST /authorizations  order=#52101  £58.00  idem_key=ck_52101_k1" ], [ "14:40:18.000", "checkout-web", "no answer after 8.0 s -> GET /authorizations?idempotency_key=ck_52101_k1 -> processing -> shows \"Your payment is still processing\"" ], [ "14:40:20.600", "processor", "authorization.succeeded  au_B530  idem_key=ck_52101_k1  (answered in 10.6 s)" ], [ "14:40:20.600", "order-svc", "#52101 captured au_B530 £58.00" ], [ "14:40:33.000", "shopper", "taps Pay again" ], [ "14:40:33.000", "checkout-web", "POST /authorizations  order=#52101  £58.00  idem_key=ck_52101_k1" ], [ "14:40:33.000", "checkout-web", "authorized au_B530 in 0.0 s -> shows the order confirmation" ] ]
+  }, {
+    "title" : "Canary, fix on: Android app, order #52103, the retry that used to race (synthetic)",
+    "lines" : [ [ "19:19:19.000", "checkout-app", "POST /authorizations  order=#52103  £42.00  idem_key=ck_52103_k1" ], [ "19:19:27.000", "checkout-app", "no answer after 8.0 s -> GET /authorizations?idempotency_key=ck_52103_k1 -> processing -> shows \"Your payment is still processing\"" ], [ "19:19:27.000", "app", "automatic retry, 500 ms after the timeout" ], [ "19:19:27.500", "checkout-app", "POST /authorizations  order=#52103  £42.00  idem_key=ck_52103_k1" ], [ "19:19:31.900", "checkout-app", "authorized au_C3C1 in 4.4 s -> shows the order confirmation" ], [ "19:19:31.900", "processor", "authorization.succeeded  au_C3C1  idem_key=ck_52103_k1  (answered in 12.9 s)" ], [ "19:19:31.900", "order-svc", "#52103 captured au_C3C1 £42.00" ] ]
+  }, {
+    "title" : "Canary, fix on: web, order #52111, a new card after a decline (synthetic)",
+    "lines" : [ [ "12:12:00.000", "checkout-web", "POST /authorizations  order=#52111  £29.99  idem_key=ck_52111_k1" ], [ "12:12:01.200", "checkout-web", "declined in 1.2 s -> shows \"Card declined\"" ], [ "12:12:21.200", "checkout-web", "POST /authorizations  order=#52111  £29.99  idem_key=ck_52111_k2" ], [ "12:12:22.700", "checkout-web", "authorized au_B283 in 1.5 s -> shows the order confirmation" ], [ "12:12:22.700", "processor", "authorization.succeeded  au_B283  idem_key=ck_52111_k2  (answered in 1.5 s)" ], [ "12:12:22.700", "order-svc", "#52111 captured au_B283 £29.99" ] ]
+  }, {
+    "title" : "T-4022: web, order #52388, paid again after the error (synthetic)",
+    "lines" : [ [ "20:20:20.000", "checkout-web", "POST /authorizations  order=#52388  £62.00  idem_key=ck_52388_a1" ], [ "20:20:28.000", "checkout-web", "no answer after 8.0 s -> shows \"Something went wrong\"" ], [ "20:20:33.900", "processor", "authorization.succeeded  au_C63B  idem_key=ck_52388_a1  (answered in 13.9 s)" ], [ "20:20:33.900", "order-svc", "#52388 captured au_C63B £62.00" ], [ "20:20:37.000", "shopper", "taps Pay again" ], [ "20:20:37.000", "checkout-web", "POST /authorizations  order=#52388  £62.00  idem_key=ck_52388_a2" ], [ "20:20:38.500", "checkout-web", "authorized au_C63D in 1.5 s -> shows the order confirmation" ], [ "20:20:38.500", "processor", "authorization.succeeded  au_C63D  idem_key=ck_52388_a2  (answered in 1.5 s)" ], [ "20:20:38.500", "order-svc", "#52388 extra authorization au_C63D on a captured order -> hold: Payment pending" ] ]
+  }, {
+    "title" : "T-4018: Android app, order #51388, two holds on the card (synthetic)",
+    "lines" : [ [ "22:02:02.000", "checkout-app", "POST /authorizations  order=#51388  £42.00  idem_key=ck_51388_a1" ], [ "22:02:10.000", "checkout-app", "no answer after 8.0 s -> shows \"Something went wrong\"" ], [ "22:02:10.000", "app", "automatic retry, 500 ms after the timeout" ], [ "22:02:10.500", "checkout-app", "POST /authorizations  order=#51388  £42.00  idem_key=ck_51388_a2" ], [ "22:02:11.800", "processor", "authorization.succeeded  au_BF83  idem_key=ck_51388_a1  (answered in 9.8 s)" ], [ "22:02:11.800", "order-svc", "#51388 captured au_BF83 £42.00" ], [ "22:02:12.200", "checkout-app", "authorized au_BF84 in 1.7 s -> shows the order confirmation" ], [ "22:02:12.200", "processor", "authorization.succeeded  au_BF84  idem_key=ck_51388_a2  (answered in 1.7 s)" ], [ "22:02:12.200", "order-svc", "#51388 extra authorization au_BF84 on a captured order -> hold: Payment pending" ] ]
+  } ],
+  "storyComparison" : [ {
+    "metric" : "before.canary.checkouts",
+    "expected" : 1644,
+    "computed" : 1644,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.slowFirstAnswer",
+    "expected" : 3,
+    "computed" : 3,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.secondAuthorization",
+    "expected" : 1,
+    "computed" : 1,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.stuck",
+    "expected" : 1,
+    "computed" : 1,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.bothCaptured",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.heldOther",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.newCardAfterDecline",
+    "expected" : 3,
+    "computed" : 3,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.detectorHits",
+    "expected" : 1,
+    "computed" : 1,
+    "matches" : true
+  }, {
+    "metric" : "before.control.checkouts",
+    "expected" : 6643,
+    "computed" : 6643,
+    "matches" : true
+  }, {
+    "metric" : "before.control.slowFirstAnswer",
+    "expected" : 14,
+    "computed" : 14,
+    "matches" : true
+  }, {
+    "metric" : "before.control.secondAuthorization",
+    "expected" : 6,
+    "computed" : 6,
+    "matches" : true
+  }, {
+    "metric" : "before.control.stuck",
+    "expected" : 5,
+    "computed" : 5,
+    "matches" : true
+  }, {
+    "metric" : "before.control.bothCaptured",
+    "expected" : 1,
+    "computed" : 1,
+    "matches" : true
+  }, {
+    "metric" : "before.control.heldOther",
+    "expected" : 1,
+    "computed" : 1,
+    "matches" : true
+  }, {
+    "metric" : "before.control.newCardAfterDecline",
+    "expected" : 6,
+    "computed" : 6,
+    "matches" : true
+  }, {
+    "metric" : "before.control.detectorHits",
+    "expected" : 6,
+    "computed" : 6,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.checkouts",
+    "expected" : 1646,
+    "computed" : 1646,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.slowFirstAnswer",
+    "expected" : 4,
+    "computed" : 4,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.secondAuthorization",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.stuck",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.bothCaptured",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.heldOther",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.newCardAfterDecline",
+    "expected" : 4,
+    "computed" : 4,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.detectorHits",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "after.control.checkouts",
+    "expected" : 6643,
+    "computed" : 6643,
+    "matches" : true
+  }, {
+    "metric" : "after.control.slowFirstAnswer",
+    "expected" : 15,
+    "computed" : 15,
+    "matches" : true
+  }, {
+    "metric" : "after.control.secondAuthorization",
+    "expected" : 7,
+    "computed" : 7,
+    "matches" : true
+  }, {
+    "metric" : "after.control.stuck",
+    "expected" : 6,
+    "computed" : 6,
+    "matches" : true
+  }, {
+    "metric" : "after.control.bothCaptured",
+    "expected" : 1,
+    "computed" : 1,
+    "matches" : true
+  }, {
+    "metric" : "after.control.heldOther",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "after.control.newCardAfterDecline",
+    "expected" : 6,
+    "computed" : 6,
+    "matches" : true
+  }, {
+    "metric" : "after.control.detectorHits",
+    "expected" : 7,
+    "computed" : 7,
+    "matches" : true
+  } ],
+  "settings" : {
+    "days" : 14,
+    "stores" : 5,
+    "canaryStores" : [ "store-north" ],
+    "controlStores" : [ "store-south", "store-east", "store-west", "store-central" ],
+    "checkoutTimeoutSeconds" : 8,
+    "appRetryMillis" : 500,
+    "captureTakesMillis" : 50
+  }
+}

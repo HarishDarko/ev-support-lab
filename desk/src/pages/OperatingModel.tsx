@@ -1,20 +1,27 @@
-import { ESCALATION_LINE } from "../data/synthetic";
+import { useIncident } from "../incident";
+import type { IndustryPages } from "../incident/types";
 import "./Page.css";
 
 // A plain page, not part of the animated story: how the Eastern-hours dev-support role would run day to day.
-// It is a proposal to adjust with the team, and it says so. No targets are invented; measures come first.
+// It is a proposal to adjust with the team, and it says so. No targets are invented; measures come first. The team
+// that watches the product around the clock differs by industry; EV charging's NOC is the default.
 
-const DAY = [
+const NOC: IndustryPages["monitor"] = {
+  name: "the NOC",
+  lede: "The NOC covers the network around the clock",
+  sync: {
+    title: "NOC sync",
+    text: "Alerts and repeat offenders from the night: which chargers, which sites, which ones have been reset before. During the day the NOC reaches this shift directly, with an agreed time to acknowledge.",
+  },
+};
+
+const day = (monitor: IndustryPages["monitor"]) => [
   {
     time: "07:00–08:30",
     title: "Live handover with India engineering",
     text: "What is open, what changed overnight, what needs a decision. Anything they are mid-way through stays with its owner or is handed over by name.",
   },
-  {
-    time: "08:30",
-    title: "NOC sync",
-    text: "Alerts and repeat offenders from the night: which chargers, which sites, which ones have been reset before. During the day the NOC reaches this shift directly, with an agreed time to acknowledge.",
-  },
+  { time: "08:30", ...monitor.sync },
   {
     time: "Through the day",
     title: "Triage and investigate",
@@ -40,13 +47,13 @@ const MEASURES = [
   "Handoffs sent back for missing information, in either direction.",
 ];
 
-const PLAN = [
+const plan = (monitor: IndustryPages["monitor"]) => [
   {
     when: "First 30 days",
     items: [
-      "Learn the platform, the runbooks and the ticketing tools the NOC and support teams use.",
+      `Learn the platform, the runbooks and the ticketing tools ${monitor.name} and support teams use.`,
       "Join the India handovers and take the Eastern-hours queue with review.",
-      "Agree the escalation line and the handover note format with engineering and the NOC.",
+      `Agree the escalation line and the handover note format with engineering and ${monitor.name}.`,
       "Start measuring, with no targets yet.",
       "Write down the ten most common recurring symptoms and where each one ends up.",
     ],
@@ -68,21 +75,22 @@ const PLAN = [
 ];
 
 export function OperatingModel() {
+  const { escalation, pages } = useIncident();
+  const monitor = pages?.monitor ?? NOC;
   return (
     <article className="page">
       <p className="page-kicker">How I'd run it · a proposal to adjust with the team</p>
       <h1 className="page-title">Eastern-hours dev support, day to day</h1>
       <p className="page-lede">
-        The NOC covers the network around the clock and India engineering covers 23:30–08:30 ET. This shift covers
-        07:00–15:30 ET, so every day starts with ninety minutes of live overlap. The aim is that the India team's time
-        goes to engineering: the Eastern-hours queue is handled here, and anything that needs them arrives as one
-        complete packet.
+        {monitor.lede} and India engineering covers 23:30–08:30 ET. This shift covers 07:00–15:30 ET, so every day
+        starts with ninety minutes of live overlap. The aim is that the India team's time goes to engineering: the
+        Eastern-hours queue is handled here, and anything that needs them arrives as one complete packet.
       </p>
 
       <section className="page-section" aria-labelledby="op-day">
         <h2 id="op-day">The day</h2>
         <ol className="timeline">
-          {DAY.map((d) => (
+          {day(monitor).map((d) => (
             <li key={d.title}>
               <span className="timeline-time">{d.time}</span>
               <div>
@@ -101,7 +109,7 @@ export function OperatingModel() {
           <div>
             <h3>Support owns it when</h3>
             <ul>
-              {ESCALATION_LINE.supportOwns.map((s) => (
+              {escalation.supportOwns.map((s) => (
                 <li key={s}>{s}</li>
               ))}
             </ul>
@@ -109,7 +117,7 @@ export function OperatingModel() {
           <div>
             <h3>It goes to engineering when any of these hold</h3>
             <ul>
-              {ESCALATION_LINE.escalateWhenAny.map((r) => (
+              {escalation.escalateWhenAny.map((r) => (
                 <li key={r.key}>{r.text}</li>
               ))}
             </ul>
@@ -139,7 +147,7 @@ export function OperatingModel() {
       <section className="page-section" aria-labelledby="op-plan">
         <h2 id="op-plan">The first 90 days</h2>
         <div className="three-col">
-          {PLAN.map((p) => (
+          {plan(monitor).map((p) => (
             <div key={p.when}>
               <h3>{p.when}</h3>
               <ul>
