@@ -3,7 +3,17 @@
 // pack's rules. Server side only: the browser never imports this file.
 import { StepError, clip, fenced } from "../../../functions/_lib/errors";
 import { ValidationError, check, exceptionIn, exceptionNamesIn, quoted } from "../../../functions/_lib/checks";
-import { bool, groundingIn, knownIds, obj, runbookListOf, severity, str, strs } from "../../../functions/_lib/kit";
+import {
+  MAX_TOKENS,
+  bool,
+  groundingIn,
+  knownIds,
+  obj,
+  runbookListOf,
+  severity,
+  str,
+  strs,
+} from "../../../functions/_lib/kit";
 import type { StepInput } from "../../../functions/_lib/types";
 import {
   COMPONENTS,
@@ -83,6 +93,7 @@ export interface InvestigationModel {
 
 const investigate = {
   deep: true,
+  maxTokens: MAX_TOKENS.investigate,
   schema: obj({
     symptom: str,
     impact: strs,
@@ -154,6 +165,7 @@ export interface HandoffModel {
 
 const handoff = {
   deep: true,
+  maxTokens: MAX_TOKENS.handoff,
   schema: obj({
     title: str,
     severity,
@@ -223,6 +235,7 @@ export interface VerifyModel {
 
 const verify = {
   deep: true,
+  maxTokens: MAX_TOKENS.verify,
   schema: obj({
     verdict: { type: "string", enum: ["consistent with hypothesis", "inconclusive", "contradicts hypothesis"] },
     reading: str,
@@ -273,6 +286,7 @@ export interface KbModel {
 
 const kb = {
   deep: true,
+  maxTokens: MAX_TOKENS.kb,
   schema: obj({
     title: str,
     applies_when: strs,
@@ -351,6 +365,7 @@ export interface ShiftnoteModel {
 
 const shiftnote = {
   deep: true,
+  maxTokens: MAX_TOKENS.shiftnote,
   schema: obj({ headline: str, done: strs, needs_you: strs, escalated: strs, watch: strs }),
   build(input: StepInput): string {
     return `Write the end-of-shift handoff note from the Eastern Time shift to the India team. Short bullets, ticket ids where useful, nothing they need to ask about.

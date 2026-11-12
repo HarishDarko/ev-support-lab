@@ -5,7 +5,7 @@
 import type { Pack, PackHistoryItem, PackTicket } from "../../shared/packs/types";
 import { check, exceptionIn, exceptionNamesIn, normalize } from "./checks";
 import { StepError, clip, fenced, shiftSummaryOf } from "./errors";
-import { bool, groundingIn, knownIds, obj, runbookListOf, severity, str, strs } from "./kit";
+import { MAX_TOKENS, bool, groundingIn, knownIds, obj, runbookListOf, severity, str, strs } from "./kit";
 import { ruleTriageFor } from "./rule-engine";
 import type { StepInput } from "./types";
 import type { ClassifyModel, KbModel, ShiftnoteModel } from "../../shared/packs/steps";
@@ -72,6 +72,7 @@ export function shortChainSteps<C extends string, T extends PackTicket, H extend
 
   const kb = {
     deep: true,
+    maxTokens: MAX_TOKENS.kb,
     schema: obj({
       title: str,
       applies_when: strs,
@@ -239,6 +240,7 @@ matched_article: the article title if it matches, else "none". suggested_action:
 
   const shiftnote = {
     deep: true,
+    maxTokens: MAX_TOKENS.shiftnote,
     schema: obj({ headline: str, done: strs, needs_you: strs, escalated: strs, watch: strs }),
     build(input: StepInput): string {
       return `Write the end-of-shift handoff note for the next shift. Short bullets, ticket ids where useful, nothing they need to ask about.

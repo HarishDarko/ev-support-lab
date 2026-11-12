@@ -4,7 +4,17 @@
 // committed recording is an AI one (functions/_lib/live-packs.ts), so today only the fallbacks answer.
 import { StepError, clip, fenced } from "../../../functions/_lib/errors";
 import { ValidationError, check, exceptionIn, exceptionNamesIn, quoted } from "../../../functions/_lib/checks";
-import { bool, groundingIn, knownIds, obj, runbookListOf, severity, str, strs } from "../../../functions/_lib/kit";
+import {
+  MAX_TOKENS,
+  bool,
+  groundingIn,
+  knownIds,
+  obj,
+  runbookListOf,
+  severity,
+  str,
+  strs,
+} from "../../../functions/_lib/kit";
 import type { StepInput } from "../../../functions/_lib/types";
 import type {
   ClassifyModel,
@@ -78,6 +88,7 @@ function incidentInput() {
 
 const investigate = {
   deep: true,
+  maxTokens: MAX_TOKENS.investigate,
   schema: obj({
     symptom: str,
     impact: strs,
@@ -136,6 +147,7 @@ ${incidentInput()}`;
 
 const handoff = {
   deep: true,
+  maxTokens: MAX_TOKENS.handoff,
   schema: obj({
     title: str,
     severity,
@@ -197,6 +209,7 @@ ${incidentInput()}`;
 
 const verify = {
   deep: true,
+  maxTokens: MAX_TOKENS.verify,
   schema: obj({
     verdict: { type: "string", enum: ["consistent with hypothesis", "inconclusive", "contradicts hypothesis"] },
     reading: str,
@@ -235,6 +248,7 @@ Write:
 
 const kb = {
   deep: true,
+  maxTokens: MAX_TOKENS.kb,
   schema: obj({
     title: str,
     applies_when: strs,
@@ -297,6 +311,7 @@ ${runbookList}`;
 
 const shiftnote = {
   deep: true,
+  maxTokens: MAX_TOKENS.shiftnote,
   schema: obj({ headline: str, done: strs, needs_you: strs, escalated: strs, watch: strs }),
   build(input: StepInput): string {
     return `Write the end-of-shift handoff note from the Eastern Time shift to the India team. Short bullets, ticket ids where useful, nothing they need to ask about.

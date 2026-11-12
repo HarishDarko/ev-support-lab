@@ -25,6 +25,13 @@ export const strs = { type: "array", items: str };
 export const bool = { type: "boolean" };
 export const SEVERITIES = ["S1", "S2", "S3", "S4"] as const satisfies readonly Severity[];
 export const severity = { type: "string", enum: [...SEVERITIES] };
+/**
+ * Output caps for the reasoning steps on the deep model, which would otherwise default to 8000 tokens. Each is about
+ * three times the step's output in the recorded EV run (src/data/recorded-run.json: investigate 1138, handoff 799,
+ * kb 524, shift note 475, verify 368), rounded up to 500, and never under 1500.
+ */
+export const MAX_TOKENS = { investigate: 3500, handoff: 2500, verify: 1500, kb: 2000, shiftnote: 1500 } as const;
+
 /** The actions triage may give a ticket. */
 export const TRIAGE_ACTIONS = [
   "close_with_runbook",
