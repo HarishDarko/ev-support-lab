@@ -1,10 +1,10 @@
 // The walkthrough as data: five stages, sixteen beats, one point each (docs/specs/desk-phase2.md, section 2).
 // Every number in a claim is computed here from the synthetic data or the run, never typed into the UI.
-import { TICKETS } from "../data/synthetic";
 import { EV_INCIDENT } from "../incident/ev-charging";
 import type { Incident, IncidentBeatId } from "../incident/types";
 import type { Stage } from "../stages";
 import { needsMeterCheck } from "../run/guardrail";
+import { EV_DESK, type DeskPack } from "../run/pack";
 import { priorUses, REPEAT_LIMIT, WINDOW_DAYS, type Lane, type StoryData } from "./data";
 
 export type DeskTab = "queue" | "incident" | "handoff" | "kb" | "coverage" | "scorecard";
@@ -60,16 +60,21 @@ export interface Facts extends Decisions {
 
 const LANES: Lane[] = ["close", "person", "escalate", "info", "held"];
 
-export function facts(data: StoryData, decisions: Decisions, incident: Incident = EV_INCIDENT): Facts {
+export function facts(
+  data: StoryData,
+  decisions: Decisions,
+  incident: Incident = EV_INCIDENT,
+  pack: DeskPack = EV_DESK,
+): Facts {
   const lanes = Object.fromEntries(LANES.map((l) => [l, [] as string[]])) as Record<Lane, string[]>;
   for (const t of data.tickets) lanes[t.lane].push(t.id);
   const heldRunbook = data.tickets.find((t) => t.lane === "held")?.runbook ?? incident.recordOnlyRunbook;
-  const prior = priorUses(heldRunbook);
+  const prior = priorUses(heldRunbook, pack);
   // The meter gate (v1, kept): a record-only runbook closes at the last recorded meter value, so a person confirms
   // the meter is flat before such a closure can be approved.
   const runbookOf = new Map(data.tickets.map((t) => [t.id, t.runbook]));
   const checked = new Set(decisions.meterChecked);
-  const gated = (id: string) => needsMeterCheck(runbookOf.get(id) ?? "none") && !checked.has(id);
+  const gated = (id: string) => needsMeterCheck(runbookOf.get(id) ?? "none", pack) && !checked.has(id);
   const approvable = lanes.close.filter((id) => !gated(id));
   const awaitingMeter = lanes.close.filter(gated);
   const approvedSet = new Set(decisions.approvedIds);
@@ -80,11 +85,11 @@ export function facts(data: StoryData, decisions: Decisions, incident: Incident 
     approvedCount,
     approvable,
     awaitingMeter,
-    total: TICKETS.length,
+    total: pack.tickets.length,
     lanes,
     heldRunbook,
     prior: prior.length,
-    priorSites: new Set(prior.map((h) => h.site)).size,
+    priorSites: new Set(prior.map((h) => pack.placeOf(h))).size,
     incident,
     triggers: [...incident.triggerWords],
     ...incident.storyFacts,
@@ -110,8 +115,7 @@ export const BEATS: readonly Beat[] = [
     stage: "queue",
     when: shiftStart,
     claim: (f) => `${f.total} tickets are waiting.`,
-    lede: () =>
-      "Raised overnight by the NOC, customer care, field service, host accounts and billing. Each needs an engineering-level look.",
+    lede: (f) => f.incident.queue.raisedBy,
     desk: "queue",
   },
   {
@@ -152,7 +156,7 @@ export const BEATS: readonly Beat[] = [
         : `A person approves the ${f.approvable.length} closures.`,
     lede: (f) =>
       f.awaitingMeter.length
-        ? `Nothing closes on the AI's word. ${f.awaitingMeter.length} more wait until a person confirms the meter in the desk.`
+        ? `Nothing closes on the AI's word. ${f.awaitingMeter.length} more wait until a person ${f.incident.queue.check} in the desk.`
         : "Nothing closes on the AI's word. Every closure names a real runbook.",
     desk: "queue",
     action: "approve",

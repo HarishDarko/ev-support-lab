@@ -1,6 +1,5 @@
 // Reads over a Run: one result per ticket with its lane and provenance, lane counts, and the shift summary the
 // end-of-shift note is written from. Pure functions; the React hook only memoises them.
-import { TICKETS, type HistoryItem, type Runbook, type Ticket } from "../data/synthetic";
 import { EV_INCIDENT } from "../incident/ev-charging";
 import type { Incident } from "../incident/types";
 import {
@@ -14,18 +13,19 @@ import {
   type LaneCounts,
   type RepeatRule,
 } from "./guardrail";
+import { EV_DESK, type DeskHistory, type DeskPack, type DeskRunbook, type DeskTicket } from "./pack";
 import { provenanceOf, type Provenance } from "./provenance";
 import type { Lane, Run, StepResult, TriageData, TriageResult } from "./types";
 
 /** Everything the desk shows about one ticket's triage. */
 export interface TicketResult {
-  ticket: Ticket;
+  ticket: DeskTicket;
   result: TriageResult;
   lane: Lane;
   laneLabel: string;
   provenance: Provenance;
   /** The runbook the result names, if it names a real one. */
-  runbook: Runbook | null;
+  runbook: DeskRunbook | null;
   /** The quoted words, when they were verified in the ticket text. Null otherwise: nothing is highlighted. */
   quote: string | null;
   /** For a rules result: the words the rule matched in the ticket. Not AI output, so it is marked differently. */
@@ -33,36 +33,36 @@ export interface TicketResult {
   /** Set for a held closure: the repeat rule and the earlier closures behind it. */
   repeatRule: RepeatRule | null;
   /** Earlier closures by the same runbook in the window (the history behind the rule). */
-  priorUses: HistoryItem[];
+  priorUses: DeskHistory[];
   needsMeterCheck: boolean;
 }
 
 export type TicketIndex = ReadonlyMap<string, TicketResult>;
 
-export function indexRun(run: Run): TicketIndex {
-  return indexTriage(run.steps.triage);
+export function indexRun(run: Run, pack: DeskPack = EV_DESK): TicketIndex {
+  return indexTriage(run.steps.triage, pack);
 }
 
-export function indexTriage(batches: readonly StepResult<TriageData>[]): TicketIndex {
+export function indexTriage(batches: readonly StepResult<TriageData>[], pack: DeskPack = EV_DESK): TicketIndex {
   const index = new Map<string, TicketResult>();
-  const byId = new Map(TICKETS.map((t) => [t.id, t]));
+  const byId = new Map(pack.tickets.map((t) => [t.id, t]));
   for (const batch of batches) {
     for (const result of batch.data.results) {
       const ticket = byId.get(result.id);
       if (!ticket) continue;
-      const lane = laneOf(result);
+      const lane = laneOf(result, pack);
       index.set(result.id, {
         ticket,
         result,
         lane,
         laneLabel: LANE_LABEL[lane],
         provenance: provenanceOf(result.source, batch.trace, batch.ms, Boolean(batch.live)),
-        runbook: runbookById(result.runbook) ?? null,
+        runbook: runbookById(result.runbook, pack) ?? null,
         quote: result.source === "ai" && result.quote_verified && result.evidence ? result.evidence : null,
         matched: result.source === "rules" && result.evidence ? result.evidence : null,
-        repeatRule: lane === "held" ? repeatRuleFor(result.runbook) : null,
-        priorUses: result.runbook === "none" ? [] : priorUses(result.runbook),
-        needsMeterCheck: needsMeterCheck(result.runbook),
+        repeatRule: lane === "held" ? repeatRuleFor(result.runbook, pack) : null,
+        priorUses: result.runbook === "none" ? [] : priorUses(result.runbook, pack),
+        needsMeterCheck: needsMeterCheck(result.runbook, pack),
       });
     }
   }
@@ -70,9 +70,9 @@ export function indexTriage(batches: readonly StepResult<TriageData>[]): TicketI
 }
 
 /** Ticket ids per lane, in queue order. */
-export function lanesOf(index: TicketIndex): Record<Lane, string[]> {
+export function lanesOf(index: TicketIndex, pack: DeskPack = EV_DESK): Record<Lane, string[]> {
   const lanes: Record<Lane, string[]> = { close: [], person: [], escalate: [], info: [], held: [] };
-  for (const t of TICKETS) {
+  for (const t of pack.tickets) {
     const entry = index.get(t.id);
     if (entry) lanes[entry.lane].push(t.id);
   }
@@ -102,14 +102,15 @@ export function shiftSummary(
   handoffTitle: string,
   approved?: number,
   incident: Incident = EV_INCIDENT,
+  pack: DeskPack = EV_DESK,
 ) {
-  const lanes = lanesOf(index);
+  const lanes = lanesOf(index, pack);
   const closing = approved ?? lanes.close.length;
   return {
-    open_at_start: TICKETS.length,
+    open_at_start: pack.tickets.length,
     approved_for_closure: closing,
     held_by_repeat_guardrail: lanes.held,
-    still_open: TICKETS.length - closing,
+    still_open: pack.tickets.length - closing,
     needs_a_person: lanes.person.map((id) => `${id}: ${index.get(id)!.result.summary}`),
     ai_agreement: {
       triaged: index.size,

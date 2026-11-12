@@ -3,7 +3,7 @@ export const META = {
   id: "saas-support",
   name: "SaaS support",
   complete: true,
-  hasIncident: false,
+  hasIncident: true,
   fields: [
     { key: "account", label: "Account" },
     { key: "plan", label: "Plan" },

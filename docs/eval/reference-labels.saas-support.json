@@ -1,11 +1,11 @@
 {
-  "about": "Reference triage for the 21 synthetic saas-support tickets, used to score the keyword rules (and later models). Labelled independently by 3 reviewers on 2026-11-10 from the ticket text and the label definitions only (no rules or model output): 2 fresh Claude Opus 5.5 runs and 1 Gemini 4 Pro run (agy, Gemini 4 Argon High). The first answer in each field is the majority answer (strict scoring); the others are answers at least one reviewer chose and at least two accepted (lenient scoring). All three gave the same best answer on component 19 of 21, severity 19, action 17 and runbook 21. No field needed a hand decision.",
-  "reviewed": "2026-11-10",
+  "about": "Reference triage for the 25 synthetic saas-support tickets, used to score the keyword rules (and later models). Labelled independently by 3 reviewers on 2026-11-10 from the ticket text and the label definitions only (no rules or model output): 2 fresh Claude Opus 5.5 runs and 1 Gemini 4 Pro run (agy, Gemini 4 Argon High). The first answer in each field is the majority answer (strict scoring); the others are answers at least one reviewer chose and at least two accepted (lenient scoring). All three gave the same best answer on component 19 of 21, severity 19, action 17 and runbook 21. No field needed a hand decision. On 2026-11-11 (SD-15) the changed ticket T-3004 and the new T-3022 to T-3025 were labelled again the same way (2 fresh Claude Opus 5.5 runs, 1 Gemini 4 Argon High run through agy), from a packet with only those 5 tickets; all 3 agreed on component 5 of 5, severity 4, action 4 and runbook 4, and no field needed a hand decision.",
+  "reviewed": "2026-11-11",
   "labels": [
     { "id": "T-3001", "component": ["login-access"], "severity": ["S2"], "action": ["needs_human"], "runbook": ["RB-11"], "why": "All 3 reviewers agree on every field." },
     { "id": "T-3002", "component": ["login-access"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["RB-12"], "why": "All 3 reviewers agree on every field." },
     { "id": "T-3003", "component": ["billing"], "severity": ["S2"], "action": ["close_with_runbook"], "runbook": ["RB-13"], "why": "All 3 reviewers agree on every field." },
-    { "id": "T-3004", "component": ["integration"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-14"], "why": "All 3 reviewers agree on every field." },
+    { "id": "T-3004", "component": ["integration"], "severity": ["S3"], "action": ["escalation_candidate"], "runbook": ["none", "RB-14"], "why": "Relabelled 2026-11-11 (SD-15): majority answer first; reviewers split on runbook (A:none B:none G:RB-14)." },
     { "id": "T-3005", "component": ["performance"], "severity": ["S3", "S2"], "action": ["info_only"], "runbook": ["none"], "why": "Reviewers split on severity (A:S3 B:S2 G:S3); majority answer first." },
     { "id": "T-3006", "component": ["data-request"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-15"], "why": "All 3 reviewers agree on every field." },
     { "id": "T-3007", "component": ["bug"], "severity": ["S3"], "action": ["escalation_candidate"], "runbook": ["none"], "why": "All 3 reviewers agree on every field." },
@@ -22,6 +22,10 @@
     { "id": "T-3018", "component": ["request-or-question"], "severity": ["S4"], "action": ["info_only", "needs_human"], "runbook": ["none"], "why": "Reviewers split on action (A:info_only B:needs_human G:info_only); majority answer first." },
     { "id": "T-3019", "component": ["data-request"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-15"], "why": "All 3 reviewers agree on every field." },
     { "id": "T-3020", "component": ["performance", "login-access"], "severity": ["S1"], "action": ["escalation_candidate"], "runbook": ["none"], "why": "Reviewers split on component (A:performance B:performance G:login-access); majority answer first." },
-    { "id": "T-3021", "component": ["integration", "bug"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["none"], "why": "Reviewers split on component (A:bug B:integration G:integration); majority answer first." }
+    { "id": "T-3021", "component": ["integration", "bug"], "severity": ["S3"], "action": ["needs_human"], "runbook": ["none"], "why": "Reviewers split on component (A:bug B:integration G:integration); majority answer first." },
+    { "id": "T-3022", "component": ["integration"], "severity": ["S1"], "action": ["escalation_candidate"], "runbook": ["none"], "why": "Relabelled 2026-11-11 (SD-15): all 3 reviewers agree on every field." },
+    { "id": "T-3023", "component": ["integration"], "severity": ["S3"], "action": ["close_with_runbook"], "runbook": ["RB-14"], "why": "Relabelled 2026-11-11 (SD-15): all 3 reviewers agree on every field." },
+    { "id": "T-3024", "component": ["integration"], "severity": ["S3"], "action": ["escalation_candidate"], "runbook": ["none"], "why": "Relabelled 2026-11-11 (SD-15): all 3 reviewers agree on every field." },
+    { "id": "T-3025", "component": ["integration"], "severity": ["S3", "S4"], "action": ["escalation_candidate", "info_only"], "runbook": ["none"], "why": "Relabelled 2026-11-11 (SD-15): reviewers split on severity (A:S3 B:S3 G:S4) and action (A:escalation_candidate B:escalation_candidate G:info_only); majority answer first." }
   ]
 }

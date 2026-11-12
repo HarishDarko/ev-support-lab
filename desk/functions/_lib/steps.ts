@@ -274,13 +274,24 @@ ${pack.history.map((h) => pack.prompts.historyLine(h)).join("\n")}`;
   return { triage, patterns };
 }
 
-const build = (id: IncidentPackId) =>
-  ({ ...queueSteps(PACKS[id]), ...INCIDENT_STEPS[id] }) satisfies Record<string, Step>;
-const built = new Map<IncidentPackId, ReturnType<typeof build>>();
+/** A pack's full chain: the queue steps and that pack's own incident steps, typed as that pack's. */
+export type PackSteps<P extends IncidentPackId> = ReturnType<typeof queueSteps> & (typeof INCIDENT_STEPS)[P];
+// Each pack has its own ticket type; the queue steps read only the fields every pack has. The incident steps keep
+// each pack's own type (shared/packs/steps.ts checks every pack's against Step).
+const build = <P extends IncidentPackId>(id: P): PackSteps<P> => ({
+  ...queueSteps(PACKS[id] as unknown as Pack),
+  ...INCIDENT_STEPS[id],
+});
+const built: { [P in IncidentPackId]?: PackSteps<P> } = {};
 /** Every step for a pack with an incident, built once. */
-export function stepsFor(id: IncidentPackId = DEFAULT_PACK_ID): ReturnType<typeof build> {
-  let steps = built.get(id);
-  if (!steps) built.set(id, (steps = build(id)));
+export function stepsFor<P extends IncidentPackId = typeof DEFAULT_PACK_ID>(
+  id: P = DEFAULT_PACK_ID as P,
+): PackSteps<P> {
+  const cached = built[id];
+  if (cached) return cached;
+  const steps = build(id);
+  // TypeScript cannot write through a mapped type with a generic key; the value is this key's own steps.
+  (built as Partial<Record<IncidentPackId, unknown>>)[id] = steps;
   return steps;
 }
 

@@ -2,15 +2,18 @@
 // The provider starts from the recorded run, so nothing waits on the network. `runLive()` re-runs the chain in
 // the background and merges answers as they land.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useIncident } from "../incident";
 import { classifyTicket } from "./classify";
 import { chainSeconds, runLabel } from "./cost";
-import { CHAIN_CALLS, TRIAGE_BATCHES, liveNote, mergeUpdate, postTo, runChain, type PostStep } from "./live";
-import { recordedRun } from "./recorded";
+import { chainCalls, liveNote, mergeUpdate, postTo, runChain, triageBatches, type PostStep } from "./live";
+import { EV_DESK, type DeskPack } from "./pack";
 import { indexRun, laneCounts, lanesOf, type TicketResult } from "./selectors";
 import type { LaneCounts } from "./guardrail";
 import type { ClassifyModel, Lane, Run, RunSource, RunStatus, StepResult } from "./types";
 
 export interface RunApi {
+  /** The industry pack this run belongs to. */
+  pack: DeskPack;
   run: Run;
   source: RunSource;
   status: RunStatus;
@@ -46,6 +49,8 @@ interface ProviderProps {
   initial?: Run;
   /** How steps are called. Defaults to POST /api/<step>. For tests. */
   post?: PostStep;
+  /** The industry pack. Defaults to EV charging; the incident comes from IncidentContext. */
+  pack?: DeskPack;
 }
 
 /** The groups of steps a screen reader hears about, in the order they usually finish. */
@@ -57,8 +62,9 @@ const ANNOUNCED_GROUPS: [steps: string[], name: string][] = [
   [["kb", "classify", "shiftnote"], "The article, the new-ticket check and the shift note"],
 ];
 
-export function RunProvider({ children, initial, post }: ProviderProps) {
-  const [run, setRun] = useState<Run>(() => initial ?? recordedRun());
+export function RunProvider({ children, initial, post, pack = EV_DESK }: ProviderProps) {
+  const incident = useIncident();
+  const [run, setRun] = useState<Run>(() => initial ?? pack.recorded());
   const [status, setStatus] = useState<RunStatus>("idle");
   const [spent, setSpent] = useState(0);
   // Some live call ran on a model with no list price, so `spent` is a floor.
@@ -78,21 +84,26 @@ export function RunProvider({ children, initial, post }: ProviderProps) {
   useEffect(() => () => controller.current?.abort(), []);
 
   const runLive = useCallback(async () => {
-    if (busy.current) return;
+    // A pack with no reviewed recording has no live runs; the server refuses them too.
+    if (busy.current || !pack.liveRuns) return;
     busy.current = true;
     const abort = new AbortController();
     controller.current = abort;
+    const total = chainCalls(pack);
+    const batches = triageBatches(pack).length;
     setStatus("running");
     setMessage(null);
-    setProgress({ settled: 0, total: CHAIN_CALLS, ai: 0 });
+    setProgress({ settled: 0, total, ai: 0 });
     let ai = 0;
-    setAnnouncement(`Live run started. It usually takes about ${chainSeconds(recordedRun().steps)} seconds.`);
+    setAnnouncement(`Live run started. It usually takes about ${chainSeconds(pack.recorded().steps)} seconds.`);
     const done = new Set<string>();
     let triageDone = 0;
     const report = await runChain({
       post: postStep,
       base: latest.current.steps,
       signal: abort.signal,
+      pack,
+      incident,
       onUpdate: (update) => {
         setRun((current) => mergeUpdate(current, update));
         if (update.outcome !== "failed") {
@@ -100,13 +111,12 @@ export function RunProvider({ children, initial, post }: ProviderProps) {
           if (update.result.trace.unpriced) setUnpriced(true);
         }
         if (update.outcome !== "failed" && update.result.trace.source === "ai") ai += 1;
-        setProgress({ settled: update.settled, total: CHAIN_CALLS, ai });
+        setProgress({ settled: update.settled, total, ai });
         if (update.step === "triage") triageDone += 1;
         else done.add(update.step);
         const finished = ANNOUNCED_GROUPS.find(
           ([steps]) =>
-            steps.includes(update.step) &&
-            steps.every((s) => (s === "triage" ? triageDone === TRIAGE_BATCHES.length : done.has(s))),
+            steps.includes(update.step) && steps.every((s) => (s === "triage" ? triageDone === batches : done.has(s))),
         );
         if (finished) setAnnouncement(`${finished[1]} finished.`);
       },
@@ -118,25 +128,26 @@ export function RunProvider({ children, initial, post }: ProviderProps) {
     setMessage(liveNote(report));
     // The note itself is shown in its own status line, so it is not repeated here.
     setAnnouncement("Live run finished.");
-  }, [postStep]);
+  }, [postStep, pack, incident]);
 
   const classify = useCallback(
     async (text: string) => {
-      const result = await classifyTicket(postStep, text, latest.current.steps.kb.data);
+      const result = await classifyTicket(postStep, text, latest.current.steps.kb.data, undefined, pack);
       setSpent((total) => total + result.trace.cost);
       if (result.trace.unpriced) setUnpriced(true);
       return result;
     },
-    [postStep],
+    [postStep, pack],
   );
 
-  const index = useMemo(() => indexRun(run), [run]);
-  const lanes = useMemo(() => lanesOf(index), [index]);
+  const index = useMemo(() => indexRun(run, pack), [run, pack]);
+  const lanes = useMemo(() => lanesOf(index, pack), [index, pack]);
   const counts = useMemo(() => laneCounts(index), [index]);
   const label = runLabel(run);
 
   const value = useMemo<RunApi>(
     () => ({
+      pack,
       run,
       source: run.source,
       status,
@@ -153,7 +164,22 @@ export function RunProvider({ children, initial, post }: ProviderProps) {
       lanes,
       counts,
     }),
-    [run, status, spent, unpriced, message, progress, announcement, label, runLive, classify, index, lanes, counts],
+    [
+      pack,
+      run,
+      status,
+      spent,
+      unpriced,
+      message,
+      progress,
+      announcement,
+      label,
+      runLive,
+      classify,
+      index,
+      lanes,
+      counts,
+    ],
   );
 
   return <RunContext value={value}>{children}</RunContext>;

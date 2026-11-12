@@ -1,5 +1,5 @@
-// The incident the screens show. Today only EV charging has one, so it is the default; a pack with its own
-// incident provides it through IncidentContext.
+// The incident the screens show. EV charging's is the default (it is in the page); every other industry provides
+// its own through IncidentContext.
 import { createContext, useContext } from "react";
 import { EV_INCIDENT } from "./ev-charging";
 import type { Incident } from "./types";

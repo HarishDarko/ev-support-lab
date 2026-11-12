@@ -1,0 +1,45 @@
+// What the walkthrough needs for one industry: its desk pack (queue, rules, recorded run) and its incident. EV
+// charging's is in the page; another industry with an incident loads its own when picked, so the EV page carries
+// none of its data.
+import { useEffect, useState } from "react";
+import type { PackId } from "../../shared/packs";
+import { EV_INCIDENT } from "../incident/ev-charging";
+import type { Incident } from "../incident/types";
+import { EV_DESK, type DeskPack } from "../run/pack";
+
+export interface PackBundle {
+  desk: DeskPack;
+  incident: Incident;
+}
+
+export const EV_BUNDLE: PackBundle = { desk: EV_DESK, incident: EV_INCIDENT };
+
+/** Each industry's own bundle, other than EV's, loaded when it is picked (and by the recording scripts). */
+export const LOADERS: Partial<Record<PackId, () => Promise<PackBundle>>> = {
+  "saas-support": () => import("./saas-desk").then((m) => m.SAAS_BUNDLE),
+  "e-commerce": () => import("./ecommerce-desk").then((m) => m.SHOP_BUNDLE),
+};
+
+/** Which bundle an industry shows: EV's is in the page; every other offered industry loads its own. */
+const ownBundle = (id: PackId): boolean => id !== EV_BUNDLE.desk.id && Boolean(LOADERS[id]);
+
+/**
+ * The bundle for the picked industry. Null while an industry's own bundle is loading; `failed` when it did not load.
+ */
+export function usePackBundle(id: PackId): { bundle: PackBundle | null; failed: boolean } {
+  const [loaded, setLoaded] = useState<{ id: PackId; bundle: PackBundle | null; failed: boolean } | null>(null);
+  useEffect(() => {
+    if (!ownBundle(id)) return;
+    let live = true;
+    LOADERS[id]!().then(
+      (bundle) => live && setLoaded({ id, bundle, failed: false }),
+      () => live && setLoaded({ id, bundle: null, failed: true }),
+    );
+    return () => {
+      live = false;
+    };
+  }, [id]);
+  if (!ownBundle(id)) return { bundle: EV_BUNDLE, failed: false };
+  if (loaded?.id !== id) return { bundle: null, failed: false };
+  return { bundle: loaded.bundle, failed: loaded.failed };
+}

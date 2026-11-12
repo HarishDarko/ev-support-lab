@@ -1,26 +1,39 @@
 import { REPO, source } from "../data/lab";
 import { useIncident } from "../incident";
+import type { IndustryPages, Lab } from "../incident/types";
 import "./Page.css";
 
 // How the prototype was built, how its AI output is checked, and what it does not prove. Plain text on purpose:
 // this is the page an engineer reads before asking questions.
 
-const BUILT = [
+// Each industry has its own lab; EV charging's words are the default (the incident's `pages` overrides them).
+const EV_NOTES: IndustryPages["notes"] = {
+  kicker: "Engineering notes",
+  labStack: "Java 25, Spring Boot 4, PostgreSQL through Testcontainers, a scripted charger over a real websocket.",
+  labPath: "lab",
+  recordOnlyCheck:
+    "A closure must name a real runbook and fit the ticket, and a person approves it. A record-only runbook also needs a person to confirm the meter first.",
+  notModelled: [
+    "OCPP 1.6J itself (see above): the lab speaks 2.0.1 only.",
+    "TxStopPoint configuration, which decides when a charger ends a transaction.",
+    "Roaming (OCPI) and charge detail records.",
+    "Idle fees, real payment capture and refunds.",
+    "Production traffic volumes, or anything about a real company's systems. Every station, ticket and number is synthetic.",
+  ],
+};
+
+const built = (notes: IndustryPages["notes"]) => [
   {
     part: "The desk",
     stack: "React and TypeScript, Cloudflare Pages Functions, Vitest and Playwright with accessibility checks.",
     path: "desk",
   },
-  {
-    part: "The reproduction lab",
-    stack: "Java 25, Spring Boot 4, PostgreSQL through Testcontainers, a scripted charger over a real websocket.",
-    path: "lab",
-  },
+  { part: "The reproduction lab", stack: notes.labStack, path: notes.labPath },
 ];
 
-const AI_CHECKS = [
+const aiChecks = (notes: IndustryPages["notes"]) => [
   "Every triage decision quotes the ticket. A quote that is not in the ticket (ignoring case, spacing and punctuation) is rejected, and the rules answer instead.",
-  "A closure must name a real runbook and fit the ticket, and a person approves it. A record-only runbook also needs a person to confirm the meter first.",
+  notes.recordOnlyCheck,
   "A record-only runbook that keeps closing the same symptom is held, and the tickets become a pattern.",
   "Every AI answer shows its model, the checks that ran, and its cost. A rules answer is labelled as rules.",
 ];
@@ -66,19 +79,14 @@ const OCPP16 = [
   "If the charger supports the RemoteTrigger profile, TriggerMessage can ask for a StatusNotification or MeterValues, but not for a StopTransaction.",
 ];
 
-const NOT_MODELLED = [
-  "OCPP 1.6J itself (see above): the lab speaks 2.0.1 only.",
-  "TxStopPoint configuration, which decides when a charger ends a transaction.",
-  "Roaming (OCPI) and charge detail records.",
-  "Idle fees, real payment capture and refunds.",
-  "Production traffic volumes, or anything about a real company's systems. Every station, ticket and number is synthetic.",
-];
-
 export function EngineeringNotes() {
-  const { lab } = useIncident();
+  const { lab, pages } = useIncident();
+  const notes = pages?.notes ?? EV_NOTES;
+  // The OCPP review table and the 1.6 comparison are about the EV lab; another industry shows what its lab tests.
+  const ev = !pages;
   return (
     <article className="page">
-      <p className="page-kicker">Engineering notes</p>
+      <p className="page-kicker">{notes.kicker}</p>
       <h1 className="page-title">How this was built, and what it does not prove</h1>
       <p className="page-lede">
         Built with AI coding assistants. I decided what to build and the rules it had to follow, reviewed the code, and
@@ -88,7 +96,7 @@ export function EngineeringNotes() {
       <section className="page-section" aria-labelledby="en-built">
         <h2 id="en-built">The two parts</h2>
         <ul className="plain">
-          {BUILT.map((b) => (
+          {built(notes).map((b) => (
             <li key={b.part}>
               <h3>{b.part}</h3>
               <p>
@@ -105,7 +113,7 @@ export function EngineeringNotes() {
       <section className="page-section" aria-labelledby="en-ai">
         <h2 id="en-ai">How the AI output is checked</h2>
         <ul>
-          {AI_CHECKS.map((c) => (
+          {aiChecks(notes).map((c) => (
             <li key={c}>{c}</li>
           ))}
         </ul>
@@ -119,6 +127,67 @@ export function EngineeringNotes() {
         </p>
       </section>
 
+      {ev ? <EvLabSections /> : <LabSection lab={lab} />}
+
+      <section className="page-section" aria-labelledby="en-limits">
+        <h2 id="en-limits">What the lab does not model</h2>
+        <ul>
+          {notes.notModelled.map((n) => (
+            <li key={n}>{n}</li>
+          ))}
+        </ul>
+        <p className="page-links">
+          <a href={source(lab.readme)} target="_blank" rel="noreferrer">
+            Lab README
+          </a>
+          {lab.adrs.map((a) => (
+            <a key={a.path} href={source(a.path)} target="_blank" rel="noreferrer">
+              {a.title}
+            </a>
+          ))}
+          {lab.precedent && (
+            <a href={lab.precedent.url} target="_blank" rel="noreferrer">
+              Related public fix: {lab.precedent.title}
+            </a>
+          )}
+        </p>
+      </section>
+    </article>
+  );
+}
+
+/** What a non-EV lab reproduces and how its fix works, from the lab's own test classes and rules. */
+function LabSection({ lab }: { lab: Lab }) {
+  return (
+    <section className="page-section" aria-labelledby="en-lab">
+      <h2 id="en-lab">What the lab reproduces, and the fix</h2>
+      <p>
+        {lab.reproduction.className} runs with the fix flag off and {lab.reproShows} {lab.regression.className} passes
+        with the fix on, and CI fails the build if it still passes with the fix off. {lab.edgeCases.className} covers
+        the cases the fix must leave alone.
+      </p>
+      <ul>
+        {lab.rules.map((r) => (
+          <li key={r.name}>
+            <strong>{r.name}.</strong> {r.text}
+          </li>
+        ))}
+      </ul>
+      <p className="page-links">
+        {[lab.reproduction, lab.regression, lab.edgeCases].map((t) => (
+          <a key={t.className} href={source(t.path)} target="_blank" rel="noreferrer">
+            {t.className}
+          </a>
+        ))}
+      </p>
+    </section>
+  );
+}
+
+/** The EV lab's review findings and the OCPP 1.6 comparison. */
+function EvLabSections() {
+  return (
+    <>
       <section className="page-section" aria-labelledby="en-fixed">
         <h2 id="en-fixed">What two rounds of AI review found, and what changed</h2>
         <table className="page-table">
@@ -154,28 +223,6 @@ export function EngineeringNotes() {
           cannot establish that a transaction ended.
         </p>
       </section>
-
-      <section className="page-section" aria-labelledby="en-limits">
-        <h2 id="en-limits">What the lab does not model</h2>
-        <ul>
-          {NOT_MODELLED.map((n) => (
-            <li key={n}>{n}</li>
-          ))}
-        </ul>
-        <p className="page-links">
-          <a href={source(lab.readme)} target="_blank" rel="noreferrer">
-            Lab README
-          </a>
-          {lab.adrs.map((a) => (
-            <a key={a.path} href={source(a.path)} target="_blank" rel="noreferrer">
-              {a.title}
-            </a>
-          ))}
-          <a href={lab.precedent.url} target="_blank" rel="noreferrer">
-            Related public fix: {lab.precedent.title}
-          </a>
-        </p>
-      </section>
-    </article>
+    </>
   );
 }

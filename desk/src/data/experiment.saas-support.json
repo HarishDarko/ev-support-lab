@@ -1,0 +1,83 @@
+{
+  "windows" : {
+    "before" : {
+      "canary" : {
+        "endpoints" : 10,
+        "events" : 6869,
+        "tokenRequests" : 10573,
+        "storms" : 9,
+        "pauses" : 5,
+        "realOutagePauses" : 0,
+        "failedAttempts" : 131,
+        "waited" : 0,
+        "replayed" : 164,
+        "lost" : 23,
+        "deliveredTwice" : 0
+      },
+      "control" : {
+        "endpoints" : 10,
+        "events" : 6839,
+        "tokenRequests" : 10474,
+        "storms" : 8,
+        "pauses" : 4,
+        "realOutagePauses" : 0,
+        "failedAttempts" : 103,
+        "waited" : 0,
+        "replayed" : 122,
+        "lost" : 25,
+        "deliveredTwice" : 0
+      }
+    },
+    "after" : {
+      "canary" : {
+        "endpoints" : 10,
+        "events" : 6887,
+        "tokenRequests" : 3342,
+        "storms" : 0,
+        "pauses" : 1,
+        "realOutagePauses" : 1,
+        "failedAttempts" : 20,
+        "waited" : 0,
+        "replayed" : 56,
+        "lost" : 0,
+        "deliveredTwice" : 0
+      },
+      "control" : {
+        "endpoints" : 10,
+        "events" : 6867,
+        "tokenRequests" : 10562,
+        "storms" : 9,
+        "pauses" : 5,
+        "realOutagePauses" : 0,
+        "failedAttempts" : 129,
+        "waited" : 0,
+        "replayed" : 165,
+        "lost" : 22,
+        "deliveredTwice" : 0
+      }
+    }
+  },
+  "logs" : [ {
+    "title" : "Northwind Labs · ep_northwind · H-3111",
+    "lines" : [ [ "14:00:00", "webhook-worker", "2 deliveries (HMAC signature, no token) -> HTTP 401" ] ]
+  }, {
+    "title" : "Harbor Analytics · ep_harbor_main · T-3004",
+    "lines" : [ [ "01:00:00", "recurring-jobs", "burst: 32 task events on the hour" ], [ "01:00:00", "token-cache", "access token expired (lifetime 3600 s); the cache does not check" ], [ "01:00:00", "webhook-worker", "32 deliveries in flight -> 401 Unauthorized (token expired)" ], [ "01:00:00", "webhook-worker", "32 threads each request a new token (no shared refresh)" ], [ "01:00:00", "webhook-worker", "31 retries at once, 0 ms backoff -> 401 (token revoked by a newer one)" ], [ "01:00:00", "webhook-worker", "31 threads each request a new token (no shared refresh)" ], [ "01:00:00", "webhook-worker", "30 retries at once, 0 ms backoff -> 401 (token revoked by a newer one)" ], [ "01:00:00", "webhook-worker", "30 threads each request a new token (no shared refresh)" ], [ "01:00:00", "webhook-worker", "29 retries at once, 0 ms backoff -> 401 (token revoked by a newer one)" ], [ "01:00:00", "webhook-worker", "29 threads each request a new token (no shared refresh)" ], [ "01:00:00", "customer-idp", "POST /oauth/token -> 429 Too Many Requests" ], [ "01:00:00", "endpoint-health", "endpoint paused (15 failures in 60 min)" ], [ "01:00:00", "notifier", "\"Webhook endpoint paused\" email to workspace admins" ], [ "01:00:00", "webhook-worker", "6 retries at once, 0 ms backoff -> 401 (token revoked by a newer one)" ], [ "01:00:00", "webhook-worker", "122 token requests for 32 deliveries" ], [ "08:30:00", "support-tool", "test delivery -> 200" ], [ "08:30:00", "support-tool", "RB-14: replayed 42 failed events, 42 delivered" ] ]
+  }, {
+    "title" : "Saffron Foods · ep_saffron · T-3024",
+    "lines" : [ [ "04:00:00", "recurring-jobs", "burst: 30 task events on the hour" ], [ "04:00:00", "token-cache", "access token expired (lifetime 3600 s); the cache does not check" ], [ "04:00:00", "webhook-worker", "30 deliveries in flight -> 401 Unauthorized (token expired)" ], [ "04:00:00", "webhook-worker", "30 threads each request a new token (no shared refresh)" ], [ "04:00:00", "webhook-worker", "29 retries at once, 0 ms backoff -> 401 (token revoked by a newer one)" ], [ "04:00:00", "webhook-worker", "29 threads each request a new token (no shared refresh)" ], [ "04:00:00", "webhook-worker", "28 retries at once, 0 ms backoff -> 401 (token revoked by a newer one)" ], [ "04:00:00", "webhook-worker", "28 threads each request a new token (no shared refresh)" ], [ "04:00:00", "webhook-worker", "27 retries at once, 0 ms backoff -> 401 (token revoked by a newer one)" ], [ "04:00:00", "webhook-worker", "27 threads each request a new token (no shared refresh)" ], [ "04:00:00", "customer-idp", "POST /oauth/token -> 429 Too Many Requests" ], [ "04:00:00", "webhook-worker", "12 retries at once, 0 ms backoff -> 401 (token revoked by a newer one)" ], [ "04:00:00", "endpoint-health", "endpoint paused (15 failures in 60 min)" ], [ "04:00:00", "notifier", "\"Webhook endpoint paused\" email to workspace admins" ], [ "04:00:00", "webhook-worker", "114 token requests for 30 deliveries" ], [ "08:30:00", "support-tool", "test delivery -> 200" ], [ "08:30:00", "support-tool", "RB-14: replayed 34 failed events, 34 delivered" ] ]
+  }, {
+    "title" : "Harbor Analytics · ep_harbor_main · T-3004, after the fix",
+    "lines" : [ [ "01:00:00", "recurring-jobs", "burst: 32 task events on the hour" ], [ "01:00:00", "token-cache", "token refreshed before it expired: 1 shared token request" ] ]
+  } ],
+  "storyComparison" : [ ],
+  "settings" : {
+    "tokenLifetimeSeconds" : 3600,
+    "eventsPerHour" : 2,
+    "days" : 14,
+    "tokenRequestsPerMinute" : 100,
+    "canaryEndpoints" : 10,
+    "stormThreshold" : 20,
+    "controlEndpoints" : 10
+  }
+}
