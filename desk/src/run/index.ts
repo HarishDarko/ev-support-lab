@@ -19,9 +19,11 @@ export {
 export type { RepeatRule, LaneCounts } from "./guardrail";
 export { provenanceOf, provenanceOfStep, costText, CHECK_SCOPE } from "./provenance";
 export type { Provenance, Reliability } from "./provenance";
-export { costByStep, runCost, modelsOf, runLabel, liveSpendText, STEP_LABEL } from "./cost";
+export { costByStep, runCost, modelsOf, runLabel, liveSpendText, chainSeconds, STEP_LABEL } from "./cost";
 export type { StepCost } from "./cost";
 export { formatUsd, formatUsdShort, formatSeconds, formatTokens } from "./format";
 export { quoteSpans, splitByQuote } from "./quote";
 export * from "./types";
 export { classifyTicket, MAX_TICKET_CHARS } from "./classify";
+export { EV_DESK, NO_LIVE_RUNS } from "./pack";
+export type { DeskPack, DeskTicket, DeskHistory, DeskRunbook, DeskField, DeskColumn } from "./pack";

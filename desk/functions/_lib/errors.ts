@@ -12,6 +12,12 @@ export class StepError extends Error {
   }
 }
 
+/**
+ * Client text that goes inside a triple-quote fence in a prompt: every double quote becomes a single one, so the
+ * text cannot close the fence (a lone quote next to the closing fence would break it too).
+ */
+export const fenced = (text: string): string => text.replace(/"/g, "'");
+
 // Trims client-supplied JSON (earlier model output) before it goes back into a prompt.
 export function clip(value: unknown, max = 6000): string {
   const text = JSON.stringify(value ?? null);

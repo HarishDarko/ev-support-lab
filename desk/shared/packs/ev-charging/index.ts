@@ -1,11 +1,13 @@
 // The EV charging pack: an internal support desk for a network of public chargers, with the stuck-session incident.
 // Everything in this folder is synthetic data made up for a prototype.
 import type { Pack } from "../types";
+import { META } from "./meta";
 import {
   COMPONENTS,
   ENGINEERING_CHANGE,
   HERO,
   HISTORY,
+  NEW_TICKET_EXAMPLE,
   RUNBOOKS,
   TICKETS,
   type Component,
@@ -27,8 +29,10 @@ import {
 import { DEFAULT_COMPONENT, RULES } from "./triage-rules";
 
 export const EV_CHARGING = {
-  id: "ev-charging",
-  name: "EV charging",
+  ...META,
+  liveRuns: true,
+  fields: [...META.fields],
+  newTicketExample: NEW_TICKET_EXAMPLE,
   components: COMPONENTS,
   defaultComponent: DEFAULT_COMPONENT,
   runbooks: RUNBOOKS,

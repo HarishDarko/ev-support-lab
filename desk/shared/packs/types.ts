@@ -59,6 +59,16 @@ export interface Pack<
 > {
   id: string;
   name: string;
+  /** Shown in the Industry menu only when complete: synthetic data, keyword rules and reviewed labels. */
+  complete?: boolean;
+  /** The pack's labels for the queue's ticket fields (for EV: site, charger, firmware). */
+  fields?: { key: string; label: string }[];
+  /** Live model calls are allowed for this pack. Off until the pack has a reviewed recording (SD-14). */
+  liveRuns?: boolean;
+  /** The pack has a step-by-step incident walkthrough (logs, handoff, verification). */
+  hasIncident?: boolean;
+  /** The ticket the new-ticket check starts from. */
+  newTicketExample?: string;
   components: readonly C[];
   /** The label for plain questions and requests, and for any ticket no rule matches. */
   defaultComponent: C;
@@ -84,7 +94,7 @@ export interface Pack<
     /** The triage prompt's notes on components and actions. */
     componentGuide: string;
     actionGuide: string;
-    ticketLine: (t: T) => string;
-    historyLine: (h: H) => string;
+    ticketLine(t: T): string;
+    historyLine(h: H): string;
   };
 }

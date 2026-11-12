@@ -3,7 +3,7 @@
 // tests/packs.test.ts checks these are the default pack's own.
 export { DEFAULT_COMPONENT, RULES, TRIAGE_RULES } from "./ev-charging/triage-rules";
 export { RUNBOOK_EXCEPTIONS } from "./ev-charging/guardrails";
-export { RUNBOOKS } from "./ev-charging/data";
+export { HISTORY, RUNBOOKS, TICKETS } from "./ev-charging/data";
 export {
   HANDOFF_NOTE,
   LAB_TEST_ATTACHMENT,

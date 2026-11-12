@@ -1,0 +1,71 @@
+name: lab-saas
+
+# One run per commit: pushes run only on main; branches run through their pull request.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "lab-saas/**"
+      - "gradle/**"
+      - "gradlew"
+      - "settings.gradle.kts"
+      - ".github/workflows/lab-saas.yml"
+  pull_request:
+    paths:
+      - "lab-saas/**"
+      - "gradle/**"
+      - "gradlew"
+      - "settings.gradle.kts"
+      - ".github/workflows/lab-saas.yml"
+
+concurrency:
+  group: lab-saas-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lab-saas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      # Java 25 is the build's toolchain, so Gradle uses this JDK instead of provisioning another one.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@v4
+      # Docker is available on the runner, so Testcontainers starts PostgreSQL itself.
+      - name: Tests, including the experiment
+        run: ./gradlew :lab-saas:test --console=plain
+      # With the fix off the regression test must fail on its assertions. A Gradle or Docker error, or a filter that
+      # matches no test, must not count as that failure, so the step reads the test report instead of the exit code.
+      - name: The regression test fails without the fix
+        run: |
+          report=lab-saas/build/test-results/test/TEST-dev.saaslab.delivery.TokenStormRegressionTest.xml
+          rm -rf lab-saas/build/test-results/test
+          set +e
+          ./gradlew :lab-saas:test --tests '*TokenStormRegressionTest' -Dlab.fix.enabled=false --console=plain
+          set -e
+          if [ ! -f "$report" ]; then
+            echo "::error::No report for TokenStormRegressionTest: the test did not run with the fix off." >&2
+            exit 1
+          fi
+          attr() { grep -o "$1=\"[0-9]*\"" "$report" | head -n 1 | tr -dc '0-9'; }
+          tests=$(attr tests); failures=$(attr failures); errors=$(attr errors)
+          echo "With the fix off: tests=$tests failures=$failures errors=$errors"
+          if [ "${tests:-0}" -eq 0 ] || [ "${failures:-0}" -eq 0 ] || [ "${errors:-0}" -ne 0 ]; then
+            echo "::error::TokenStormRegressionTest must fail on its assertions with the fix off (failures above 0, errors 0)." >&2
+            exit 1
+          fi
+          # Gradle reports every exception as a failure, so also check each failure is an assertion, not a crash.
+          types=$(grep -E '^\s*<failure ' "$report" | grep -oE ' type="[^"]*"' | sed 's/ type="//; s/"$//')
+          other=$(printf '%s\n' "$types" | grep -vE '^(org\.opentest4j\.AssertionFailedError|java\.lang\.AssertionError|org\.assertj\.core\.error\..+)?$' || true)
+          echo "Failure types: $(printf '%s ' $types)"
+          if [ -n "$other" ]; then
+            echo "::error::With the fix off the test failed for another reason: $other" >&2
+            exit 1
+          fi

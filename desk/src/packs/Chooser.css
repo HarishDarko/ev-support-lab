@@ -1,0 +1,38 @@
+/* The opening choice of industries: three equal cards, one column on a phone. */
+
+.chooser-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: var(--space-4);
+  margin: var(--space-6) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.chooser-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-node);
+  color: var(--fg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease);
+}
+.chooser-card:hover {
+  border-color: var(--fg-3);
+}
+.chooser-name {
+  font-size: var(--text-22);
+  font-weight: var(--weight-semibold);
+}
+.chooser-case {
+  color: var(--fg-2);
+  font-family: var(--font-read);
+  font-size: var(--text-16);
+  line-height: 1.45;
+}

@@ -1,12 +1,13 @@
 // The steps of a run, for any pack. Triage and patterns are built here from the pack's queue, history, runbooks,
 // rules and word lists; the incident steps come from the pack itself. A request with no pack gets the default pack.
-import { DEFAULT_PACK, DEFAULT_PACK_ID, PACKS, type PackId } from "../../shared/packs";
-import { INCIDENT_SOURCES, INCIDENT_STEPS } from "../../shared/packs/steps";
+import { DEFAULT_PACK, DEFAULT_PACK_ID, PACKS } from "../../shared/packs";
+import { INCIDENT_SOURCES, INCIDENT_STEPS, type IncidentPackId } from "../../shared/packs/steps";
 import type { Pack, PackHistoryItem, PackTicket } from "../../shared/packs/types";
 import { ValidationError, check, exceptionIn, mentions, quoted } from "./checks";
 import { StepError } from "./errors";
 import { bool, obj, runbookListOf, severity, str, strs, type Step } from "./kit";
 import { ruleTriageFor, rulePatternsFor } from "./rule-engine";
+import { shortChainSteps } from "./short-chain";
 import type { StepInput } from "./types";
 
 export type { Step } from "./kit";
@@ -99,7 +100,7 @@ ${runbookList}
 Tickets:
 ${pack.tickets
   .filter((t) => ids.includes(t.id))
-  .map(pack.prompts.ticketLine)
+  .map((t) => pack.prompts.ticketLine(t))
   .join("\n")}`;
     },
     // Per ticket, the AI result is kept only if: its quote is really in the ticket, its label fits the ticket,
@@ -242,7 +243,7 @@ Runbooks:
 ${runbookList}
 
 Closed history (last 21 days):
-${pack.history.map(pack.prompts.historyLine).join("\n")}`;
+${pack.history.map((h) => pack.prompts.historyLine(h)).join("\n")}`;
     },
     validate(data: { patterns: PatternModel[] }) {
       let dropped = 0;
@@ -273,12 +274,39 @@ ${pack.history.map(pack.prompts.historyLine).join("\n")}`;
   return { triage, patterns };
 }
 
-const build = (id: PackId) => ({ ...queueSteps(PACKS[id]), ...INCIDENT_STEPS[id] }) satisfies Record<string, Step>;
-const built = new Map<PackId, ReturnType<typeof build>>();
-/** Every step for a pack, built once. */
-export function stepsFor(id: PackId = DEFAULT_PACK_ID): ReturnType<typeof build> {
-  let steps = built.get(id);
-  if (!steps) built.set(id, (steps = build(id)));
+/** A pack's full chain: the queue steps and that pack's own incident steps, typed as that pack's. */
+export type PackSteps<P extends IncidentPackId> = ReturnType<typeof queueSteps> & (typeof INCIDENT_STEPS)[P];
+// Each pack has its own ticket type; the queue steps read only the fields every pack has. The incident steps keep
+// each pack's own type (shared/packs/steps.ts checks every pack's against Step).
+const build = <P extends IncidentPackId>(id: P): PackSteps<P> => ({
+  ...queueSteps(PACKS[id] as unknown as Pack),
+  ...INCIDENT_STEPS[id],
+});
+const built: { [P in IncidentPackId]?: PackSteps<P> } = {};
+/** Every step for a pack with an incident, built once. */
+export function stepsFor<P extends IncidentPackId = typeof DEFAULT_PACK_ID>(
+  id: P = DEFAULT_PACK_ID as P,
+): PackSteps<P> {
+  const cached = built[id];
+  if (cached) return cached;
+  const steps = build(id);
+  // TypeScript cannot write through a mapped type with a generic key; the value is this key's own steps.
+  (built as Partial<Record<IncidentPackId, unknown>>)[id] = steps;
+  return steps;
+}
+
+/** The steps for a pack with no incident: triage, patterns and the short chain (no investigation, handoff or
+ * verification). */
+const queueOnlyBuilt = new WeakMap<object, Record<string, Step>>();
+export function queueOnlySteps<C extends string, T extends PackTicket, H extends PackHistoryItem>(
+  pack: Pack<C, T, H>,
+): Record<string, Step> {
+  let steps = queueOnlyBuilt.get(pack);
+  if (!steps)
+    queueOnlyBuilt.set(
+      pack,
+      (steps = { ...queueSteps(pack), ...shortChainSteps(pack) } satisfies Record<string, Step>),
+    );
   return steps;
 }
 
