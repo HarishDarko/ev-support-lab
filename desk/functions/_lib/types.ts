@@ -12,6 +12,9 @@ export interface Env {
   ANTHROPIC_API_KEY?: string;
   /** "1" turns the live model off: every step answers from the deterministic rules. Used by e2e and CI. */
   MOCK?: string;
+  /** "1" on a local `wrangler pages dev` only: live calls for a pack whose live runs are off, to record it. Never set
+   * in wrangler.toml or production; ignored unless the request is to a local address. */
+  ALLOW_PACK_RECORDING?: string;
   /** Model ids. Defaults are in ai.ts. */
   FAST_MODEL?: string;
   DEEP_MODEL?: string;
@@ -30,6 +33,10 @@ export type StepInput =
       summary?: unknown;
       text?: unknown;
       article?: unknown;
+      /** The pattern a short-chain article is written from. */
+      pattern?: unknown;
+      /** The industry pack's id. Missing means the default pack. */
+      pack?: unknown;
     }
   | null
   | undefined;

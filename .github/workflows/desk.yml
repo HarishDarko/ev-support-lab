@@ -1,25 +1,34 @@
 name: desk
 
+# One run per commit: pushes run only on main (where the deploy is); branches run through their pull request.
 on:
   push:
+    branches: [main]
     paths:
       - "desk/**"
+      - "docs/eval/**"
       - ".github/workflows/desk.yml"
   pull_request:
     paths:
       - "desk/**"
+      - "docs/eval/**"
       - ".github/workflows/desk.yml"
 
+# A newer push cancels an older run, except on main, where a run may be deploying.
 concurrency:
   group: desk-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
 
 jobs:
   desk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    # Playwright's own image has Chromium and its system packages, so no apt install on every run. Its version
+    # must match @playwright/test in desk/package-lock.json; the first step below checks that.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
     timeout-minutes: 15
     defaults:
       run:
@@ -38,6 +47,14 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Check the browser image matches the Playwright version
+        run: |
+          want="$(node -p "require('@playwright/test/package.json').version")"
+          if [ "$want" != "1.63.0" ]; then
+            echo "::error::@playwright/test is $want; change the container image tag in .github/workflows/desk.yml to v$want-noble."
+            exit 1
+          fi
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -50,25 +67,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Read the Playwright version
-        id: playwright
-        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Playwright browsers
-        id: browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
-
-      - name: Install Playwright browser
-        if: steps.browsers.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-
-      - name: Install Playwright system dependencies
-        if: steps.browsers.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
-
       - name: End-to-end tests (MOCK=1, no API key, no spend)
         run: npx playwright test
 
@@ -79,3 +77,61 @@ jobs:
           name: playwright-report
           path: desk/playwright-report
           retention-days: 7
+
+      # Reached only when every check above passed. The deploy job ships these exact files.
+      - name: Keep the tested build for the deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: desk-dist
+          path: desk/dist
+          retention-days: 3
+
+  # Production deploy: only from main, only after the desk job (typecheck, lint, unit, build, browser tests) passed.
+  deploy:
+    needs: desk
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    concurrency:
+      group: desk-deploy-production
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: desk
+    # The Cloudflare token and account id are given only to the two steps that need them, never to `npm ci`,
+    # so no install script can read them.
+    steps:
+      - name: Check the deploy secrets are set
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Set the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets (see README, Deploy)."
+            exit 1
+          fi
+        working-directory: .
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desk/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Get the tested build
+        uses: actions/download-artifact@v4
+        with:
+          name: desk-dist
+          path: desk/dist
+
+      - name: Deploy to Cloudflare Pages (production)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler pages deploy dist --project-name support-desk --branch main --commit-hash "$GITHUB_SHA"

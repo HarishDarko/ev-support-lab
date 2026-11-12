@@ -1,5 +1,6 @@
 // The desk sheet, opened by a ?desk=<tab> link, against the built site under MOCK=1: no key, no spend.
 import { test, expect, type Locator, type Page } from "@playwright/test";
+import { openFromChooser } from "./chooser";
 import AxeBuilder from "@axe-core/playwright";
 
 /** Every tab, and one thing that proves its content is there. */
@@ -45,7 +46,7 @@ test("opens on the requested tab, visits every tab, and Esc closes it with focus
   page,
 }) => {
   const errors = watchErrors(page);
-  await page.goto("/?desk=queue");
+  await openFromChooser(page, "/?desk=queue");
   const dialog = await atRest(page);
 
   await expect(dialog.getByTestId("desk-synthetic")).toContainText("Synthetic data");
@@ -75,13 +76,13 @@ test("opens on the requested tab, visits every tab, and Esc closes it with focus
 });
 
 test("an unknown tab falls back to the queue", async ({ page }) => {
-  await page.goto("/?desk=nonsense");
+  await openFromChooser(page, "/?desk=nonsense");
   await atRest(page);
   await expect(tab(page, "Queue")).toHaveAttribute("aria-selected", "true");
 });
 
 test("arrow keys move between tabs, and Tab stays inside the sheet", async ({ page }) => {
-  await page.goto("/?desk=queue");
+  await openFromChooser(page, "/?desk=queue");
   const dialog = await atRest(page);
 
   await tab(page, "Queue").focus();
@@ -104,7 +105,7 @@ test("arrow keys move between tabs, and Tab stays inside the sheet", async ({ pa
 });
 
 test("the queue shows every ticket, highlights the quote in place, and explains a held closure", async ({ page }) => {
-  await page.goto("/?desk=queue");
+  await openFromChooser(page, "/?desk=queue");
   const dialog = await atRest(page);
 
   await expect(dialog.getByRole("table").first().getByRole("row")).toHaveCount(41); // header + 40 tickets
@@ -122,7 +123,7 @@ test("the queue shows every ticket, highlights the quote in place, and explains 
 });
 
 test("the knowledge base checks a new ticket live, and says when the rules answered instead", async ({ page }) => {
-  await page.goto("/?desk=kb");
+  await openFromChooser(page, "/?desk=kb");
   const dialog = await atRest(page);
 
   const box = dialog.getByLabel("New ticket text");
@@ -140,7 +141,7 @@ test("the knowledge base checks a new ticket live, and says when the rules answe
 });
 
 test("Run it live keeps working when the model is off, and says so in one line", async ({ page }) => {
-  await page.goto("/?desk=queue");
+  await openFromChooser(page, "/?desk=queue");
   const dialog = await atRest(page);
 
   await dialog.getByRole("button", { name: "Run it live" }).click();
@@ -149,10 +150,17 @@ test("Run it live keeps working when the model is off, and says so in one line",
   await expect(dialog.getByRole("table").first().getByRole("row")).toHaveCount(41);
 });
 
-test("the scorecard says Not measured yet and shows this run's cost per step", async ({ page }) => {
-  await page.goto("/?desk=scorecard");
+test("the scorecard shows measured accuracy, the rules' held-out check, and this run's cost per step", async ({
+  page,
+}) => {
+  await openFromChooser(page, "/?desk=scorecard");
   const dialog = await atRest(page);
-  await expect(dialog.getByText("Not measured yet.")).toBeVisible();
+  await expect(dialog.getByText("Not measured yet.")).toHaveCount(0);
+  const accuracy = dialog.getByRole("table", { name: "Triage accuracy against the reviewed labels" });
+  await expect(accuracy.getByRole("row", { name: /All four right/ })).toContainText("28 of 40");
+  await expect(accuracy.getByRole("row", { name: /All four right/ })).toContainText("24 of 40");
+  const heldOut = dialog.getByRole("table", { name: "Keyword rules on older closed tickets" });
+  await expect(heldOut).toContainText("21 of 30");
   await expect(dialog.getByRole("heading", { name: "Method" })).toBeVisible();
   const table = dialog.getByRole("table", { name: "Cost of this run, per step" });
   await expect(table.getByRole("row")).toHaveCount(10); // header + 8 steps + total
@@ -164,7 +172,7 @@ for (const scheme of ["light", "dark"] as const) {
     // Six full axe runs in one test: under parallel load this can pass 30 s, so it gets a longer budget.
     test.setTimeout(60_000);
     await page.emulateMedia({ colorScheme: scheme });
-    await page.goto("/?desk=queue");
+    await openFromChooser(page, "/?desk=queue");
     const dialog = await atRest(page);
     for (const { name } of TABS) {
       await tab(page, name).click();
@@ -180,7 +188,7 @@ for (const scheme of ["light", "dark"] as const) {
 
 test("full screen with no sideways scroll at 390 px", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/?desk=queue");
+  await openFromChooser(page, "/?desk=queue");
   const dialog = await atRest(page);
   expect((await dialog.boundingBox())?.width).toBe(390);
 
@@ -199,7 +207,7 @@ test("full screen with no sideways scroll at 390 px", async ({ page }) => {
 
 test("opens with a crossfade under reduced motion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/?desk=incident");
+  await openFromChooser(page, "/?desk=incident");
   const dialog = await atRest(page);
   await expect(dialog.getByRole("heading", { name: "Investigation" })).toBeVisible();
   await expect(dialog.getByText("Not confirmed").first()).toBeVisible();

@@ -1,11 +1,3 @@
-.score-state {
-  max-width: 68ch;
-  margin: 0;
-  padding: var(--space-3) var(--space-4);
-  border-left: 3px solid var(--attn);
-  background: var(--attn-soft);
-  font-size: var(--text-16);
-}
 .score-model {
   font-size: var(--text-12);
 }

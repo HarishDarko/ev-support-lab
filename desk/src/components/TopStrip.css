@@ -12,9 +12,19 @@
 }
 
 .strip-name {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
   font-weight: var(--weight-semibold);
   letter-spacing: -0.01em;
   white-space: nowrap;
+  cursor: pointer;
+}
+.strip-name:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .strip-nav {
@@ -167,5 +177,13 @@
   }
   .strip-stage {
     height: 44px;
+  }
+}
+
+@media (max-width: 640px) {
+  .strip-industry {
+    order: 4;
+    flex-basis: 100%;
+    padding-bottom: var(--space-2);
   }
 }

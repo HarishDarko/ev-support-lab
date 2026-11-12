@@ -1,0 +1,5561 @@
+{
+ "system": "You work inside an internal production-support desk for an EV charging network operator. The support desk serves internal teams (customer care, NOC, field service, host accounts, billing ops), not drivers directly.\n\nEverything you are given is synthetic data made up for a prototype.\n\nRules:\n- Never invent names of people. Refer to roles only (driver, host, customer care, NOC, field service, engineering).\n- Never invent business figures such as revenue, cost, savings or customer counts. Use only numbers present in the input.\n- Use only facts in the input. If something is not in the input, say it is unknown.\n- A pattern across tickets is a correlation. State causes as hypotheses, never as proven.\n- Write plainly and briefly, the way an experienced support engineer writes for colleagues. No marketing language, no lecturing.",
+ "triageOpen": [
+  {
+   "id": "T-2040",
+   "summary": "CP-044-01 no heartbeat since 08:47. Site shows 1 of",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"heartbeat\" (charger offline).",
+   "evidence": "heartbeat"
+  },
+  {
+   "id": "T-2041",
+   "summary": "Driver says the app still showed 'Charging' hours after",
+   "component": "session-state",
+   "severity": "S2",
+   "action": "close_with_runbook",
+   "runbook": "RB-05",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"still showed 'Charging'\" (stuck session).",
+   "evidence": "still showed 'Charging'"
+  },
+  {
+   "id": "T-2042",
+   "summary": "Hospital staff badges rejected at CP-038-03 since this morning",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"badge\" (card authorization).",
+   "evidence": "badge"
+  },
+  {
+   "id": "T-2043",
+   "summary": "Driver's card shows a $50 pending hold from a",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "T-2044",
+   "summary": "Host wants a weekly utilization email instead of logging",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Host wants a weekly utilization email"
+  },
+  {
+   "id": "T-2045",
+   "summary": "On site at S-038. Two more ports rejecting staff",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"badge\" (card authorization).",
+   "evidence": "badge"
+  },
+  {
+   "id": "T-2046",
+   "summary": "CP-063-02 offline 41 min. Last message: Heartbeat at 11:24",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"offline\" (charger offline).",
+   "evidence": "offline"
+  },
+  {
+   "id": "T-2047",
+   "summary": "Host at S-031 says CP-031-01 has shown 'In use'",
+   "component": "session-state",
+   "severity": "S2",
+   "action": "close_with_runbook",
+   "runbook": "RB-05",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"In use' on the public map\" (stuck session).",
+   "evidence": "In use' on the public map"
+  },
+  {
+   "id": "T-2048",
+   "summary": "Question: can host invoices show sessions grouped by port",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Question: can host invoices show sessions"
+  },
+  {
+   "id": "T-2049",
+   "summary": "Driver has a $35 hold still pending two days",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "T-2050",
+   "summary": "Third call today about badges not working at the",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"badge\" (card authorization).",
+   "evidence": "badge"
+  },
+  {
+   "id": "T-2051",
+   "summary": "Host portal export of a 12-month session report spins",
+   "component": "host-portal",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-04",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"export\" (large export).",
+   "evidence": "export"
+  },
+  {
+   "id": "T-2052",
+   "summary": "Connector holster on CP-044-03 cracked, cable on the ground",
+   "component": "hardware-field",
+   "severity": "S3",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"holster\" (physical damage).",
+   "evidence": "holster"
+  },
+  {
+   "id": "T-2053",
+   "summary": "Session SX-88301 open 9h 40m with no energy change",
+   "component": "session-state",
+   "severity": "S2",
+   "action": "close_with_runbook",
+   "runbook": "RB-05",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"open 9h\" (stuck session).",
+   "evidence": "open 9h"
+  },
+  {
+   "id": "T-2054",
+   "summary": "Elevated 5xx on the auth API 00:10–00:14 ET. Auto-resolved",
+   "component": "platform-api",
+   "severity": "S4",
+   "action": "info_only",
+   "runbook": "none",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"Auto-resolved\" (alert already cleared).",
+   "evidence": "Auto-resolved"
+  },
+  {
+   "id": "T-2055",
+   "summary": "Hospital site again. Nurse badge rejected on CP-038-04",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"badge\" (card authorization).",
+   "evidence": "badge"
+  },
+  {
+   "id": "T-2056",
+   "summary": "CP-011-02 no heartbeat for 52 min",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"heartbeat\" (charger offline).",
+   "evidence": "heartbeat"
+  },
+  {
+   "id": "T-2057",
+   "summary": "Driver has a $50 hold after a session that",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "T-2058",
+   "summary": "Driver can't start a session at another site. App",
+   "component": "session-state",
+   "severity": "S2",
+   "action": "close_with_runbook",
+   "runbook": "RB-05",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"already have an active session\" (stuck session).",
+   "evidence": "already have an active session"
+  },
+  {
+   "id": "T-2059",
+   "summary": "Host asks how time-of-use pricing works and whether we",
+   "component": "pricing",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "RB-07",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"time-of-use\" (pricing question).",
+   "evidence": "time-of-use"
+  },
+  {
+   "id": "T-2060",
+   "summary": "DC charger CP-073-01 delivering 50 kW max since 11:30",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "DC charger CP-073-01 delivering 50 kW"
+  },
+  {
+   "id": "T-2061",
+   "summary": "Checked CP-038-03 local auth list version: v211. Host portal",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"auth list\" (card authorization).",
+   "evidence": "auth list"
+  },
+  {
+   "id": "T-2062",
+   "summary": "UK driver says the app showed the price as",
+   "component": "driver-app",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"price\" (pricing display).",
+   "evidence": "price"
+  },
+  {
+   "id": "T-2063",
+   "summary": "Host user locked out of the portal after password",
+   "component": "host-portal",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-06",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"locked out\" (portal access).",
+   "evidence": "locked out"
+  },
+  {
+   "id": "T-2064",
+   "summary": "CP-052-01 offline 35 min. Two earlier offline events this",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "needs_human",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"earlier offline events\" (reset already tried).",
+   "evidence": "earlier offline events"
+  },
+  {
+   "id": "T-2065",
+   "summary": "Driver app closes on launch for a driver on",
+   "component": "driver-app",
+   "severity": "S3",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"closes on launch\" (app crash).",
+   "evidence": "closes on launch"
+  },
+  {
+   "id": "T-2066",
+   "summary": "Session at S-047 (fleet depot) open over 12h, energy",
+   "component": "session-state",
+   "severity": "S2",
+   "action": "close_with_runbook",
+   "runbook": "RB-05",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"energy stopped climbing\" (stuck session).",
+   "evidence": "energy stopped climbing"
+  },
+  {
+   "id": "T-2067",
+   "summary": "Second UK driver report: price shown in dollars in",
+   "component": "driver-app",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"price\" (pricing display).",
+   "evidence": "price"
+  },
+  {
+   "id": "T-2068",
+   "summary": "Belgian host says roaming sessions from a partner network",
+   "component": "roaming",
+   "severity": "S3",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"roaming\" (roaming data).",
+   "evidence": "roaming"
+  },
+  {
+   "id": "T-2069",
+   "summary": "Hospital facilities manager escalating: staff badge problem now on",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"badge\" (card authorization).",
+   "evidence": "badge"
+  },
+  {
+   "id": "T-2070",
+   "summary": "CP-035-03 no heartbeat for 47 min",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"heartbeat\" (charger offline).",
+   "evidence": "heartbeat"
+  },
+  {
+   "id": "T-2071",
+   "summary": "Driver has a $50 hold that has not dropped",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "T-2072",
+   "summary": "Host report export for Jan–Sep times out",
+   "component": "host-portal",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-04",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"export\" (large export).",
+   "evidence": "export"
+  },
+  {
+   "id": "T-2073",
+   "summary": "When is the next firmware rollout for S-066? Host",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "When is the next firmware rollout"
+  },
+  {
+   "id": "T-2074",
+   "summary": "Host complains a petrol car keeps parking in the",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Host complains a petrol car keeps"
+  },
+  {
+   "id": "T-2075",
+   "summary": "CP-070-02 no heartbeat for 63 min. Soft reset sent",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "needs_human",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"no response\" (reset already tried).",
+   "evidence": "no response"
+  },
+  {
+   "id": "T-2076",
+   "summary": "Host asks for a raw session data export for",
+   "component": "host-portal",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-04",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"export\" (large export).",
+   "evidence": "export"
+  },
+  {
+   "id": "T-2077",
+   "summary": "Large export from host portal failing again",
+   "component": "host-portal",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-04",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"export\" (large export).",
+   "evidence": "export"
+  },
+  {
+   "id": "T-2078",
+   "summary": "Driver says a $25 hold appeared even though the",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "T-2079",
+   "summary": "CP-019-01 offline 38 min",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"offline\" (charger offline).",
+   "evidence": "offline"
+  }
+ ],
+ "triageHistory": [
+  {
+   "id": "H-1903",
+   "summary": "Session stayed 'Charging' after driver left. Idle fee complaint",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Session stayed 'Charging' after driver left"
+  },
+  {
+   "id": "H-1905",
+   "summary": "Charger offline overnight",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"offline\" (charger offline).",
+   "evidence": "offline"
+  },
+  {
+   "id": "H-1908",
+   "summary": "Host asked about invoice timing",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Host asked about invoice timing"
+  },
+  {
+   "id": "H-1911",
+   "summary": "Driver blocked from new session, app says one is",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Driver blocked from new session, app"
+  },
+  {
+   "id": "H-1914",
+   "summary": "Pending $50 hold after failed start",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "H-1916",
+   "summary": "Host portal locked",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Host portal locked"
+  },
+  {
+   "id": "H-1919",
+   "summary": "Charger offline",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"offline\" (charger offline).",
+   "evidence": "offline"
+  },
+  {
+   "id": "H-1922",
+   "summary": "Map shows station in use, bay empty",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Map shows station in use, bay"
+  },
+  {
+   "id": "H-1924",
+   "summary": "RFID card rejected after card replacement",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"RFID\" (card authorization).",
+   "evidence": "RFID"
+  },
+  {
+   "id": "H-1927",
+   "summary": "Driver asked how to get a receipt",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Driver asked how to get a"
+  },
+  {
+   "id": "H-1930",
+   "summary": "Session open 11h, energy flat after first hour. Idle",
+   "component": "session-state",
+   "severity": "S2",
+   "action": "close_with_runbook",
+   "runbook": "RB-05",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"open 11h\" (stuck session).",
+   "evidence": "open 11h"
+  },
+  {
+   "id": "H-1932",
+   "summary": "Charger offline",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"offline\" (charger offline).",
+   "evidence": "offline"
+  },
+  {
+   "id": "H-1935",
+   "summary": "Host asked for signage",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Host asked for signage"
+  },
+  {
+   "id": "H-1938",
+   "summary": "Session still 'Charging' after unplug. Driver called twice",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Session still 'Charging' after unplug. Driver"
+  },
+  {
+   "id": "H-1940",
+   "summary": "Pending hold after completed session",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "H-1942",
+   "summary": "RFID rejected at new site",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"RFID\" (card authorization).",
+   "evidence": "RFID"
+  },
+  {
+   "id": "H-1944",
+   "summary": "Charger offline twice in one day",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"offline\" (charger offline).",
+   "evidence": "offline"
+  },
+  {
+   "id": "H-1947",
+   "summary": "Workplace host: port shows in use all weekend, nobody",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Workplace host: port shows in use"
+  },
+  {
+   "id": "H-1949",
+   "summary": "Driver wanted to change payment card",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Driver wanted to change payment card"
+  },
+  {
+   "id": "H-1951",
+   "summary": "DC charger slow in afternoon heat",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "DC charger slow in afternoon heat"
+  },
+  {
+   "id": "H-1953",
+   "summary": "Card reader faulty on one port",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Card reader faulty on one port"
+  },
+  {
+   "id": "H-1955",
+   "summary": "Session open after unplug again at the garage. Refund",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Session open after unplug again at"
+  },
+  {
+   "id": "H-1957",
+   "summary": "Fleet manager asked about session export",
+   "component": "host-portal",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-04",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"export\" (large export).",
+   "evidence": "export"
+  },
+  {
+   "id": "H-1959",
+   "summary": "Charger offline after storm",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"offline\" (charger offline).",
+   "evidence": "offline"
+  },
+  {
+   "id": "H-1962",
+   "summary": "Depot session open overnight with flat energy",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Depot session open overnight with flat"
+  },
+  {
+   "id": "H-1964",
+   "summary": "Host asked for a second admin user",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Host asked for a second admin"
+  },
+  {
+   "id": "H-1966",
+   "summary": "Driver asked about VAT on receipt",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Driver asked about VAT on receipt"
+  },
+  {
+   "id": "H-1968",
+   "summary": "Session showed Charging for 8h after driver left",
+   "component": "session-state",
+   "severity": "S2",
+   "action": "close_with_runbook",
+   "runbook": "RB-05",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"showed Charging\" (stuck session).",
+   "evidence": "showed Charging"
+  },
+  {
+   "id": "H-1970",
+   "summary": "Pending hold",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "H-1972",
+   "summary": "Charger offline",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"offline\" (charger offline).",
+   "evidence": "offline"
+  }
+ ],
+ "triageNoFirmware": [
+  {
+   "id": "T-2040",
+   "summary": "CP-044-01 no heartbeat since 08:47. Site shows 1 of",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"heartbeat\" (charger offline).",
+   "evidence": "heartbeat"
+  },
+  {
+   "id": "T-2041",
+   "summary": "Driver says the app still showed 'Charging' hours after",
+   "component": "session-state",
+   "severity": "S2",
+   "action": "close_with_runbook",
+   "runbook": "RB-05",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"still showed 'Charging'\" (stuck session).",
+   "evidence": "still showed 'Charging'"
+  },
+  {
+   "id": "T-2042",
+   "summary": "Hospital staff badges rejected at CP-038-03 since this morning",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"badge\" (card authorization).",
+   "evidence": "badge"
+  },
+  {
+   "id": "T-2043",
+   "summary": "Driver's card shows a $50 pending hold from a",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "T-2044",
+   "summary": "Host wants a weekly utilization email instead of logging",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Host wants a weekly utilization email"
+  },
+  {
+   "id": "T-2045",
+   "summary": "On site at S-038. Two more ports rejecting staff",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"badge\" (card authorization).",
+   "evidence": "badge"
+  },
+  {
+   "id": "T-2046",
+   "summary": "CP-063-02 offline 41 min. Last message: Heartbeat at 11:24",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"offline\" (charger offline).",
+   "evidence": "offline"
+  },
+  {
+   "id": "T-2047",
+   "summary": "Host at S-031 says CP-031-01 has shown 'In use'",
+   "component": "session-state",
+   "severity": "S2",
+   "action": "close_with_runbook",
+   "runbook": "RB-05",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"In use' on the public map\" (stuck session).",
+   "evidence": "In use' on the public map"
+  },
+  {
+   "id": "T-2048",
+   "summary": "Question: can host invoices show sessions grouped by port",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Question: can host invoices show sessions"
+  },
+  {
+   "id": "T-2049",
+   "summary": "Driver has a $35 hold still pending two days",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "T-2050",
+   "summary": "Third call today about badges not working at the",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"badge\" (card authorization).",
+   "evidence": "badge"
+  },
+  {
+   "id": "T-2051",
+   "summary": "Host portal export of a 12-month session report spins",
+   "component": "host-portal",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-04",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"export\" (large export).",
+   "evidence": "export"
+  },
+  {
+   "id": "T-2052",
+   "summary": "Connector holster on CP-044-03 cracked, cable on the ground",
+   "component": "hardware-field",
+   "severity": "S3",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"holster\" (physical damage).",
+   "evidence": "holster"
+  },
+  {
+   "id": "T-2053",
+   "summary": "Session SX-88301 open 9h 40m with no energy change",
+   "component": "session-state",
+   "severity": "S2",
+   "action": "close_with_runbook",
+   "runbook": "RB-05",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"open 9h\" (stuck session).",
+   "evidence": "open 9h"
+  },
+  {
+   "id": "T-2054",
+   "summary": "Elevated 5xx on the auth API 00:10–00:14 ET. Auto-resolved",
+   "component": "platform-api",
+   "severity": "S4",
+   "action": "info_only",
+   "runbook": "none",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"Auto-resolved\" (alert already cleared).",
+   "evidence": "Auto-resolved"
+  },
+  {
+   "id": "T-2055",
+   "summary": "Hospital site again. Nurse badge rejected on CP-038-04",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"badge\" (card authorization).",
+   "evidence": "badge"
+  },
+  {
+   "id": "T-2056",
+   "summary": "CP-011-02 no heartbeat for 52 min",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"heartbeat\" (charger offline).",
+   "evidence": "heartbeat"
+  },
+  {
+   "id": "T-2057",
+   "summary": "Driver has a $50 hold after a session that",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "T-2058",
+   "summary": "Driver can't start a session at another site. App",
+   "component": "session-state",
+   "severity": "S2",
+   "action": "close_with_runbook",
+   "runbook": "RB-05",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"already have an active session\" (stuck session).",
+   "evidence": "already have an active session"
+  },
+  {
+   "id": "T-2059",
+   "summary": "Host asks how time-of-use pricing works and whether we",
+   "component": "pricing",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "RB-07",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"time-of-use\" (pricing question).",
+   "evidence": "time-of-use"
+  },
+  {
+   "id": "T-2060",
+   "summary": "DC charger CP-073-01 delivering 50 kW max since 11:30",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "DC charger CP-073-01 delivering 50 kW"
+  },
+  {
+   "id": "T-2061",
+   "summary": "Checked CP-038-03 local auth list version: v211. Host portal",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"auth list\" (card authorization).",
+   "evidence": "auth list"
+  },
+  {
+   "id": "T-2062",
+   "summary": "UK driver says the app showed the price as",
+   "component": "driver-app",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"price\" (pricing display).",
+   "evidence": "price"
+  },
+  {
+   "id": "T-2063",
+   "summary": "Host user locked out of the portal after password",
+   "component": "host-portal",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-06",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"locked out\" (portal access).",
+   "evidence": "locked out"
+  },
+  {
+   "id": "T-2064",
+   "summary": "CP-052-01 offline 35 min. Two earlier offline events this",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "needs_human",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"earlier offline events\" (reset already tried).",
+   "evidence": "earlier offline events"
+  },
+  {
+   "id": "T-2065",
+   "summary": "Driver app closes on launch for a driver on",
+   "component": "driver-app",
+   "severity": "S3",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"closes on launch\" (app crash).",
+   "evidence": "closes on launch"
+  },
+  {
+   "id": "T-2066",
+   "summary": "Session at S-047 (fleet depot) open over 12h, energy",
+   "component": "session-state",
+   "severity": "S2",
+   "action": "close_with_runbook",
+   "runbook": "RB-05",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"energy stopped climbing\" (stuck session).",
+   "evidence": "energy stopped climbing"
+  },
+  {
+   "id": "T-2067",
+   "summary": "Second UK driver report: price shown in dollars in",
+   "component": "driver-app",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"price\" (pricing display).",
+   "evidence": "price"
+  },
+  {
+   "id": "T-2068",
+   "summary": "Belgian host says roaming sessions from a partner network",
+   "component": "roaming",
+   "severity": "S3",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"roaming\" (roaming data).",
+   "evidence": "roaming"
+  },
+  {
+   "id": "T-2069",
+   "summary": "Hospital facilities manager escalating: staff badge problem now on",
+   "component": "authorization",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-01",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"badge\" (card authorization).",
+   "evidence": "badge"
+  },
+  {
+   "id": "T-2070",
+   "summary": "CP-035-03 no heartbeat for 47 min",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"heartbeat\" (charger offline).",
+   "evidence": "heartbeat"
+  },
+  {
+   "id": "T-2071",
+   "summary": "Driver has a $50 hold that has not dropped",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "T-2072",
+   "summary": "Host report export for Jan–Sep times out",
+   "component": "host-portal",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-04",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"export\" (large export).",
+   "evidence": "export"
+  },
+  {
+   "id": "T-2073",
+   "summary": "When is the next firmware rollout for S-066? Host",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "When is the next firmware rollout"
+  },
+  {
+   "id": "T-2074",
+   "summary": "Host complains a petrol car keeps parking in the",
+   "component": "request-or-question",
+   "severity": "S4",
+   "action": "needs_human",
+   "runbook": "none",
+   "confidence": 0.3,
+   "reason": "Rules fallback: no rule matched, so a person decides.",
+   "evidence": "Host complains a petrol car keeps"
+  },
+  {
+   "id": "T-2075",
+   "summary": "CP-070-02 no heartbeat for 63 min. Soft reset sent",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "needs_human",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"no response\" (reset already tried).",
+   "evidence": "no response"
+  },
+  {
+   "id": "T-2076",
+   "summary": "Host asks for a raw session data export for",
+   "component": "host-portal",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-04",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"export\" (large export).",
+   "evidence": "export"
+  },
+  {
+   "id": "T-2077",
+   "summary": "Large export from host portal failing again",
+   "component": "host-portal",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-04",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"export\" (large export).",
+   "evidence": "export"
+  },
+  {
+   "id": "T-2078",
+   "summary": "Driver says a $25 hold appeared even though the",
+   "component": "payments",
+   "severity": "S4",
+   "action": "close_with_runbook",
+   "runbook": "RB-02",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"hold\" (stale payment hold).",
+   "evidence": "hold"
+  },
+  {
+   "id": "T-2079",
+   "summary": "CP-019-01 offline 38 min",
+   "component": "connectivity",
+   "severity": "S3",
+   "action": "close_with_runbook",
+   "runbook": "RB-03",
+   "confidence": 0.6,
+   "reason": "Rules fallback: matched \"offline\" (charger offline).",
+   "evidence": "offline"
+  }
+ ],
+ "patterns": {
+  "patterns": [
+   {
+    "name": "Reset already tried",
+    "ticket_ids": [
+     "T-2040",
+     "T-2046",
+     "T-2056",
+     "T-2064",
+     "T-2070",
+     "T-2075",
+     "T-2079"
+    ],
+    "history_ids": [
+     "H-1905",
+     "H-1919",
+     "H-1932",
+     "H-1944",
+     "H-1972"
+    ],
+    "recurring": true,
+    "why_grouped": "Same keyword rule (reset already tried) and runbook RB-03.",
+    "next_step": "Apply RB-03 and review the pattern."
+   },
+   {
+    "name": "Stuck session",
+    "ticket_ids": [
+     "T-2041",
+     "T-2047",
+     "T-2053",
+     "T-2058",
+     "T-2066"
+    ],
+    "history_ids": [
+     "H-1903",
+     "H-1911",
+     "H-1922",
+     "H-1930",
+     "H-1938",
+     "H-1947",
+     "H-1955",
+     "H-1962",
+     "H-1968"
+    ],
+    "recurring": true,
+    "why_grouped": "Same keyword rule (stuck session) and runbook RB-05.",
+    "next_step": "Apply RB-05 and review the pattern."
+   },
+   {
+    "name": "Card authorization",
+    "ticket_ids": [
+     "T-2042",
+     "T-2045",
+     "T-2050",
+     "T-2055",
+     "T-2061",
+     "T-2069"
+    ],
+    "history_ids": [
+     "H-1924",
+     "H-1942"
+    ],
+    "recurring": true,
+    "why_grouped": "Same keyword rule (card authorization) and runbook RB-01.",
+    "next_step": "Apply RB-01 and review the pattern."
+   },
+   {
+    "name": "Stale payment hold",
+    "ticket_ids": [
+     "T-2043",
+     "T-2049",
+     "T-2057",
+     "T-2071",
+     "T-2078"
+    ],
+    "history_ids": [
+     "H-1914",
+     "H-1940",
+     "H-1970"
+    ],
+    "recurring": true,
+    "why_grouped": "Same keyword rule (stale payment hold) and runbook RB-02.",
+    "next_step": "Apply RB-02 and review the pattern."
+   },
+   {
+    "name": "Large export",
+    "ticket_ids": [
+     "T-2051",
+     "T-2072",
+     "T-2076",
+     "T-2077"
+    ],
+    "history_ids": [
+     "H-1957"
+    ],
+    "recurring": true,
+    "why_grouped": "Same keyword rule (large export) and runbook RB-04.",
+    "next_step": "Apply RB-04 and review the pattern."
+   },
+   {
+    "name": "Pricing display",
+    "ticket_ids": [
+     "T-2062",
+     "T-2065",
+     "T-2067"
+    ],
+    "history_ids": [],
+    "recurring": false,
+    "why_grouped": "Same keyword rule (pricing display) and runbook none.",
+    "next_step": "A person reviews the group."
+   }
+  ]
+ },
+ "investigate": {
+  "symptom": "Sessions stay open in the backend after the driver unplugs, while the charger reports the connector Available. Drivers are billed idle fees or blocked from new sessions, and hosts see empty bays marked in use.",
+  "impact": [
+   "14 tickets at 9 sites over 21 days.",
+   "Idle fees charged for time nobody was parked.",
+   "Drivers blocked from starting sessions elsewhere."
+  ],
+  "evidence": [
+   {
+    "point": "Every stuck session had a connection drop between 3 and 88 seconds after unplug.",
+    "source": "Unplug-to-drop timings",
+    "quote": ""
+   },
+   {
+    "point": "On FW-A the Ended event arrived after reconnect and the backend ignored it as out of order.",
+    "source": "Log CP-022-04",
+    "quote": "ignored: connector already Available (out of order)"
+   },
+   {
+    "point": "On FW-B the gateway shows no Ended event after the reconnect; the session stayed Charging.",
+    "source": "Log CP-014-02",
+    "quote": "(no TransactionEvent Ended received)"
+   },
+   {
+    "point": "Drops near unplug ended stuck 12 of 19 times on FW-B, 2 of 11 on FW-A, 0 of 6 on FW-C.",
+    "source": "Fleet view, 21 days",
+    "quote": ""
+   }
+  ],
+  "hypotheses": [
+   {
+    "statement": "The backend ignores an Ended event that arrives after the EVSE reports Available, leaving the transaction open.",
+    "status": "leading hypothesis",
+    "supports": [
+     "Seen directly in the CP-022-04 log.",
+     "Every case follows a reconnect near unplug."
+    ],
+    "against_or_gaps": [
+     "Only one log shows a late Ended event.",
+     "Does not explain FW-B logs with no Ended event."
+    ]
+   },
+   {
+    "statement": "FW-B does not send its queued Ended event after the websocket reconnects. May coexist with the first.",
+    "status": "alternative hypothesis",
+    "supports": [
+     "12 of 14 cases are on FW-B.",
+     "No Ended event at the gateway after reconnect."
+    ],
+    "against_or_gaps": [
+     "Inferred from absence; could be a capture gap.",
+     "No charger-side logs to confirm."
+    ]
+   }
+  ],
+  "ruled_out": [
+   "Payment provider",
+   "Driver app display",
+   "Single site or charger fault",
+   "Driver behaviour"
+  ],
+  "open_questions": [
+   "Is ignoring a late Ended event after Available intended behaviour?",
+   "Does FW-B keep queued TransactionEvents across a websocket reconnect?",
+   "Is gateway capture complete during reconnects?"
+  ]
+ },
+ "handoff": {
+  "title": "Sessions stay open after a charger reconnects near unplug",
+  "severity": "S2",
+  "scope": "14 tickets, 9 sites, two firmware lines, 21 days.",
+  "rules_triggered": [
+   "code",
+   "spread",
+   "billing"
+  ],
+  "reproduction": [
+   "Run the lab's reproduction test with the fix flag off: a simulated charger unplugs, reconnects, then sends a late Ended.",
+   "It passes by showing the bug: the backend ignores the Ended and the transaction stays Charging.",
+   "Compare with the gateway log: EVCommunicationLost, websocket 1006, Available, then the Ended ignored as out of order.",
+   "On a FW-B 4.2.x test charger with capture on, drop the connection before the Ended is sent and check whether it is ever sent."
+  ],
+  "evidence_attached": [
+   "Lab tests: bug reproduced; regression fails without the fix",
+   "Three OCPP 2.0.1 log excerpts",
+   "21-day fleet table by firmware",
+   "Unplug-to-drop timings",
+   "14 linked tickets"
+  ],
+  "ruled_out": [
+   "Payment provider",
+   "Driver app display",
+   "Single site or charger fault",
+   "Driver behaviour"
+  ],
+  "workaround_in_place": "Support closes stuck sessions with RB-05 and flags invoices for review; a proposed detector would flag new candidates for review within 45 minutes.",
+  "the_ask": "Decide how the backend should close a transaction left open after a reconnect without billing errors, and whether a late Ended event should be applied instead of ignored.",
+  "hypothesis_note": "The backend ignoring a late Ended is reproduced in a lab with a simulated charger. Whether FW-B drops its queued Ended is not confirmed."
+ },
+ "verify": {
+  "verdict": "consistent with hypothesis",
+  "reading": "Canary stuck sessions went from 5 to 0 while drops near unplug continued; control stayed at 4. No false closures or duplicate charges in 2140 canary sessions.",
+  "what_it_does_not_prove": [
+   "Which mechanism causes the missing Ended event.",
+   "That it holds beyond two weeks and five events.",
+   "That provisional billing is right without review."
+  ],
+  "keep_watching": [
+   "Provisional invoices and their adjustments.",
+   "Detector hits on control sites."
+  ],
+  "next_decision": "Keep the flag on the canary sites for another 14 days; widen only if billing reviews stay clean. A false closure or duplicate charge reverses it."
+ },
+ "kb": {
+  "title": "Session stuck in Charging after the charger reconnects",
+  "applies_when": [
+   "App or map shows Charging after the driver left.",
+   "Idle fee complaint with flat energy.",
+   "Driver told a session is already active."
+  ],
+  "how_to_confirm": [
+   "Gateway log: no TransactionEvent Ended after the unplug event.",
+   "Gateway log: connection lost and back within 90 seconds of unplug.",
+   "EVSE reports Available while the transaction is open."
+  ],
+  "steps": [
+   "Confirm the meter shows no energy change since unplug, before RB-05.",
+   "Apply RB-05: close at the session's last recorded meter value.",
+   "Reverse idle fees from the last meter change.",
+   "Flag the invoice for billing review and link the ticket to the parent incident."
+  ],
+  "escalate_if": [
+   "No connection drop near unplug.",
+   "Energy still climbing on the open session.",
+   "Firmware line other than FW-A or FW-B.",
+   "A newer session already started on the same connector."
+  ],
+  "status_note": "ENG-4471 reconciliation is on canary sites with billing marked provisional; the FW-B firmware question is open with the vendor.",
+  "related": [
+   "T-2041",
+   "T-2047",
+   "T-2053",
+   "T-2058",
+   "T-2066",
+   "RB-05",
+   "ENG-4471"
+  ]
+ },
+ "shiftnote": {
+  "headline": "Queue started at 40; 20 approved for closure by runbook, and the stuck-session pattern is with engineering.",
+  "done": [
+   "20 tickets approved for runbook closure.",
+   "Stuck-session pattern grouped and contained.",
+   "Detector query written; proposed to run every 15 minutes."
+  ],
+  "needs_you": [
+   "T-2052: Connector holster cracked cable on ground Owner: India engineering on-call, by 07:00 ET.",
+   "T-2053: Session stuck open 9h no energy change Owner: India engineering on-call, by 07:00 ET.",
+   "T-2058: Driver shows active session three hours after checkout Owner: India engineering on-call, by 07:00 ET.",
+   "T-2062: App displayed price in USD instead of GBP Owner: India engineering on-call, by 07:00 ET."
+  ],
+  "escalated": [
+   "ENG-4471: Sessions stay open after unplug-time websocket drop",
+   "RB-05 meanwhile for new stuck sessions."
+  ],
+  "watch": [
+   "Detector candidates for stuck sessions.",
+   "Repeat offline alerts."
+  ]
+ },
+ "shiftnoteNoSummary": {
+  "headline": "Queue started at 40; 0 approved for closure by runbook, and the stuck-session pattern is with engineering.",
+  "done": [
+   "0 tickets approved for runbook closure.",
+   "Stuck-session pattern grouped and contained.",
+   "Detector query written; proposed to run every 15 minutes."
+  ],
+  "needs_you": [],
+  "escalated": [
+   "Nothing sent to engineering yet."
+  ],
+  "watch": [
+   "Detector candidates for stuck sessions.",
+   "Repeat offline alerts."
+  ]
+ },
+ "classifyExample": {
+  "component": "session-state",
+  "severity": "S2",
+  "matches_known_pattern": true,
+  "matched_article": "Session stuck Charging after unplug websocket drop",
+  "suggested_action": "Confirm the meter is flat, then apply RB-05, reverse idle fees, flag the invoice and link to the parent incident.",
+  "confirm": "Before RB-05, a person checks the meter shows no energy change since unplug. The check above reads wording only.",
+  "escalate": false,
+  "why": "Rules fallback: matched \"open 7h\" (stuck session)."
+ },
+ "classifyEveryTicket": [
+  [
+   "T-2040",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"heartbeat\" (charger offline)."
+   }
+  ],
+  [
+   "T-2041",
+   {
+    "component": "session-state",
+    "severity": "S2",
+    "matches_known_pattern": true,
+    "matched_article": "Session stuck Charging after unplug websocket drop",
+    "suggested_action": "Confirm the meter is flat, then apply RB-05, reverse idle fees, flag the invoice and link to the parent incident.",
+    "confirm": "Before RB-05, a person checks the meter shows no energy change since unplug. The check above reads wording only.",
+    "escalate": false,
+    "why": "Rules fallback: matched \"still showed 'Charging'\" (stuck session)."
+   }
+  ],
+  [
+   "T-2042",
+   {
+    "component": "authorization",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"badge\" (card authorization)."
+   }
+  ],
+  [
+   "T-2043",
+   {
+    "component": "payments",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"hold\" (stale payment hold)."
+   }
+  ],
+  [
+   "T-2044",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "T-2045",
+   {
+    "component": "authorization",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"badge\" (card authorization)."
+   }
+  ],
+  [
+   "T-2046",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"offline\" (charger offline)."
+   }
+  ],
+  [
+   "T-2047",
+   {
+    "component": "session-state",
+    "severity": "S2",
+    "matches_known_pattern": true,
+    "matched_article": "Session stuck Charging after unplug websocket drop",
+    "suggested_action": "Confirm the meter is flat, then apply RB-05, reverse idle fees, flag the invoice and link to the parent incident.",
+    "confirm": "Before RB-05, a person checks the meter shows no energy change since unplug. The check above reads wording only.",
+    "escalate": false,
+    "why": "Rules fallback: matched \"In use' on the public map\" (stuck session)."
+   }
+  ],
+  [
+   "T-2048",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "T-2049",
+   {
+    "component": "payments",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"hold\" (stale payment hold)."
+   }
+  ],
+  [
+   "T-2050",
+   {
+    "component": "authorization",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"badge\" (card authorization)."
+   }
+  ],
+  [
+   "T-2051",
+   {
+    "component": "host-portal",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"export\" (large export)."
+   }
+  ],
+  [
+   "T-2052",
+   {
+    "component": "hardware-field",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"holster\" (physical damage)."
+   }
+  ],
+  [
+   "T-2053",
+   {
+    "component": "session-state",
+    "severity": "S2",
+    "matches_known_pattern": true,
+    "matched_article": "Session stuck Charging after unplug websocket drop",
+    "suggested_action": "Confirm the meter is flat, then apply RB-05, reverse idle fees, flag the invoice and link to the parent incident.",
+    "confirm": "Before RB-05, a person checks the meter shows no energy change since unplug. The check above reads wording only.",
+    "escalate": false,
+    "why": "Rules fallback: matched \"open 9h\" (stuck session)."
+   }
+  ],
+  [
+   "T-2054",
+   {
+    "component": "platform-api",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"Auto-resolved\" (alert already cleared)."
+   }
+  ],
+  [
+   "T-2055",
+   {
+    "component": "authorization",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"badge\" (card authorization)."
+   }
+  ],
+  [
+   "T-2056",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"heartbeat\" (charger offline)."
+   }
+  ],
+  [
+   "T-2057",
+   {
+    "component": "payments",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"hold\" (stale payment hold)."
+   }
+  ],
+  [
+   "T-2058",
+   {
+    "component": "session-state",
+    "severity": "S2",
+    "matches_known_pattern": true,
+    "matched_article": "Session stuck Charging after unplug websocket drop",
+    "suggested_action": "Confirm the meter is flat, then apply RB-05, reverse idle fees, flag the invoice and link to the parent incident.",
+    "confirm": "Before RB-05, a person checks the meter shows no energy change since unplug. The check above reads wording only.",
+    "escalate": false,
+    "why": "Rules fallback: matched \"already have an active session\" (stuck session)."
+   }
+  ],
+  [
+   "T-2059",
+   {
+    "component": "pricing",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"time-of-use\" (pricing question)."
+   }
+  ],
+  [
+   "T-2060",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "T-2061",
+   {
+    "component": "authorization",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"auth list\" (card authorization)."
+   }
+  ],
+  [
+   "T-2062",
+   {
+    "component": "driver-app",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"price\" (pricing display)."
+   }
+  ],
+  [
+   "T-2063",
+   {
+    "component": "host-portal",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"locked out\" (portal access)."
+   }
+  ],
+  [
+   "T-2064",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"earlier offline events\" (reset already tried)."
+   }
+  ],
+  [
+   "T-2065",
+   {
+    "component": "driver-app",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"closes on launch\" (app crash)."
+   }
+  ],
+  [
+   "T-2066",
+   {
+    "component": "session-state",
+    "severity": "S2",
+    "matches_known_pattern": true,
+    "matched_article": "Session stuck Charging after unplug websocket drop",
+    "suggested_action": "Confirm the meter is flat, then apply RB-05, reverse idle fees, flag the invoice and link to the parent incident.",
+    "confirm": "Before RB-05, a person checks the meter shows no energy change since unplug. The check above reads wording only.",
+    "escalate": false,
+    "why": "Rules fallback: matched \"energy stopped climbing\" (stuck session)."
+   }
+  ],
+  [
+   "T-2067",
+   {
+    "component": "driver-app",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"price\" (pricing display)."
+   }
+  ],
+  [
+   "T-2068",
+   {
+    "component": "roaming",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"roaming\" (roaming data)."
+   }
+  ],
+  [
+   "T-2069",
+   {
+    "component": "authorization",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"badge\" (card authorization)."
+   }
+  ],
+  [
+   "T-2070",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"heartbeat\" (charger offline)."
+   }
+  ],
+  [
+   "T-2071",
+   {
+    "component": "payments",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"hold\" (stale payment hold)."
+   }
+  ],
+  [
+   "T-2072",
+   {
+    "component": "host-portal",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"export\" (large export)."
+   }
+  ],
+  [
+   "T-2073",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "T-2074",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "T-2075",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"no response\" (reset already tried)."
+   }
+  ],
+  [
+   "T-2076",
+   {
+    "component": "host-portal",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"export\" (large export)."
+   }
+  ],
+  [
+   "T-2077",
+   {
+    "component": "host-portal",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"export\" (large export)."
+   }
+  ],
+  [
+   "T-2078",
+   {
+    "component": "payments",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"hold\" (stale payment hold)."
+   }
+  ],
+  [
+   "T-2079",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"offline\" (charger offline)."
+   }
+  ],
+  [
+   "H-1903",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1905",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"offline\" (charger offline)."
+   }
+  ],
+  [
+   "H-1908",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1911",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1914",
+   {
+    "component": "payments",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"hold\" (stale payment hold)."
+   }
+  ],
+  [
+   "H-1916",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1919",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"offline\" (charger offline)."
+   }
+  ],
+  [
+   "H-1922",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1924",
+   {
+    "component": "authorization",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"RFID\" (card authorization)."
+   }
+  ],
+  [
+   "H-1927",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1930",
+   {
+    "component": "session-state",
+    "severity": "S2",
+    "matches_known_pattern": true,
+    "matched_article": "Session stuck Charging after unplug websocket drop",
+    "suggested_action": "Confirm the meter is flat, then apply RB-05, reverse idle fees, flag the invoice and link to the parent incident.",
+    "confirm": "Before RB-05, a person checks the meter shows no energy change since unplug. The check above reads wording only.",
+    "escalate": false,
+    "why": "Rules fallback: matched \"open 11h\" (stuck session)."
+   }
+  ],
+  [
+   "H-1932",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"offline\" (charger offline)."
+   }
+  ],
+  [
+   "H-1935",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1938",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1940",
+   {
+    "component": "payments",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"hold\" (stale payment hold)."
+   }
+  ],
+  [
+   "H-1942",
+   {
+    "component": "authorization",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"RFID\" (card authorization)."
+   }
+  ],
+  [
+   "H-1944",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"offline\" (charger offline)."
+   }
+  ],
+  [
+   "H-1947",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1949",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1951",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1953",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1955",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1957",
+   {
+    "component": "host-portal",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"export\" (large export)."
+   }
+  ],
+  [
+   "H-1959",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"offline\" (charger offline)."
+   }
+  ],
+  [
+   "H-1962",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1964",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1966",
+   {
+    "component": "request-or-question",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: no rule matched, so a person decides."
+   }
+  ],
+  [
+   "H-1968",
+   {
+    "component": "session-state",
+    "severity": "S2",
+    "matches_known_pattern": true,
+    "matched_article": "Session stuck Charging after unplug websocket drop",
+    "suggested_action": "Confirm the meter is flat, then apply RB-05, reverse idle fees, flag the invoice and link to the parent incident.",
+    "confirm": "Before RB-05, a person checks the meter shows no energy change since unplug. The check above reads wording only.",
+    "escalate": false,
+    "why": "Rules fallback: matched \"showed Charging\" (stuck session)."
+   }
+  ],
+  [
+   "H-1970",
+   {
+    "component": "payments",
+    "severity": "S4",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"hold\" (stale payment hold)."
+   }
+  ],
+  [
+   "H-1972",
+   {
+    "component": "connectivity",
+    "severity": "S3",
+    "matches_known_pattern": false,
+    "matched_article": "none",
+    "suggested_action": "A person reviews it.",
+    "confirm": "",
+    "escalate": false,
+    "why": "Rules fallback: matched \"offline\" (charger offline)."
+   }
+  ]
+ ],
+ "runbookIds": [
+  "RB-01",
+  "RB-02",
+  "RB-03",
+  "RB-04",
+  "RB-05",
+  "RB-06",
+  "RB-07"
+ ],
+ "handoffNote": "The backend ignoring a late Ended is reproduced in a lab with a simulated charger. Whether FW-B drops its queued Ended is not confirmed.",
+ "labTest": "Lab tests: bug reproduced; regression fails without the fix",
+ "meterStep": "Confirm the meter shows no energy change since unplug, before RB-05.",
+ "billingStep": "Flag the invoice for billing review and link the ticket to the parent incident.",
+ "confirmMeter": "Before RB-05, a person checks the meter shows no energy change since unplug. The check above reads wording only.",
+ "sources": {
+  "Log CP-014-02": "22:41:07  CP-014-02 → TransactionEvent  eventType=Updated  transactionId=88213  seqNo=40  meter=18.42 kWh\n22:41:52  CP-014-02 → TransactionEvent  eventType=Updated  transactionId=88213  seqNo=41  triggerReason=EVCommunicationLost\n22:42:43  gateway  connection lost (websocket 1006, no close frame)\n22:43:11  gateway  websocket opened  CP-014-02\n22:43:12  CP-014-02 → StatusNotification  evseId=1  connectorStatus=Available\n22:43:42  CP-014-02 → Heartbeat  \n22:43:42  session-svc  transactionId=88213 state=Charging  last_meter=18.42 kWh  (no TransactionEvent Ended received)\n06:10:00  session-svc  transactionId=88213 open 7h 29m, idle fee accruing",
+  "Log CP-031-01": "23:58:30  CP-031-01 → TransactionEvent  eventType=Updated  transactionId=88177  seqNo=27  triggerReason=EVCommunicationLost\n23:58:55  gateway  connection lost (websocket 1006, no close frame)\n00:00:02  gateway  websocket opened  CP-031-01\n00:00:03  CP-031-01 → StatusNotification  evseId=1  connectorStatus=Available\n00:00:03  session-svc  transactionId=88177 state=Charging  (no TransactionEvent Ended received)\n13:18:00  map-svc  CP-031-01 shown 'In use' (derived from open session)",
+  "Log CP-022-04": "07:41:40  CP-022-04 → TransactionEvent  eventType=Updated  transactionId=87640  seqNo=8  triggerReason=EVCommunicationLost\n07:41:47  gateway  connection lost (websocket 1006, no close frame)\n07:42:30  gateway  websocket opened  CP-022-04\n07:42:31  CP-022-04 → StatusNotification  evseId=2  connectorStatus=Available\n07:42:52  CP-022-04 → TransactionEvent  eventType=Ended  transactionId=87640  offline=true  seqNo=9  stoppedReason=EVDisconnected\n07:42:52  session-svc  TransactionEvent Ended transactionId=87640 ignored: connector already Available (out of order)\n07:42:52  CP-022-04 ← TransactionEventResponse  (empty payload)",
+  "Fleet view, 21 days": "FW-B 4.2.x: 4812 sessions; websocket drop within 90 s of unplug: 19 (stuck afterwards: 12); drops at other times: 41 (stuck afterwards: 0)\nFW-A 3.9.x: 3950 sessions; websocket drop within 90 s of unplug: 11 (stuck afterwards: 2); drops at other times: 37 (stuck afterwards: 0)\nFW-C 1.6.x: 2204 sessions; websocket drop within 90 s of unplug: 6 (stuck afterwards: 0); drops at other times: 22 (stuck afterwards: 0)",
+  "Unplug-to-drop timings": "H-1903 FW-B 22s, H-1911 FW-B 7s, H-1922 FW-B 31s, H-1930 FW-B 44s, H-1938 FW-A 12s, H-1947 FW-B 58s, H-1955 FW-B 3s, H-1962 FW-B 66s, H-1968 FW-B 18s, T-2041 FW-B 51s, T-2047 FW-B 25s, T-2053 FW-B 88s, T-2058 FW-A 7s, T-2066 FW-B 38s",
+  "Tickets": "T-2041 | opened Mon 10:03 ET | from Customer care | site S-014 (Parking garage · NJ) | charger CP-014-02 | firmware FW-B 4.2.1 | Driver says the app still showed 'Charging' hours after they unplugged at S-014 last night. Idle fee kept running. Asking for a refund.\nT-2047 | opened Mon 13:18 ET | from Host accounts | site S-031 (Municipal lot · NY) | charger CP-031-01 | firmware FW-B 4.2.3 | Host at S-031 says CP-031-01 has shown 'In use' on the public map since last night. Nobody is parked there.\nT-2053 | opened Mon 21:40 ET | from NOC alert | site S-058 (University · NY) | charger CP-058-04 | firmware FW-B 4.2.1 | Session SX-88301 open 9h 40m with no energy change since 12:02. Connector reports Available.\nT-2058 | opened Tue 10:48 ET | from Customer care | site S-022 (Hotel · PA) | charger CP-022-04 | firmware FW-A 3.9.0 | Driver can't start a session at another site. App says 'You already have an active session'. They left S-022 about three hours ago.\nT-2066 | opened Tue 16:30 ET | from Billing ops | site S-047 (Fleet depot · NJ) | charger CP-047-02 | firmware FW-B 4.2.3 | Session at S-047 (fleet depot) open over 12h, energy stopped climbing after about 40 min. Fleet manager disputing the idle fee.\nH-1903 | day -21 | site S-014 | firmware FW-B 4.2.1 | Session stayed 'Charging' after driver left. Idle fee complaint. | resolution: RB-05: force-closed, idle fee reversed. Closed as one-off.\nH-1911 | day -19 | site S-027 | firmware FW-B 4.2.1 | Driver blocked from new session, app says one is active. | resolution: RB-05: force-closed old session. Closed as one-off.\nH-1922 | day -16 | site S-031 | firmware FW-B 4.2.3 | Map shows station in use, bay empty. | resolution: RB-05: force-closed session. Closed as one-off.\nH-1930 | day -14 | site S-063 | firmware FW-B 4.2.3 | Session open 11h, energy flat after first hour. Idle fee dispute. | resolution: RB-05: force-closed, fee reversed. Closed as one-off.\nH-1938 | day -12 | site S-019 | firmware FW-A 3.9.0 | Session still 'Charging' after unplug. Driver called twice. | resolution: RB-05: force-closed. Closed as one-off.\nH-1947 | day -9 | site S-070 | firmware FW-B 4.2.3 | Workplace host: port shows in use all weekend, nobody there. | resolution: RB-05: force-closed. Closed as one-off.\nH-1955 | day -7 | site S-014 | firmware FW-B 4.2.1 | Session open after unplug again at the garage. Refund requested. | resolution: RB-05: force-closed, refunded. Closed as one-off.\nH-1962 | day -4 | site S-047 | firmware FW-B 4.2.3 | Depot session open overnight with flat energy. | resolution: RB-05: force-closed. Closed as one-off.\nH-1968 | day -2 | site S-027 | firmware FW-B 4.2.1 | Session showed Charging for 8h after driver left. | resolution: RB-05: force-closed, fee reversed. Closed as one-off.",
+  "Support checks": "Payment provider: no incidents logged in the 21-day window; holds and captures normal on unaffected sessions.\nDriver app display: the session API itself returns state=Charging, so the app is showing what the backend holds.\nSingle site or charger fault: 14 tickets across 9 sites and two firmware lines.\nDriver behaviour: every affected connector reported Available within 2 minutes of unplug."
+ },
+ "componentTerms": {
+  "session-state": [
+   "session",
+   "charging",
+   "in use",
+   "active",
+   "idle fee",
+   "energy",
+   "open"
+  ],
+  "authorization": [
+   "badge",
+   "rfid",
+   "card",
+   "auth",
+   "rejected"
+  ],
+  "payments": [
+   "hold",
+   "payment",
+   "refund",
+   "charge",
+   "$"
+  ],
+  "connectivity": [
+   "heartbeat",
+   "offline",
+   "connection",
+   "online"
+  ],
+  "host-portal": [
+   "portal",
+   "export",
+   "report",
+   "locked",
+   "access"
+  ],
+  "driver-app": [
+   "app",
+   "android",
+   "launch",
+   "price"
+  ],
+  "pricing": [
+   "pricing",
+   "price",
+   "rate",
+   "time-of-use"
+  ],
+  "hardware-field": [
+   "holster",
+   "cable",
+   "connector",
+   "kw",
+   "part",
+   "reader",
+   "derat",
+   "temperature"
+  ],
+  "roaming": [
+   "roaming",
+   "partner"
+  ],
+  "platform-api": [
+   "api",
+   "5xx",
+   "alert"
+  ],
+  "request-or-question": []
+ },
+ "runbookTerms": {
+  "RB-01": [
+   "badge",
+   "rfid",
+   "card",
+   "auth"
+  ],
+  "RB-02": [
+   "hold"
+  ],
+  "RB-03": [
+   "heartbeat",
+   "offline"
+  ],
+  "RB-04": [
+   "export",
+   "report"
+  ],
+  "RB-05": [
+   "charging",
+   "in use",
+   "active session",
+   "energy",
+   "open"
+  ],
+  "RB-06": [
+   "locked",
+   "access",
+   "password"
+  ],
+  "RB-07": [
+   "pricing",
+   "price",
+   "time-of-use",
+   "rate"
+  ]
+ },
+ "runbookFits": {
+  "RB-01": [
+   "authorization"
+  ],
+  "RB-02": [
+   "payments"
+  ],
+  "RB-03": [
+   "connectivity"
+  ],
+  "RB-04": [
+   "host-portal"
+  ],
+  "RB-05": [
+   "session-state"
+  ],
+  "RB-06": [
+   "host-portal"
+  ],
+  "RB-07": [
+   "pricing",
+   "request-or-question"
+  ]
+ },
+ "exceptionNames": [
+  [
+   "RB-01",
+   []
+  ],
+  [
+   "RB-02",
+   []
+  ],
+  [
+   "RB-03",
+   [
+    "reset already tried"
+   ]
+  ],
+  [
+   "RB-04",
+   []
+  ],
+  [
+   "RB-05",
+   [
+    "energy still moving",
+    "no connection drop near unplug",
+    "firmware outside FW-A and FW-B"
+   ]
+  ],
+  [
+   "RB-06",
+   []
+  ],
+  [
+   "RB-07",
+   []
+  ]
+ ],
+ "exceptions": [
+  [
+   "T-2040",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2041",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2042",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2043",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2044",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2045",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2046",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2047",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2048",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2049",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2050",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2051",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2052",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2053",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2054",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2055",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2056",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2057",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2058",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2059",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2060",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "energy still moving",
+      "hit": "DC charger CP-073-01 delivering"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2061",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2062",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2063",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2064",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     {
+      "name": "reset already tried",
+      "hit": "earlier offline events"
+     }
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2065",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2066",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2067",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2068",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2069",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2070",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2071",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2072",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2073",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2074",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2075",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     {
+      "name": "reset already tried",
+      "hit": "no response"
+     }
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2076",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2077",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2078",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "T-2079",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1903",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1905",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1908",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1911",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1914",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1916",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1919",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1922",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1924",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1927",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1930",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1932",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1935",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1938",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1940",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1942",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1944",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1947",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1949",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1951",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-D"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1953",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1955",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1957",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1959",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1962",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1964",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1966",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1968",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1970",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     {
+      "name": "firmware outside FW-A and FW-B",
+      "hit": "FW-C"
+     }
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ],
+  [
+   "H-1972",
+   [
+    [
+     "RB-01",
+     null
+    ],
+    [
+     "RB-02",
+     null
+    ],
+    [
+     "RB-03",
+     null
+    ],
+    [
+     "RB-04",
+     null
+    ],
+    [
+     "RB-05",
+     null
+    ],
+    [
+     "RB-06",
+     null
+    ],
+    [
+     "RB-07",
+     null
+    ]
+   ]
+  ]
+ ],
+ "stepShapes": [
+  [
+   "triage",
+   false,
+   4000,
+   {
+    "type": "object",
+    "properties": {
+     "results": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "id": {
+         "type": "string"
+        },
+        "summary": {
+         "type": "string"
+        },
+        "component": {
+         "type": "string",
+         "enum": [
+          "session-state",
+          "authorization",
+          "payments",
+          "connectivity",
+          "host-portal",
+          "driver-app",
+          "pricing",
+          "hardware-field",
+          "roaming",
+          "platform-api",
+          "request-or-question"
+         ]
+        },
+        "severity": {
+         "type": "string",
+         "enum": [
+          "S1",
+          "S2",
+          "S3",
+          "S4"
+         ]
+        },
+        "action": {
+         "type": "string",
+         "enum": [
+          "close_with_runbook",
+          "needs_human",
+          "escalation_candidate",
+          "info_only"
+         ]
+        },
+        "runbook": {
+         "type": "string",
+         "enum": [
+          "RB-01",
+          "RB-02",
+          "RB-03",
+          "RB-04",
+          "RB-05",
+          "RB-06",
+          "RB-07",
+          "none"
+         ]
+        },
+        "confidence": {
+         "type": "number"
+        },
+        "reason": {
+         "type": "string"
+        },
+        "evidence": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "id",
+        "summary",
+        "component",
+        "severity",
+        "action",
+        "runbook",
+        "confidence",
+        "reason",
+        "evidence"
+       ],
+       "additionalProperties": false
+      }
+     }
+    },
+    "required": [
+     "results"
+    ],
+    "additionalProperties": false
+   }
+  ],
+  [
+   "patterns",
+   true,
+   6000,
+   {
+    "type": "object",
+    "properties": {
+     "patterns": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "ticket_ids": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "history_ids": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "recurring": {
+         "type": "boolean"
+        },
+        "why_grouped": {
+         "type": "string"
+        },
+        "next_step": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "name",
+        "ticket_ids",
+        "history_ids",
+        "recurring",
+        "why_grouped",
+        "next_step"
+       ],
+       "additionalProperties": false
+      }
+     }
+    },
+    "required": [
+     "patterns"
+    ],
+    "additionalProperties": false
+   }
+  ],
+  [
+   "investigate",
+   true,
+   null,
+   {
+    "type": "object",
+    "properties": {
+     "symptom": {
+      "type": "string"
+     },
+     "impact": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "evidence": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "point": {
+         "type": "string"
+        },
+        "source": {
+         "type": "string",
+         "enum": [
+          "Log CP-014-02",
+          "Log CP-031-01",
+          "Log CP-022-04",
+          "Fleet view, 21 days",
+          "Unplug-to-drop timings",
+          "Tickets",
+          "Support checks"
+         ]
+        },
+        "quote": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "point",
+        "source",
+        "quote"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "hypotheses": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "statement": {
+         "type": "string"
+        },
+        "status": {
+         "type": "string",
+         "enum": [
+          "leading hypothesis",
+          "alternative hypothesis"
+         ]
+        },
+        "supports": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "against_or_gaps": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        }
+       },
+       "required": [
+        "statement",
+        "status",
+        "supports",
+        "against_or_gaps"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "ruled_out": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "open_questions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    },
+    "required": [
+     "symptom",
+     "impact",
+     "evidence",
+     "hypotheses",
+     "ruled_out",
+     "open_questions"
+    ],
+    "additionalProperties": false
+   }
+  ],
+  [
+   "handoff",
+   true,
+   null,
+   {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string"
+     },
+     "severity": {
+      "type": "string",
+      "enum": [
+       "S1",
+       "S2",
+       "S3",
+       "S4"
+      ]
+     },
+     "scope": {
+      "type": "string"
+     },
+     "rules_triggered": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "enum": [
+        "code",
+        "spread",
+        "billing",
+        "safety"
+       ]
+      }
+     },
+     "reproduction": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "evidence_attached": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "ruled_out": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "workaround_in_place": {
+      "type": "string"
+     },
+     "the_ask": {
+      "type": "string"
+     },
+     "hypothesis_note": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "title",
+     "severity",
+     "scope",
+     "rules_triggered",
+     "reproduction",
+     "evidence_attached",
+     "ruled_out",
+     "workaround_in_place",
+     "the_ask",
+     "hypothesis_note"
+    ],
+    "additionalProperties": false
+   }
+  ],
+  [
+   "verify",
+   true,
+   null,
+   {
+    "type": "object",
+    "properties": {
+     "verdict": {
+      "type": "string",
+      "enum": [
+       "consistent with hypothesis",
+       "inconclusive",
+       "contradicts hypothesis"
+      ]
+     },
+     "reading": {
+      "type": "string"
+     },
+     "what_it_does_not_prove": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "keep_watching": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "next_decision": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "verdict",
+     "reading",
+     "what_it_does_not_prove",
+     "keep_watching",
+     "next_decision"
+    ],
+    "additionalProperties": false
+   }
+  ],
+  [
+   "kb",
+   true,
+   null,
+   {
+    "type": "object",
+    "properties": {
+     "title": {
+      "type": "string"
+     },
+     "applies_when": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "how_to_confirm": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "steps": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "escalate_if": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "status_note": {
+      "type": "string"
+     },
+     "related": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    },
+    "required": [
+     "title",
+     "applies_when",
+     "how_to_confirm",
+     "steps",
+     "escalate_if",
+     "status_note",
+     "related"
+    ],
+    "additionalProperties": false
+   }
+  ],
+  [
+   "shiftnote",
+   true,
+   null,
+   {
+    "type": "object",
+    "properties": {
+     "headline": {
+      "type": "string"
+     },
+     "done": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "needs_you": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "escalated": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "watch": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    },
+    "required": [
+     "headline",
+     "done",
+     "needs_you",
+     "escalated",
+     "watch"
+    ],
+    "additionalProperties": false
+   }
+  ],
+  [
+   "classify",
+   false,
+   1500,
+   {
+    "type": "object",
+    "properties": {
+     "component": {
+      "type": "string",
+      "enum": [
+       "session-state",
+       "authorization",
+       "payments",
+       "connectivity",
+       "host-portal",
+       "driver-app",
+       "pricing",
+       "hardware-field",
+       "roaming",
+       "platform-api",
+       "request-or-question"
+      ]
+     },
+     "severity": {
+      "type": "string",
+      "enum": [
+       "S1",
+       "S2",
+       "S3",
+       "S4"
+      ]
+     },
+     "matches_known_pattern": {
+      "type": "boolean"
+     },
+     "matched_article": {
+      "type": "string"
+     },
+     "suggested_action": {
+      "type": "string"
+     },
+     "escalate": {
+      "type": "boolean"
+     },
+     "why": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "component",
+     "severity",
+     "matches_known_pattern",
+     "matched_article",
+     "suggested_action",
+     "escalate",
+     "why"
+    ],
+    "additionalProperties": false
+   }
+  ]
+ ]
+}

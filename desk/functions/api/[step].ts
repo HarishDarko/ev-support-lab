@@ -1,7 +1,13 @@
-import { STEPS, type Step } from "../_lib/steps";
+import { PACKS, DEFAULT_PACK_ID, isPackId } from "../../shared/packs";
+import { INCIDENT_STEPS, type IncidentPackId } from "../../shared/packs/steps";
+import type { Pack } from "../../shared/packs/types";
+import { liveAllowed, recordingAllowed } from "../_lib/live-packs";
+import { STEPS, queueOnlySteps, stepsFor, type Step } from "../_lib/steps";
 import { callJSON, rateLimit, costOf, StepError, models } from "../_lib/ai";
 import { ValidationError, check } from "../_lib/validate";
 import type { Check, Env, StepInput, Usage } from "../_lib/types";
+
+const isIncidentPack = (id: string): id is IncidentPackId => Object.hasOwn(INCIDENT_STEPS, id);
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -34,8 +40,7 @@ export interface Trace {
 // and nothing unvalidated reaches the screen. The trace says which path produced the result and why.
 export async function onRequestPost({ request, env, params }: Context): Promise<Response> {
   const name = params.step as string;
-  const step = Object.hasOwn(STEPS, name) ? (STEPS as Record<string, Step>)[name] : undefined;
-  if (!step) return json({ error: "Unknown step." }, 404);
+  if (!Object.hasOwn(STEPS, name)) return json({ error: "Unknown step." }, 404);
   let input: StepInput = {};
   try {
     const body: unknown = await request.json();
@@ -43,6 +48,23 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
   } catch {
     /* steps that take no input */
   }
+  // The industry pack, from an allowlist. No pack means the default one, so the recorded run and older clients
+  // are unchanged.
+  const packId = input?.pack ?? DEFAULT_PACK_ID;
+  if (!isPackId(packId)) return json({ error: "Unknown pack." }, 400);
+  const pack = PACKS[packId];
+  // Paid model calls are switched on per pack, so a new industry cannot spend before it is ready. With the model
+  // turned off (MOCK=1) nothing is spent, and the rules still answer. A local server with the binding ALLOW_PACK_RECORDING=1 may
+  // call the model for any pack, to make that pack's first recording (functions/_lib/live-packs.ts).
+  if (env.MOCK !== "1" && !liveAllowed(packId, pack as { liveRuns?: boolean }) && !recordingAllowed(env, request.url))
+    return json(
+      { error: "Live AI runs are not switched on for this industry yet. Its answers come from the rules." },
+      403,
+    );
+  // A pack with an incident runs the full chain; any other pack runs the short one, without the incident steps.
+  const steps: Record<string, Step> = isIncidentPack(packId) ? stepsFor(packId) : queueOnlySteps(pack as Pack);
+  const step = steps[name];
+  if (!step) return json({ error: "This step is not part of this industry's chain." }, 404);
 
   let prompt: string;
   try {
@@ -89,6 +111,7 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
           schema: step.schema,
           maxTokens: step.maxTokens,
           timeout: left,
+          system: pack.prompts.system,
         });
         spend(res);
         const { data, checks } = step.validate(res.data, input, prompt);
