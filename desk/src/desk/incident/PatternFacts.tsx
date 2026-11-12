@@ -8,7 +8,7 @@ import "./PatternFacts.css";
 
 /** The pattern behind the incident: its facts, the escalation line and which triggers fired, and the AI's grouping. */
 export function PatternFacts() {
-  const { run, lanes, resultFor } = useRun();
+  const { pack, run, lanes, resultFor } = useRun();
   const incident = useIncident();
   const line = incident.escalation;
   const pattern = incidentPattern(run.steps.patterns.data.patterns, lanes.held, incident);
@@ -16,7 +16,7 @@ export function PatternFacts() {
   const runbook = incident.recordOnlyRunbook;
   const facts = [
     ...incident.patternFacts,
-    [String(priorUses(runbook).length), `${runbook} closures`, `as one-offs in ${WINDOW_DAYS} days`] as const,
+    [String(priorUses(runbook, pack).length), `${runbook} closures`, `as one-offs in ${WINDOW_DAYS} days`] as const,
   ];
 
   return (

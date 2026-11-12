@@ -7,20 +7,26 @@
 // The same function drives `npm run record`, so a recording and a visitor's live run cannot differ.
 // Answers are reported one at a time as they land. An answer is merged unless it is a rules fallback that would
 // replace an AI result: a rate limit or a model error never makes the screen worse.
-import { NEW_TICKET_EXAMPLE, TICKETS } from "../data/synthetic";
+// The chain runs for one pack (EV charging unless told otherwise); a pack other than the default is named in every
+// request, so the default pack's requests are exactly as before.
+import type { Incident } from "../incident/types";
+import { EV_DESK, type DeskPack } from "./pack";
 import { indexTriage, shiftSummary } from "./selectors";
 import type { Run, RunSteps, StepData, StepKey, StepResult, TriageData } from "./types";
 
 /** Tickets per triage call, as the prototype sent them. The API accepts 1 to 10. */
 export const BATCH_SIZE = 5;
 
-export const TRIAGE_BATCHES: readonly (readonly string[])[] = Array.from(
-  { length: Math.ceil(TICKETS.length / BATCH_SIZE) },
-  (_, i) => TICKETS.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE).map((t) => t.id),
-);
+/** The pack's tickets in triage batches, in queue order. */
+export const triageBatches = (pack: DeskPack = EV_DESK): readonly (readonly string[])[] =>
+  Array.from({ length: Math.ceil(pack.tickets.length / BATCH_SIZE) }, (_, i) =>
+    pack.tickets.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE).map((t) => t.id),
+  );
+export const TRIAGE_BATCHES: readonly (readonly string[])[] = triageBatches();
 
 /** The number of API calls in one full chain: the triage batches plus seven single-call steps. */
-export const CHAIN_CALLS = TRIAGE_BATCHES.length + 7;
+export const chainCalls = (pack: DeskPack = EV_DESK): number => triageBatches(pack).length + 7;
+export const CHAIN_CALLS = chainCalls();
 
 /** Sends one request to a step. Throws an Error with a readable message on any failure. */
 export type PostStep = (step: StepKey, body: unknown, signal?: AbortSignal) => Promise<StepResult<unknown>>;
@@ -73,6 +79,9 @@ export interface ChainOptions {
   base?: RunSteps;
   onUpdate?: (update: ChainUpdate) => void;
   signal?: AbortSignal;
+  /** The pack to run, and its incident for the shift summary. Both default to EV charging. */
+  pack?: DeskPack;
+  incident?: Incident;
 }
 
 type SingleKey = Exclude<StepKey, "triage">;
@@ -86,8 +95,17 @@ const SINGLE_KEYS: readonly SingleKey[] = [
   "classify",
 ];
 
-export async function runChain({ post, base, onUpdate, signal }: ChainOptions): Promise<ChainReport> {
-  const triage: (StepResult<TriageData> | undefined)[] = base ? [...base.triage] : TRIAGE_BATCHES.map(() => undefined);
+export async function runChain({
+  post,
+  base,
+  onUpdate,
+  signal,
+  pack = EV_DESK,
+  incident,
+}: ChainOptions): Promise<ChainReport> {
+  const batches = triageBatches(pack);
+  const total = chainCalls(pack);
+  const triage: (StepResult<TriageData> | undefined)[] = base ? [...base.triage] : batches.map(() => undefined);
   const singles: { [K in SingleKey]?: StepResult<StepData[K]> } = {};
   if (base) for (const key of SINGLE_KEYS) (singles as Record<SingleKey, unknown>)[key] = base[key];
   const report: ChainReport = {
@@ -98,7 +116,7 @@ export async function runChain({ post, base, onUpdate, signal }: ChainOptions): 
     fallbackReason: null,
     answered: 0,
     aiAnswered: 0,
-    total: CHAIN_CALLS,
+    total,
   };
   let settled = 0;
 
@@ -106,7 +124,11 @@ export async function runChain({ post, base, onUpdate, signal }: ChainOptions): 
   async function settle(step: StepKey, body: unknown, batch?: number): Promise<void> {
     if (signal?.aborted) return;
     try {
-      const result = await post(step, body, signal);
+      const result = await post(
+        step,
+        pack.requestPack ? { ...(body as object), pack: pack.requestPack } : body,
+        signal,
+      );
       settled += 1;
       report.answered += 1;
       report.spent += result.trace.cost;
@@ -147,7 +169,7 @@ export async function runChain({ post, base, onUpdate, signal }: ChainOptions): 
       .flatMap((t) => t?.data.results ?? [])
       .map(({ id, component, severity, action }) => ({ id, component, severity, action }));
 
-  await Promise.all(TRIAGE_BATCHES.map((ids, i) => settle("triage", { ids }, i)));
+  await Promise.all(batches.map((ids, i) => settle("triage", { ids }, i)));
   await single("patterns", ["triage"], () => ({ triage: triageRows() }));
   await single("investigate", [], () => ({}));
   await Promise.all([
@@ -158,10 +180,16 @@ export async function runChain({ post, base, onUpdate, signal }: ChainOptions): 
         (async () => {
           const article = () => ({ investigation: singles.investigate?.data, handoff: singles.handoff?.data });
           await single("kb", ["investigate", "handoff"], article);
-          await single("classify", ["kb"], () => ({ text: NEW_TICKET_EXAMPLE, article: singles.kb?.data }));
+          await single("classify", ["kb"], () => ({ text: pack.newTicketExample, article: singles.kb?.data }));
         })(),
         single("shiftnote", ["triage", "handoff"], () => ({
-          summary: shiftSummary(indexTriage(triage as StepResult<TriageData>[]), singles.handoff!.data.title),
+          summary: shiftSummary(
+            indexTriage(triage as StepResult<TriageData>[], pack),
+            singles.handoff!.data.title,
+            undefined,
+            incident,
+            pack,
+          ),
         })),
       ]);
     })(),

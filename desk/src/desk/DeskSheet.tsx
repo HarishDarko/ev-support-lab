@@ -12,10 +12,7 @@ import { ScorecardTab } from "./scorecard/ScorecardTab";
 import { DESK_TABS, type DeskTab } from "./tabs";
 import { useDialog } from "./useDialog";
 import { DeskTicket } from "./focus";
-import { hasIncident } from "../packs/industry";
-import { useIndustry } from "../packs/IndustryContext";
 import { IndustryMenu } from "../packs/IndustryMenu";
-import { ShowcaseNote } from "../packs/ShowcaseNote";
 import "./DeskSheet.css";
 
 export type { DeskTab } from "./tabs";
@@ -59,9 +56,7 @@ function Sheet({ tab, onClose, onTab, ticket = null }: DeskSheetProps) {
   const dialog = useRef<HTMLElement>(null);
   const tabButtons = useRef<Partial<Record<DeskTab, HTMLButtonElement | null>>>({});
   const { onKeyDown } = useDialog({ dialog, onClose, present });
-  const { id } = useIndustry();
-  // Without an incident, the incident and handoff tabs say where the incident walkthrough lives.
-  const Panel = !hasIncident(id) && (tab === "incident" || tab === "handoff") ? ShowcaseNote : PANELS[tab];
+  const Panel = PANELS[tab];
 
   // Arrow keys move between tabs (roving tabindex); Home and End jump to the ends.
   const onTabKeyDown = (event: KeyboardEvent) => {

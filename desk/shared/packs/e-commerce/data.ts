@@ -118,10 +118,10 @@ export const TICKETS: ShopTicket[] = [
   {
     id: "T-4006",
     opened: "Mon 10:45",
-    from: "Payments ops",
+    from: "Warehouse",
     order: "#51150",
     channel: "App",
-    text: "Order #51150 also stuck in Payment pending after a successful payment. Extra authorization still showing.",
+    text: "Order #51150 never reached the pick list, so its next-day delivery promise was missed. The order screen says Payment pending; the customer says they paid once.",
   },
   {
     id: "T-4007",
@@ -152,7 +152,7 @@ export const TICKETS: ShopTicket[] = [
     opened: "Mon 13:15",
     from: "Customer care",
     order: "#51209",
-    channel: "Web",
+    channel: "App",
     text: "Customer sent a screenshot of two settled charges on their card for order #51209, which is still stuck in Payment pending.",
   },
   {
@@ -214,10 +214,10 @@ export const TICKETS: ShopTicket[] = [
   {
     id: "T-4018",
     opened: "Tue 09:45",
-    from: "Payments ops",
+    from: "Customer care",
     order: "#51388",
     channel: "App",
-    text: "Order #51388 stuck in Payment pending after payment was taken. Second authorization open.",
+    text: "Customer's banking app shows two pending holds of £42.00 from us for order #51388, but they placed one order. The app spun for a while and then confirmed.",
   },
   {
     id: "T-4019",
@@ -242,6 +242,14 @@ export const TICKETS: ShopTicket[] = [
     order: "#50190",
     channel: "Email",
     text: "Return parcel for #50190 was delivered to the warehouse 5 business days ago, but no refund has been issued yet.",
+  },
+  {
+    id: "T-4022",
+    opened: "Tue 12:20",
+    from: "Customer care",
+    order: "#52388",
+    channel: "Web",
+    text: "Checkout showed 'Something went wrong' after the Pay button spun for about ten seconds, so the customer paid again and got a confirmation. Order #52388 now says Payment pending.",
   },
 ];
 

@@ -7,3 +7,4 @@ rootProject.name = "ev-support-lab"
 
 include("lab")
 include("lab-saas")
+include("lab-ecommerce")

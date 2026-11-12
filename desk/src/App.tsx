@@ -1,4 +1,5 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import type { PackId } from "../shared/packs";
 import { MotionConfig } from "motion/react";
 import { useTheme } from "./theme";
 import { TopStrip, type Page } from "./components/TopStrip";
@@ -14,11 +15,10 @@ import { facts } from "./story/beats";
 import { storyDataFromRun } from "./story/fromRun";
 import { useStory } from "./story/useStory";
 import { MeterGateContext } from "./story/meterGate";
-import { hasIncident } from "./packs/industry";
-import { IndustryProvider, useIndustry } from "./packs/IndustryContext";
-import { useIncident } from "./incident";
-// Other industries load only when picked, so the EV page carries none of their data.
-const PackDesk = lazy(() => import("./packs/PackDesk").then((m) => ({ default: m.PackDesk })));
+import { IndustryProvider, useIndustry, useIndustryChoice } from "./packs/IndustryContext";
+import { Chooser } from "./packs/Chooser";
+import { usePackBundle } from "./packs/bundles";
+import { IncidentContext, useIncident } from "./incident";
 
 const NARROW = "(max-width: 999px)";
 const subscribe = (cb: () => void) => {
@@ -39,26 +39,107 @@ const requestedTab = (): DeskTab | null => {
 export function App() {
   return (
     <MotionConfig reducedMotion="user">
-      <IndustryProvider>
-        <RunProvider>
-          <Walkthrough />
-        </RunProvider>
-      </IndustryProvider>
+      <Site />
     </MotionConfig>
   );
 }
 
-function Walkthrough() {
+/** The site opens on the choice of industries, unless the address names one (`?pack=`). */
+function Site() {
+  const { id, pick, choose } = useIndustryChoice();
+  // Picking on the chooser, or going back to it, removes the focused button with its screen, so focus moves to the
+  // new screen: the chooser at once, a walkthrough once it has loaded (unless a desk link opens the desk, whose
+  // opener takes focus). Switching with the Industry menu leaves focus on the menu.
+  const backToChooser = useRef(false);
+  const pickedOnChooser = useRef(false);
+  useEffect(() => {
+    if (id !== null || !backToChooser.current) return;
+    backToChooser.current = false;
+    document.getElementById("stage")?.focus();
+  }, [id]);
+  const pickHere = useCallback(
+    (next: PackId) => {
+      pickedOnChooser.current = true;
+      pick(next, "push");
+    },
+    [pick],
+  );
+  const chooseHere = useCallback(() => {
+    backToChooser.current = true;
+    choose();
+  }, [choose]);
+  if (!id) return <Chooser onPick={pickHere} deskLink={requestedTab() !== null} />;
+  return (
+    <IndustryProvider id={id} pick={pick} choose={chooseHere}>
+      <Industry arrivalFocusRef={pickedOnChooser} />
+    </IndustryProvider>
+  );
+}
+
+/** The picked industry's run and incident around the walkthrough. A new industry starts its own run. */
+function Industry({ arrivalFocusRef }: { arrivalFocusRef: { current: boolean } }) {
+  const { id, choose } = useIndustry();
+  const { bundle, failed } = usePackBundle(id);
+  // A ?desk= link opens the desk once, in the industry the page loaded on. Switching industry starts a new
+  // walkthrough, and it must not open the desk again from the same link.
+  const [link, setLink] = useState(() => ({ id, tab: requestedTab() }));
+  if (link.tab && link.id !== id) setLink({ id, tab: null });
+  // Arriving from the chooser, focus waits on the loading screen (or its failure) until the walkthrough takes it.
+  useEffect(() => {
+    if (!bundle && arrivalFocusRef.current) document.getElementById("stage")?.focus();
+  }, [bundle, failed, arrivalFocusRef]);
+  if (!bundle)
+    return (
+      <main id="stage" className="story" tabIndex={-1}>
+        <article className="page" aria-busy={!failed}>
+          {failed ? (
+            <>
+              <p className="page-lede" role="alert">
+                This industry did not load. Reload the page to try again.
+              </p>
+              <p>
+                <button type="button" className="btn" onClick={choose}>
+                  Back to the industries
+                </button>
+              </p>
+            </>
+          ) : (
+            <p className="page-lede" role="status">
+              Loading this industry&apos;s walkthrough. It takes a moment.
+            </p>
+          )}
+        </article>
+      </main>
+    );
+  return (
+    <IncidentContext.Provider value={bundle.incident}>
+      <RunProvider key={bundle.desk.id} pack={bundle.desk}>
+        <Walkthrough linkedTab={link.id === id ? link.tab : null} arrivalFocusRef={arrivalFocusRef} />
+      </RunProvider>
+    </IncidentContext.Provider>
+  );
+}
+
+function Walkthrough({
+  linkedTab,
+  arrivalFocusRef,
+}: {
+  linkedTab: DeskTab | null;
+  arrivalFocusRef: { current: boolean };
+}) {
   const { theme, toggle } = useTheme();
   const narrow = useNarrow();
   const runApi = useRun();
   const incident = useIncident();
-  const industry = useIndustry();
-  const showcase = hasIncident(industry.id);
   // A link with ?desk=<tab> opens the console at once.
-  const [linked] = useState(requestedTab);
-  // The desk sheet belongs to the EV walkthrough: a ?desk= link in another industry does not open it later.
-  const [deskOpen, setDeskOpen] = useState(linked !== null && showcase);
+  const [linked] = useState(linkedTab);
+  // Arriving from the chooser, focus starts on the stage (a desk link's opener takes it instead).
+  useEffect(() => {
+    if (!arrivalFocusRef.current) return;
+    arrivalFocusRef.current = false;
+    if (linked === null) document.getElementById("stage")?.focus();
+  }, [arrivalFocusRef, linked]);
+  const [deskOpen, setDeskOpen] = useState(linked !== null);
   const [deskTab, setDeskTab] = useState<DeskTab>(linked ?? "queue");
   // When the desk opens from a link, the opener takes focus in the same commit, before the sheet records what
   // to return focus to on close.
@@ -74,7 +155,7 @@ function Walkthrough() {
 
   const { run, resultFor } = runApi;
   const data = useMemo(() => storyDataFromRun({ run, resultFor }), [run, resultFor]);
-  const f = facts(data, story.decisions, incident);
+  const f = facts(data, story.decisions, incident, runApi.pack);
   const { beat } = story;
   const meterGate = useMemo(
     () => ({ checked: new Set(story.decisions.meterChecked), confirm: story.confirmMeter }),
@@ -91,7 +172,7 @@ function Walkthrough() {
 
   // D opens the desk on the tab that holds this beat's evidence.
   useEffect(() => {
-    if (!showcase || deskOpen || page !== "walkthrough") return;
+    if (deskOpen || page !== "walkthrough") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.altKey || e.ctrlKey || e.metaKey || e.defaultPrevented) return;
       if ((e.target as HTMLElement | null)?.closest("input, textarea, select, [contenteditable='true']")) return;
@@ -101,7 +182,7 @@ function Walkthrough() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [showcase, deskOpen, page, beat.desk, openDesk]);
+  }, [deskOpen, page, beat.desk, openDesk]);
 
   // On a phone the stage in view drives the top strip, and the strip scrolls to a stage.
   const [phoneStage, setPhoneStage] = useState(0);
@@ -117,9 +198,8 @@ function Walkthrough() {
     window.scrollTo({ top: 0 });
   };
 
-  const aiLabel = !showcase
-    ? "Rules · no recorded run yet"
-    : runApi.source === "live"
+  const aiLabel =
+    runApi.source === "live"
       ? liveSpendText(runApi.spent, runApi.unpriced)
       : run.recording.source === "ai"
         ? "AI · recorded run"
@@ -136,12 +216,9 @@ function Walkthrough() {
         theme={theme}
         onToggleTheme={toggle}
         aiLabel={aiLabel}
-        onAi={() =>
-          showcase ? openDesk("scorecard") : document.getElementById("pack-score")?.scrollIntoView({ block: "start" })
-        }
+        onAi={() => openDesk("scorecard")}
         page={page}
         onPage={onPage}
-        showStages={showcase}
       />
       <main
         id="stage"
@@ -153,18 +230,6 @@ function Walkthrough() {
           <OperatingModel />
         ) : page === "notes" ? (
           <EngineeringNotes />
-        ) : !showcase ? (
-          <Suspense
-            fallback={
-              <article className="page" aria-busy="true">
-                <p className="page-lede" role="status">
-                  Loading this industry&apos;s queue. It takes a moment.
-                </p>
-              </article>
-            }
-          >
-            <PackDesk id={industry.id} />
-          </Suspense>
         ) : narrow ? (
           <PhoneStory
             data={data}
@@ -199,7 +264,7 @@ function Walkthrough() {
           </>
         )}
       </main>
-      {showcase && !narrow && page === "walkthrough" && (
+      {!narrow && page === "walkthrough" && (
         <ControlBar
           index={story.index}
           actionPending={actionPending}
@@ -211,7 +276,7 @@ function Walkthrough() {
       )}
       <MeterGateContext.Provider value={meterGate}>
         <DeskSheet
-          open={showcase && deskOpen}
+          open={deskOpen}
           tab={deskTab}
           ticket={deskTicket}
           onClose={() => setDeskOpen(false)}

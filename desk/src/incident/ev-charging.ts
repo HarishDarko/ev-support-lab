@@ -72,6 +72,11 @@ export const EV_INCIDENT: Incident = {
   historyIds: HERO.historyIds,
   recordOnlyRunbook: RECORD_ONLY_RUNBOOK,
   placeWord: "sites",
+  queue: {
+    raisedBy:
+      "Raised overnight by the NOC, customer care, field service, host accounts and billing. Each needs an engineering-level look.",
+    check: "confirms the meter",
+  },
 
   patternFacts: [
     [String(HERO.totalTickets), "tickets", `${HERO.openIds.length} open, ${HERO.historyIds.length} closed before`],
