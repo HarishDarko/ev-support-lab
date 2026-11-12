@@ -1,7 +1,0 @@
-.pack-desk .dk-table td,
-.pack-desk .dk-table th {
-  white-space: nowrap;
-}
-.pack-desk .showcase-note {
-  margin-top: var(--space-6, 2rem);
-}

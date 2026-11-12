@@ -3,7 +3,7 @@ export const META = {
   id: "e-commerce",
   name: "E-commerce",
   complete: true,
-  hasIncident: false,
+  hasIncident: true,
   fields: [
     { key: "order", label: "Order" },
     { key: "channel", label: "Channel" },

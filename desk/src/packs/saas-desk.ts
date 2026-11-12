@@ -33,8 +33,8 @@ export const SAAS_DESK: DeskPack = {
   runbooks: SAAS_SUPPORT.runbooks,
   newTicketExample: SAAS_SUPPORT.newTicketExample,
   requestPack: "saas-support",
-  // No reviewed recording yet, so no live calls: the recording below is the rules' answers (MOCK=1, no model).
-  liveRuns: false,
+  // Live calls turn on once the committed recording is an AI one; today it is the rules' answers (MOCK=1, no model).
+  liveRuns: recordedJson.source === "ai",
   recorded: () => (recorded ??= runFromRecording(parseRecordedRun(recordedJson, ids))),
   ruleTriage: (t) => ruleTriageFor(SAAS_SUPPORT, t),
   ruleClassify,

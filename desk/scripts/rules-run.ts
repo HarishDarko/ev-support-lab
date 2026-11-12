@@ -1,7 +1,8 @@
 // A rules-only recording for a pack whose live runs are off: the same chain the live runner drives (src/run/live.ts),
 // sent to the real step handler in this process with the model turned off (MOCK=1). Nothing leaves the machine and
 // nothing is spent; every answer comes from the pack's deterministic rules, and the file says so (source "rules").
-// tests/saas-incident.test.ts runs this again and compares it with the committed file.
+// tests/saas-incident.test.ts and tests/ecommerce-incident.test.ts run this again and compare it with the committed
+// file.
 import { onRequestPost } from "../functions/api/[step]";
 import type { Incident } from "../src/incident/types";
 import { modelsOf, runCost } from "../src/run/cost";

@@ -1,4 +1,5 @@
-// SD-11: which industry the desk shows, and the plain-words wait estimate for a live run.
+// SD-11 and SD-15: which industry the desk shows (or the choice of industries), and the plain-words wait estimate
+// for a live run.
 import { describe, it, expect } from "vitest";
 import { DEFAULT_PACK_ID, PACKS } from "../shared/packs";
 import {
@@ -17,8 +18,8 @@ const TWO: IndustryOption[] = [
   { id: "saas-support", name: "SaaS support" },
 ];
 
-describe("the Industry menu's choices", () => {
-  it("offers only complete packs, the default first", () => {
+describe("the industries on offer", () => {
+  it("are the complete packs with their incident walkthrough, in the registry's order", () => {
     expect(INDUSTRY_OPTIONS).toEqual([
       { id: "ev-charging", name: "EV charging" },
       { id: "saas-support", name: "SaaS support" },
@@ -29,27 +30,27 @@ describe("the Industry menu's choices", () => {
 });
 
 describe("resolveIndustry", () => {
-  it("defaults to EV charging", () => {
-    expect(resolveIndustry("", null)).toBe("ev-charging");
+  it("opens on the choice of industries when the address names none, old desk links included", () => {
+    expect(resolveIndustry("")).toBeNull();
+    expect(resolveIndustry("?desk=queue")).toBeNull();
+    expect(resolveIndustry("?desk=queue", TWO)).toBeNull();
   });
-  it("a ?pack= link wins over the stored pick, when that pack is offered", () => {
-    expect(resolveIndustry("?pack=saas-support", "ev-charging", TWO)).toBe("saas-support");
-    expect(resolveIndustry("?desk=queue&pack=ev-charging", "saas-support", TWO)).toBe("ev-charging");
+  it("a ?pack= link goes straight to that industry, when it is offered", () => {
+    expect(resolveIndustry("?pack=saas-support", TWO)).toBe("saas-support");
+    expect(resolveIndustry("?desk=queue&pack=ev-charging", TWO)).toBe("ev-charging");
+    expect(resolveIndustry("?pack=e-commerce")).toBe("e-commerce");
   });
-  it("uses the stored pick when the link names none", () => {
-    expect(resolveIndustry("?desk=queue", "saas-support", TWO)).toBe("saas-support");
-  });
-  it("falls back to the default for unknown, incomplete or hostile values", () => {
+  it("opens on the choice for unknown, unoffered or hostile values", () => {
     for (const bad of ["?pack=telecom", "?pack=__proto__", "?pack=", "?pack=EV-CHARGING"])
-      expect(resolveIndustry(bad, "nonsense"), bad).toBe("ev-charging");
-    expect(resolveIndustry("?pack=shop", "shop", TWO)).toBe("ev-charging");
+      expect(resolveIndustry(bad), bad).toBeNull();
+    expect(resolveIndustry("?pack=e-commerce", TWO)).toBeNull();
   });
 });
 
 describe("withIndustry", () => {
-  it("keeps the default pack out of the address, so old links stay the same", () => {
-    expect(withIndustry("?desk=queue&pack=saas-support", "ev-charging")).toBe("?desk=queue");
-    expect(withIndustry("", "ev-charging")).toBe("");
+  it("puts every industry in the address, EV charging too, so a reload opens the same one", () => {
+    expect(withIndustry("?desk=queue&pack=saas-support", "ev-charging")).toBe("?desk=queue&pack=ev-charging");
+    expect(withIndustry("", "ev-charging")).toBe("?pack=ev-charging");
   });
   it("sets the pack and keeps other parameters", () => {
     expect(withIndustry("?desk=queue", "saas-support")).toBe("?desk=queue&pack=saas-support");
