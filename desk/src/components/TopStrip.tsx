@@ -3,6 +3,7 @@ import { STAGES } from "../stages";
 import { META } from "../data/synthetic";
 import type { Theme } from "../theme";
 import { IndustryMenu } from "../packs/IndustryMenu";
+import { useIndustry } from "../packs/IndustryContext";
 
 export type Page = "walkthrough" | "operating" | "notes";
 const PAGES: { id: Exclude<Page, "walkthrough">; name: string }[] = [
@@ -25,9 +26,18 @@ interface Props {
 
 /** The 52 px top strip: name, stage nav, synthetic-data label, where the AI answers come from, theme toggle. */
 export function TopStrip({ stageIndex, onStage, theme, onToggleTheme, aiLabel, onAi, page, onPage }: Props) {
+  const { choose } = useIndustry();
   return (
     <header className="strip">
-      <span className="strip-name">Support Desk</span>
+      <button
+        type="button"
+        className="strip-name"
+        aria-label="Support Desk, all industries"
+        title="Back to the choice of industries"
+        onClick={choose}
+      >
+        Support Desk
+      </button>
       <nav className="strip-nav" aria-label="Walkthrough and pages">
         <ol>
           {STAGES.map((stage, i) => (

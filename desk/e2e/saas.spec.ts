@@ -2,6 +2,7 @@
 // knowledge base article, on its rules-only recording. Live runs stay off for this industry until its AI
 // recording is reviewed, and the page says so.
 import { test, expect, type Page } from "@playwright/test";
+import { openFromChooser } from "./chooser";
 import AxeBuilder from "@axe-core/playwright";
 
 function watchErrors(page: Page): string[] {
@@ -90,7 +91,7 @@ test("the SaaS desk opens on its incident, with the lab's logs and the synthetic
 });
 
 test("a ?desk= link opens the desk once: switching industry does not open it again", async ({ page }) => {
-  await page.goto("/?desk=queue");
+  await openFromChooser(page, "/?desk=queue");
   const dialog = page.getByRole("dialog", { name: "The desk" });
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");

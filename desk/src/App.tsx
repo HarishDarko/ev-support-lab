@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import type { PackId } from "../shared/packs";
 import { MotionConfig } from "motion/react";
 import { useTheme } from "./theme";
 import { TopStrip, type Page } from "./components/TopStrip";
@@ -14,8 +15,8 @@ import { facts } from "./story/beats";
 import { storyDataFromRun } from "./story/fromRun";
 import { useStory } from "./story/useStory";
 import { MeterGateContext } from "./story/meterGate";
-import { DEFAULT_PACK_ID, industryName } from "./packs/industry";
-import { IndustryProvider, useIndustry } from "./packs/IndustryContext";
+import { IndustryProvider, useIndustry, useIndustryChoice } from "./packs/IndustryContext";
+import { Chooser } from "./packs/Chooser";
 import { usePackBundle } from "./packs/bundles";
 import { IncidentContext, useIncident } from "./incident";
 
@@ -38,21 +39,55 @@ const requestedTab = (): DeskTab | null => {
 export function App() {
   return (
     <MotionConfig reducedMotion="user">
-      <IndustryProvider>
-        <Industry />
-      </IndustryProvider>
+      <Site />
     </MotionConfig>
   );
 }
 
+/** The site opens on the choice of industries, unless the address names one (`?pack=`). */
+function Site() {
+  const { id, pick, choose } = useIndustryChoice();
+  // Picking on the chooser, or going back to it, removes the focused button with its screen, so focus moves to the
+  // new screen: the chooser at once, a walkthrough once it has loaded (unless a desk link opens the desk, whose
+  // opener takes focus). Switching with the Industry menu leaves focus on the menu.
+  const backToChooser = useRef(false);
+  const pickedOnChooser = useRef(false);
+  useEffect(() => {
+    if (id !== null || !backToChooser.current) return;
+    backToChooser.current = false;
+    document.getElementById("stage")?.focus();
+  }, [id]);
+  const pickHere = useCallback(
+    (next: PackId) => {
+      pickedOnChooser.current = true;
+      pick(next, "push");
+    },
+    [pick],
+  );
+  const chooseHere = useCallback(() => {
+    backToChooser.current = true;
+    choose();
+  }, [choose]);
+  if (!id) return <Chooser onPick={pickHere} deskLink={requestedTab() !== null} />;
+  return (
+    <IndustryProvider id={id} pick={pick} choose={chooseHere}>
+      <Industry arrivalFocusRef={pickedOnChooser} />
+    </IndustryProvider>
+  );
+}
+
 /** The picked industry's run and incident around the walkthrough. A new industry starts its own run. */
-function Industry() {
-  const { id, pick } = useIndustry();
+function Industry({ arrivalFocusRef }: { arrivalFocusRef: { current: boolean } }) {
+  const { id, choose } = useIndustry();
   const { bundle, failed } = usePackBundle(id);
   // A ?desk= link opens the desk once, in the industry the page loaded on. Switching industry starts a new
   // walkthrough, and it must not open the desk again from the same link.
   const [link, setLink] = useState(() => ({ id, tab: requestedTab() }));
   if (link.tab && link.id !== id) setLink({ id, tab: null });
+  // Arriving from the chooser, focus waits on the loading screen (or its failure) until the walkthrough takes it.
+  useEffect(() => {
+    if (!bundle && arrivalFocusRef.current) document.getElementById("stage")?.focus();
+  }, [bundle, failed, arrivalFocusRef]);
   if (!bundle)
     return (
       <main id="stage" className="story" tabIndex={-1}>
@@ -63,8 +98,8 @@ function Industry() {
                 This industry did not load. Reload the page to try again.
               </p>
               <p>
-                <button type="button" className="btn" onClick={() => pick(DEFAULT_PACK_ID)}>
-                  Switch to {industryName(DEFAULT_PACK_ID)}
+                <button type="button" className="btn" onClick={choose}>
+                  Back to the industries
                 </button>
               </p>
             </>
@@ -79,19 +114,31 @@ function Industry() {
   return (
     <IncidentContext.Provider value={bundle.incident}>
       <RunProvider key={bundle.desk.id} pack={bundle.desk}>
-        <Walkthrough linkedTab={link.id === id ? link.tab : null} />
+        <Walkthrough linkedTab={link.id === id ? link.tab : null} arrivalFocusRef={arrivalFocusRef} />
       </RunProvider>
     </IncidentContext.Provider>
   );
 }
 
-function Walkthrough({ linkedTab }: { linkedTab: DeskTab | null }) {
+function Walkthrough({
+  linkedTab,
+  arrivalFocusRef,
+}: {
+  linkedTab: DeskTab | null;
+  arrivalFocusRef: { current: boolean };
+}) {
   const { theme, toggle } = useTheme();
   const narrow = useNarrow();
   const runApi = useRun();
   const incident = useIncident();
   // A link with ?desk=<tab> opens the console at once.
   const [linked] = useState(linkedTab);
+  // Arriving from the chooser, focus starts on the stage (a desk link's opener takes it instead).
+  useEffect(() => {
+    if (!arrivalFocusRef.current) return;
+    arrivalFocusRef.current = false;
+    if (linked === null) document.getElementById("stage")?.focus();
+  }, [arrivalFocusRef, linked]);
   const [deskOpen, setDeskOpen] = useState(linked !== null);
   const [deskTab, setDeskTab] = useState<DeskTab>(linked ?? "queue");
   // When the desk opens from a link, the opener takes focus in the same commit, before the sheet records what
