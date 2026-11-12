@@ -1,0 +1,2383 @@
+{
+ "recorded": {
+  "data": {
+   "source": "recorded-ai",
+   "origins": {
+    "investigate": "ai",
+    "handoff": "ai",
+    "verify": "ai",
+    "kb": "ai",
+    "classify": "ai",
+    "shiftnote": "ai"
+   },
+   "tickets": [
+    {
+     "id": "T-2040",
+     "lane": "close",
+     "runbook": "RB-03",
+     "quote": "CP-044-01 no heartbeat since 08:47",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2041",
+     "lane": "held",
+     "runbook": "RB-05",
+     "quote": "still showed 'Charging'",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2042",
+     "lane": "close",
+     "runbook": "RB-01",
+     "quote": "badge",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2043",
+     "lane": "close",
+     "runbook": "RB-02",
+     "quote": "Driver's card shows a $50 pending hold from a session that failed to start on Saturday",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2044",
+     "lane": "info",
+     "runbook": "none",
+     "quote": "Host wants a weekly utilization email instead of logging in to the portal",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2045",
+     "lane": "close",
+     "runbook": "RB-01",
+     "quote": "Two more ports rejecting staff badges. Charger is online, card reader works with a test card.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2046",
+     "lane": "close",
+     "runbook": "RB-03",
+     "quote": "CP-063-02 offline 41 min. Last message: Heartbeat at 11:24.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2047",
+     "lane": "held",
+     "runbook": "RB-05",
+     "quote": "has shown 'In use' on the public map since last night. Nobody is parked there.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2048",
+     "lane": "info",
+     "runbook": "none",
+     "quote": "can host invoices show sessions grouped by port instead of by day?",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2049",
+     "lane": "close",
+     "runbook": "RB-02",
+     "quote": "Driver has a $35 hold still pending two days after a completed session",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2050",
+     "lane": "close",
+     "runbook": "RB-01",
+     "quote": "Third call today about badges not working at the hospital site",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2051",
+     "lane": "close",
+     "runbook": "RB-04",
+     "quote": "12-month session report spins and then fails. Smaller exports work",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2052",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "Connector holster on CP-044-03 cracked, cable on the ground",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2053",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "Session SX-88301 open 9h 40m with no energy change since 12:02",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2054",
+     "lane": "info",
+     "runbook": "none",
+     "quote": "Elevated 5xx on the auth API 00:10–00:14 ET. Auto-resolved",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2055",
+     "lane": "close",
+     "runbook": "RB-01",
+     "quote": "Nurse badge rejected on CP-038-04",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2056",
+     "lane": "close",
+     "runbook": "RB-03",
+     "quote": "CP-011-02 no heartbeat for 52 min",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2057",
+     "lane": "close",
+     "runbook": "RB-02",
+     "quote": "Driver has a $50 hold after a session that stopped after 2 minutes",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2058",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "They left S-022 about three hours ago",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2059",
+     "lane": "close",
+     "runbook": "RB-07",
+     "quote": "Host asks how time-of-use pricing works and whether we can set evening rates",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2060",
+     "lane": "info",
+     "runbook": "none",
+     "quote": "delivering 50 kW max since 11:30. Site temperature 39°C. No faults reported.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2061",
+     "lane": "close",
+     "runbook": "RB-01",
+     "quote": "auth list",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2062",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "app showed the price as $0.45/kWh instead of £. Session itself billed correctly in GBP.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2063",
+     "lane": "close",
+     "runbook": "RB-06",
+     "quote": "Host user locked out of the portal after password resets. Needs access today for a council meeting.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2064",
+     "lane": "escalate",
+     "runbook": "RB-03",
+     "quote": "CP-052-01 offline 35 min. Two earlier offline events this week, both cleared by soft reset.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2065",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "Driver app closes on launch for a driver on Android 16, app version 7.12.0. Reinstall did not help.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2066",
+     "lane": "held",
+     "runbook": "RB-05",
+     "quote": "Session at S-047 (fleet depot) open over 12h, energy stopped climbing after about 40 min.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2067",
+     "lane": "escalate",
+     "runbook": "none",
+     "quote": "Second UK driver report: price shown in dollars in the app at S-077.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2068",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "roaming sessions from a partner network are missing from their monthly report.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2069",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "staff badge problem now on day three.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2070",
+     "lane": "close",
+     "runbook": "RB-03",
+     "quote": "CP-035-03 no heartbeat for 47 min",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2071",
+     "lane": "close",
+     "runbook": "RB-02",
+     "quote": "Driver has a $50 hold that has not dropped off after 3 days",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2072",
+     "lane": "close",
+     "runbook": "RB-04",
+     "quote": "Host report export for Jan–Sep times out",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2073",
+     "lane": "info",
+     "runbook": "none",
+     "quote": "When is the next firmware rollout for S-066",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2074",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "petrol car keeps parking in the EV bay",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2075",
+     "lane": "person",
+     "runbook": "RB-03",
+     "quote": "CP-070-02 no heartbeat for 63 min. Soft reset sent by monitoring at 12:30, no response.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2076",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "Host asks for a raw session data export for an internal audit, last 6 months.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2077",
+     "lane": "close",
+     "runbook": "RB-04",
+     "quote": "Large export from host portal failing again.",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2078",
+     "lane": "close",
+     "runbook": "RB-02",
+     "quote": "Driver says a $25 hold appeared even though the session was free",
+     "provenance": "ai"
+    },
+    {
+     "id": "T-2079",
+     "lane": "close",
+     "runbook": "RB-03",
+     "quote": "CP-019-01 offline 38 min.",
+     "provenance": "ai"
+    }
+   ],
+   "investigation": {
+    "symptom": "Drivers see 'Charging' and idle fees running hours after unplugging, and sometimes cannot start a new session. Hosts see 'In use' on the map for an empty bay, and NOC, billing and care get alerts and disputes.",
+    "impact": [
+     "14 tickets across 9 sites and two firmware lines in 21 days",
+     "Idle fees kept running on open sessions; drivers and a fleet manager dispute them",
+     "A driver was blocked from starting a new session at another site"
+    ],
+    "evidence": [
+     {
+      "point": "On CP-014-02 the connector reconnected and reported Available, but the backend still held the session as Charging with no Ended.",
+      "source": "Log CP-014-02",
+      "quote": "state=Charging  last_meter=18.42 kWh  (no TransactionEvent Ended received)",
+      "quote_verified": true
+     },
+     {
+      "point": "On CP-031-01 the same sequence appeared after an EVCommunicationLost update and a websocket drop, and the map then showed the charger in use.",
+      "source": "Log CP-031-01",
+      "quote": "CP-031-01 shown 'In use' (derived from open session)",
+      "quote_verified": true
+     },
+     {
+      "point": "On CP-022-04 an Ended did arrive after reconnect, but the backend ignored it because the connector was already Available.",
+      "source": "Log CP-022-04",
+      "quote": "ignored: connector already Available (out of order)",
+      "quote_verified": true
+     },
+     {
+      "point": "On FW-B 4.2.x, 12 of 19 drops within 90 s of unplug got stuck; 41 drops at other times got none stuck.",
+      "source": "Fleet view, 21 days",
+      "quote": "drops at other times: 41 (stuck afterwards: 0)",
+      "quote_verified": true
+     }
+    ],
+    "hypotheses": [
+     {
+      "statement": "The backend ignores a late Ended that arrives after the connector is already Available, leaving the session open. This mechanism is seen directly in one log.",
+      "status": "leading hypothesis",
+      "supports": [
+       "CP-022-04 log shows the backend ignoring a late Ended as out of order.",
+       "Stuck cases cluster on drops within 90 s of unplug, around the reconnect."
+      ],
+      "against_or_gaps": [
+       "Only one of three logs shows an Ended arriving and being ignored.",
+       "Not known whether the ignore rule is applied the same way for other firmware."
+      ]
+     },
+     {
+      "statement": "The charger never sends or never queues the Ended after an unplug-time drop, so the backend has nothing to close the session with.",
+      "status": "alternative hypothesis",
+      "supports": [
+       "CP-014-02 and CP-031-01 logs show no Ended after reconnect.",
+       "FW-B 4.2.x has the highest stuck rate: 12 of 19 drops."
+      ],
+      "against_or_gaps": [
+       "A missing line at the gateway could be a capture or logging gap.",
+       "CP-022-04 (FW-A) did send an Ended, so both mechanisms may coexist."
+      ]
+     }
+    ],
+    "ruled_out": [
+     "Payment provider fault is unlikely: no incidents logged and normal captures on unaffected sessions.",
+     "App display bug is unlikely: the session API itself returns state=Charging.",
+     "A single bad site or charger is unlikely: 14 tickets across 9 sites.",
+     "Driver behaviour is unlikely: every affected connector reported Available within 2 minutes of unplug."
+    ],
+    "open_questions": [
+     "Does the charger store and resend Ended after an unplug-time drop on FW-B 4.2.x?",
+     "Why does session-svc ignore an Ended once the connector is Available?",
+     "Could the gateway have missed Ended messages in the CP-014-02 and CP-031-01 logs?"
+    ]
+   },
+   "handoff": {
+    "title": "Sessions stay open after unplug-time websocket drop",
+    "severity": "S2",
+    "scope": "14 tickets (5 open, 9 closed earlier as one-offs) across 9 sites and two firmware lines (FW-B 4.2.x, FW-A 3.9.0) in 21 days.",
+    "rules_triggered": [
+     "code",
+     "spread",
+     "billing"
+    ],
+    "reproduction": [
+     "Run the lab reproduction test with the fix flag off: simulated charger unplugs, drops websocket, reconnects, reports Available, then sends queued Ended.",
+     "The test passes by asserting the bug: session-svc ignores the Ended as out of order and the transaction stays open.",
+     "This shows backend behaviour only. It says nothing about whether FW-B sends or queues its Ended after the drop.",
+     "Manual step: on a FW-B 4.2.x test charger, drop the connection after EVCommunicationLost but before Ended is sent; capture at charger and gateway."
+    ],
+    "evidence_attached": [
+     "Lab tests: bug reproduced; regression fails without the fix",
+     "CP-022-04 log: late Ended ignored, connector already Available",
+     "CP-014-02 and CP-031-01 logs: Available after reconnect, no Ended",
+     "Fleet view: FW-B 4.2.x 12 of 19 stuck; 41 other drops, 0 stuck",
+     "Unplug-to-drop times for 14 stuck sessions, all 3 to 88 s"
+    ],
+    "ruled_out": [
+     "Payment provider fault: unlikely, no incidents and normal captures on unaffected sessions",
+     "App display bug: unlikely, session API itself returns state=Charging",
+     "Single bad site or charger: unlikely, 14 tickets across 9 sites",
+     "Driver behaviour: unlikely, every connector reported Available within 2 minutes of unplug"
+    ],
+    "workaround_in_place": "Support corrected the 5 open sessions with RB-05 at last meter value and reversed idle fees; invoice flagged for billing review; a 15-minute detector query is proposed, not yet running.",
+    "the_ask": "Decide whether to change session-svc to accept a late Ended after the connector is Available, and to approve the 15-minute detector until the fix ships. Also assign the FW-B 4.2.x capture test.",
+    "hypothesis_note": "The backend ignoring a late Ended is reproduced in a lab with a simulated charger. Whether FW-B drops its queued Ended is not confirmed."
+   },
+   "verify": {
+    "verdict": "consistent with hypothesis",
+    "reading": "Canary stuck sessions fell from 5 to 0 while drops stayed at 6; control stayed at 4 stuck. Five were closed by reconciliation, none while energy was still flowing. Direction fits the backend-ignores-late-Ended hypothesis, but counts are tiny.",
+    "what_it_does_not_prove": [
+     "That FW-B fails to send queued Ended; 3 late Ended events arrived, so absence is only partial.",
+     "That the fix generalises beyond 5 canary sites on FW-B 4.2.x.",
+     "That 0 wrong closures is safe; with 5 reconciliations, a rare failure could be missed."
+    ],
+    "keep_watching": [
+     "Any closure while energy still rising; late Ended applied twice.",
+     "Provisional invoice adjustments: 1 of 5 so far."
+    ],
+    "next_decision": "Keep the canary running; do not widen yet. Bar: at least 28 more days and at least 10 further drops near unplug on canary with 0 early closures or duplicate charges. Any such event, or stuck sessions returning, reverses it."
+   },
+   "kb": {
+    "title": "Session stuck Charging after unplug websocket drop",
+    "applies_when": [
+     "Driver sees Charging and idle fees running hours after unplugging",
+     "Host map shows In use on an empty bay",
+     "Driver cannot start a new session after a recent unplug"
+    ],
+    "how_to_confirm": [
+     "In the charger log, find a websocket drop within 90 s of unplug, then Available after reconnect.",
+     "Late-Ended form: session-svc log shows 'ignored: connector already Available (out of order)', as on CP-022-04.",
+     "No-Ended form: log shows state=Charging, no TransactionEvent Ended received, after reconnect, as on CP-014-02 and CP-031-01."
+    ],
+    "steps": [
+     "Confirm the meter shows no energy change since unplug, before RB-05.",
+     "Run RB-05 at the last meter value to close the session and reverse idle fees.",
+     "If a payment hold remains, check the session is closed, then use RB-02.",
+     "Flag the invoice for billing review and link the ticket to the parent incident."
+    ],
+    "escalate_if": [
+     "Energy is still rising on the open session.",
+     "No connection drop occurred near the unplug time.",
+     "Charger runs a firmware line other than FW-A or FW-B.",
+     "A newer session already started on the same connector."
+    ],
+    "status_note": "ENG-4471 is behind a per-station flag on 5 FW-B canary sites with 6 control sites; whether FW-B sends or queues Ended after reconnect is unconfirmed, vendor ticket open.",
+    "related": [
+     "RB-05",
+     "RB-02",
+     "ENG-4471"
+    ]
+   },
+   "classify": {
+    "component": "session-state",
+    "severity": "S2",
+    "matches_known_pattern": true,
+    "matched_article": "Session stuck Charging after unplug websocket drop",
+    "suggested_action": "Confirm meter stable since 22:10, then run RB-05 to close session and reverse idle fees.",
+    "escalate": false,
+    "why": "Connection drop at 22:09 matches pattern; no energy rise reported; escalation criteria not met.",
+    "confirm": "Before RB-05, a person checks the meter shows no energy change since unplug. The check above reads wording only."
+   },
+   "shiftnote": {
+    "headline": "20 of 40 tickets approved for closure; 20 remain open, including INC-0412 on sessions stuck open after websocket drops, tracked under ENG-4471.",
+    "done": [
+     "Triaged all 40 open tickets; no triage changed by a person",
+     "Approved 20 tickets for closure",
+     "Held T-2041, T-2047, T-2066 under the repeat guardrail"
+    ],
+    "needs_you": [
+     "T-2075: Charger offline, soft reset failed, no heartbeat. Field service to dispatch a visit, NOC to confirm status, by 07:00 ET.",
+     "T-2052: Cracked cable on ground at connector holster. Field service to confirm make-safe and repair plan by 07:00 ET.",
+     "T-2068: Roaming sessions missing from host monthly report. Billing ops to check roaming partner records by 07:00 ET.",
+     "T-2076: Host raw session data export request for audit. Host accounts and India engineering on-call to decide at the 07:00 ET handover."
+    ],
+    "escalated": [
+     "ENG-4471: sessions stay open after unplug-time websocket drop. Engineering owns it; INC-0412 is open.",
+     "Five sessions corrected with RB-05 and invoices flagged for billing review. Tickets stay open on INC-0412."
+    ],
+    "watch": [
+     "Detector query is proposed every 15 min but not yet approved to run.",
+     "T-2053 and T-2058 are held under INC-0412; no KB article published."
+    ]
+   }
+  },
+  "start": {
+   "facts": {
+    "approvedIds": [],
+    "sent": false,
+    "meterChecked": [],
+    "approved": false,
+    "approvedCount": 0,
+    "approvable": [
+     "T-2040",
+     "T-2042",
+     "T-2043",
+     "T-2045",
+     "T-2046",
+     "T-2049",
+     "T-2050",
+     "T-2051",
+     "T-2055",
+     "T-2056",
+     "T-2057",
+     "T-2059",
+     "T-2061",
+     "T-2063",
+     "T-2070",
+     "T-2071",
+     "T-2072",
+     "T-2077",
+     "T-2078",
+     "T-2079"
+    ],
+    "awaitingMeter": [],
+    "total": 40,
+    "lanes": {
+     "close": [
+      "T-2040",
+      "T-2042",
+      "T-2043",
+      "T-2045",
+      "T-2046",
+      "T-2049",
+      "T-2050",
+      "T-2051",
+      "T-2055",
+      "T-2056",
+      "T-2057",
+      "T-2059",
+      "T-2061",
+      "T-2063",
+      "T-2070",
+      "T-2071",
+      "T-2072",
+      "T-2077",
+      "T-2078",
+      "T-2079"
+     ],
+     "person": [
+      "T-2052",
+      "T-2053",
+      "T-2058",
+      "T-2062",
+      "T-2065",
+      "T-2068",
+      "T-2069",
+      "T-2074",
+      "T-2075",
+      "T-2076"
+     ],
+     "escalate": [
+      "T-2064",
+      "T-2067"
+     ],
+     "info": [
+      "T-2044",
+      "T-2048",
+      "T-2054",
+      "T-2060",
+      "T-2073"
+     ],
+     "held": [
+      "T-2041",
+      "T-2047",
+      "T-2066"
+     ]
+    },
+    "heldRunbook": "RB-05",
+    "prior": 9,
+    "priorSites": 7,
+    "triggers": [
+     "it needs a code change",
+     "it spans 9 sites",
+     "billing is at risk"
+    ],
+    "drop": {
+     "min": 3,
+     "max": 88,
+     "n": 14
+    },
+    "fleet": [
+     {
+      "fw": "FW-B 4.2.x",
+      "sessions": 4812,
+      "dropsNearUnplug": 19,
+      "stuck": 12,
+      "dropsElsewhere": 41,
+      "stuckFromElsewhere": 0
+     },
+     {
+      "fw": "FW-A 3.9.x",
+      "sessions": 3950,
+      "dropsNearUnplug": 11,
+      "stuck": 2,
+      "dropsElsewhere": 37,
+      "stuckFromElsewhere": 0
+     },
+     {
+      "fw": "FW-C 1.6.x",
+      "sessions": 2204,
+      "dropsNearUnplug": 6,
+      "stuck": 0,
+      "dropsElsewhere": 22,
+      "stuckFromElsewhere": 0
+     }
+    ],
+    "v": {
+     "windowDays": 14,
+     "canary": {
+      "sites": 5,
+      "before": {
+       "dropsNearUnplug": 6,
+       "stuck": 5
+      },
+      "after": {
+       "dropsNearUnplug": 6,
+       "stuck": 0,
+       "closedByReconciliation": 5
+      }
+     },
+     "control": {
+      "sites": 6,
+      "before": {
+       "dropsNearUnplug": 5,
+       "stuck": 4
+      },
+      "after": {
+       "dropsNearUnplug": 6,
+       "stuck": 4
+      }
+     },
+     "detector": {
+      "hits": 4,
+      "ticketsOpenedBeforeAnyComplaint": 4,
+      "medianMinutesToFlag": 31
+     },
+     "complaintsBeforeDetector": {
+      "medianHoursToFirstComplaint": 6.2
+     },
+     "correctness": {
+      "canarySessions": 2140,
+      "reconciled": 5,
+      "falseClosures": 0,
+      "newerTransactionSkips": 1,
+      "lateEndedArrived": 3,
+      "lateEndedApplied": 3,
+      "duplicateCharges": 0,
+      "invoicesReviewed": 5,
+      "invoicesAdjusted": 1
+     }
+    },
+    "shippedDay": 6
+   },
+   "canary": "on the canary, reconciliation closed 5 of 6; the other had a newer session on the charger and went to a person",
+   "beats": [
+    {
+     "id": "q1",
+     "stage": "queue",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "40 tickets are waiting.",
+     "lede": "Raised overnight by the NOC, customer care, field service, host accounts and billing. Each needs an engineering-level look."
+    },
+    {
+     "id": "q2",
+     "stage": "queue",
+     "desk": "coverage",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "The first 90 minutes overlap with India engineering.",
+     "lede": "Handover happens live, 07:00 to 08:30. After 15:30, automation keeps triaging and urgent issues page on-call."
+    },
+    {
+     "id": "t1",
+     "stage": "triage",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "Every ticket read. Every decision quoted.",
+     "lede": "The AI proposes an action for each of the 40 and quotes the words it relied on. A quote that is not in the ticket is rejected."
+    },
+    {
+     "id": "t2",
+     "stage": "triage",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "3 closures held. RB-05 has closed this 9 times in 21 days.",
+     "lede": "RB-05 only corrects the record. Past 3 uses in 21 days, the tickets stay open and become a pattern."
+    },
+    {
+     "id": "t3",
+     "stage": "triage",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "A person approves the 20 closures.",
+     "lede": "Nothing closes on the AI's word. Every closure names a real runbook."
+    },
+    {
+     "id": "e1",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "One pattern, one incident: INC-0412.",
+     "lede": "14 tickets at 9 sites in 21 days. It crosses the escalation line three ways: it needs a code change, it spans 9 sites and billing is at risk."
+    },
+    {
+     "id": "e2",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "Every stuck session dropped its connection within 90 s of the unplug event.",
+     "lede": "14 of 14 sessions. The drop came 3 to 88 seconds after the charger reported losing communication with the EV (simulated here as unplugging)."
+    },
+    {
+     "id": "e3",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "The charger sent the Ended. This synthetic backend ignored it.",
+     "lede": "A known class of backend handling bug, exposed by OCPP reconnects, in a synthetic system: on FW-A the queued Ended arrived after the reconnect, and the backend dropped it as out of order because the connector already read Available."
+    },
+    {
+     "id": "e3b",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "On FW-B, the Ended never arrived.",
+     "lede": "Same drop, same reconnect, then nothing. Either the firmware lost its queue or the capture missed it; the logs alone cannot say which."
+    },
+    {
+     "id": "e4",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "FW-B: 12 of 19 drops near unplug ended stuck.",
+     "lede": "FW-A: 2 of 11. FW-C: 0 of 6. Drops at other times left 0 sessions stuck."
+    },
+    {
+     "id": "e5",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "Two hypotheses, neither confirmed. Support contains it today.",
+     "lede": "They may both be true. Meanwhile the 5 open sessions are corrected under the incident, and a detector is proposed for new ones."
+    },
+    {
+     "id": "e6",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "Reproduced on demand.",
+     "lede": "A small OCPP 2.0.1 backend and a simulated charger replay the sequence. With the legacy handling, the session stays open. It is a known class of reconnect bug; an open-source backend fixed a related reconnect problem in public."
+    },
+    {
+     "id": "v1",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 0",
+     "claim": "One packet to engineering. One ask, with the bug reproduced in a test.",
+     "lede": "A person approves it before it goes."
+    },
+    {
+     "id": "v2",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 6",
+     "claim": "Engineering's change, behind a flag on 5 canary sites.",
+     "lede": "6 control sites (4 FW-B, 2 FW-A) keep the legacy behaviour, so the control is not perfectly matched."
+    },
+    {
+     "id": "v3",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 20",
+     "claim": "Canary 5 → 0. Control 4 → 4.",
+     "lede": "Stuck sessions in the 14 days before and after. Drops near unplug kept happening; on the canary, reconciliation closed 5 of 6; the other had a newer session on the charger and went to a person."
+    },
+    {
+     "id": "v4",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 20",
+     "claim": "Consistent with the hypothesis. Not proof of it.",
+     "lede": "Only 5 reconciliations and 3 late Ended events exercised the change."
+    },
+    {
+     "id": "c1",
+     "stage": "close",
+     "desk": "kb",
+     "when": "The next ticket",
+     "claim": "Next time, support has the article.",
+     "lede": "A new ticket is checked against it. The first step is always the meter check, before RB-05."
+    },
+    {
+     "id": "c2",
+     "stage": "close",
+     "desk": "kb",
+     "when": "The whole chain",
+     "claim": "One shift, one chain.",
+     "lede": "Every step is in the desk, with its evidence, and in the repository, with its tests."
+    }
+   ]
+  },
+  "done": {
+   "facts": {
+    "approvedIds": [
+     "T-2040",
+     "T-2041",
+     "T-2042",
+     "T-2043",
+     "T-2044",
+     "T-2045",
+     "T-2046",
+     "T-2047",
+     "T-2048",
+     "T-2049",
+     "T-2050",
+     "T-2051",
+     "T-2052",
+     "T-2053",
+     "T-2054",
+     "T-2055",
+     "T-2056",
+     "T-2057",
+     "T-2058",
+     "T-2059",
+     "T-2060",
+     "T-2061",
+     "T-2062",
+     "T-2063",
+     "T-2064",
+     "T-2065",
+     "T-2066",
+     "T-2067",
+     "T-2068",
+     "T-2069",
+     "T-2070",
+     "T-2071",
+     "T-2072",
+     "T-2073",
+     "T-2074",
+     "T-2075",
+     "T-2076",
+     "T-2077",
+     "T-2078",
+     "T-2079"
+    ],
+    "sent": true,
+    "meterChecked": [
+     "T-2040",
+     "T-2041",
+     "T-2042",
+     "T-2043",
+     "T-2044",
+     "T-2045",
+     "T-2046",
+     "T-2047",
+     "T-2048",
+     "T-2049",
+     "T-2050",
+     "T-2051",
+     "T-2052",
+     "T-2053",
+     "T-2054",
+     "T-2055",
+     "T-2056",
+     "T-2057",
+     "T-2058",
+     "T-2059",
+     "T-2060",
+     "T-2061",
+     "T-2062",
+     "T-2063",
+     "T-2064",
+     "T-2065",
+     "T-2066",
+     "T-2067",
+     "T-2068",
+     "T-2069",
+     "T-2070",
+     "T-2071",
+     "T-2072",
+     "T-2073",
+     "T-2074",
+     "T-2075",
+     "T-2076",
+     "T-2077",
+     "T-2078",
+     "T-2079"
+    ],
+    "approved": true,
+    "approvedCount": 20,
+    "approvable": [
+     "T-2040",
+     "T-2042",
+     "T-2043",
+     "T-2045",
+     "T-2046",
+     "T-2049",
+     "T-2050",
+     "T-2051",
+     "T-2055",
+     "T-2056",
+     "T-2057",
+     "T-2059",
+     "T-2061",
+     "T-2063",
+     "T-2070",
+     "T-2071",
+     "T-2072",
+     "T-2077",
+     "T-2078",
+     "T-2079"
+    ],
+    "awaitingMeter": [],
+    "total": 40,
+    "lanes": {
+     "close": [
+      "T-2040",
+      "T-2042",
+      "T-2043",
+      "T-2045",
+      "T-2046",
+      "T-2049",
+      "T-2050",
+      "T-2051",
+      "T-2055",
+      "T-2056",
+      "T-2057",
+      "T-2059",
+      "T-2061",
+      "T-2063",
+      "T-2070",
+      "T-2071",
+      "T-2072",
+      "T-2077",
+      "T-2078",
+      "T-2079"
+     ],
+     "person": [
+      "T-2052",
+      "T-2053",
+      "T-2058",
+      "T-2062",
+      "T-2065",
+      "T-2068",
+      "T-2069",
+      "T-2074",
+      "T-2075",
+      "T-2076"
+     ],
+     "escalate": [
+      "T-2064",
+      "T-2067"
+     ],
+     "info": [
+      "T-2044",
+      "T-2048",
+      "T-2054",
+      "T-2060",
+      "T-2073"
+     ],
+     "held": [
+      "T-2041",
+      "T-2047",
+      "T-2066"
+     ]
+    },
+    "heldRunbook": "RB-05",
+    "prior": 9,
+    "priorSites": 7,
+    "triggers": [
+     "it needs a code change",
+     "it spans 9 sites",
+     "billing is at risk"
+    ],
+    "drop": {
+     "min": 3,
+     "max": 88,
+     "n": 14
+    },
+    "fleet": [
+     {
+      "fw": "FW-B 4.2.x",
+      "sessions": 4812,
+      "dropsNearUnplug": 19,
+      "stuck": 12,
+      "dropsElsewhere": 41,
+      "stuckFromElsewhere": 0
+     },
+     {
+      "fw": "FW-A 3.9.x",
+      "sessions": 3950,
+      "dropsNearUnplug": 11,
+      "stuck": 2,
+      "dropsElsewhere": 37,
+      "stuckFromElsewhere": 0
+     },
+     {
+      "fw": "FW-C 1.6.x",
+      "sessions": 2204,
+      "dropsNearUnplug": 6,
+      "stuck": 0,
+      "dropsElsewhere": 22,
+      "stuckFromElsewhere": 0
+     }
+    ],
+    "v": {
+     "windowDays": 14,
+     "canary": {
+      "sites": 5,
+      "before": {
+       "dropsNearUnplug": 6,
+       "stuck": 5
+      },
+      "after": {
+       "dropsNearUnplug": 6,
+       "stuck": 0,
+       "closedByReconciliation": 5
+      }
+     },
+     "control": {
+      "sites": 6,
+      "before": {
+       "dropsNearUnplug": 5,
+       "stuck": 4
+      },
+      "after": {
+       "dropsNearUnplug": 6,
+       "stuck": 4
+      }
+     },
+     "detector": {
+      "hits": 4,
+      "ticketsOpenedBeforeAnyComplaint": 4,
+      "medianMinutesToFlag": 31
+     },
+     "complaintsBeforeDetector": {
+      "medianHoursToFirstComplaint": 6.2
+     },
+     "correctness": {
+      "canarySessions": 2140,
+      "reconciled": 5,
+      "falseClosures": 0,
+      "newerTransactionSkips": 1,
+      "lateEndedArrived": 3,
+      "lateEndedApplied": 3,
+      "duplicateCharges": 0,
+      "invoicesReviewed": 5,
+      "invoicesAdjusted": 1
+     }
+    },
+    "shippedDay": 6
+   },
+   "canary": "on the canary, reconciliation closed 5 of 6; the other had a newer session on the charger and went to a person",
+   "beats": [
+    {
+     "id": "q1",
+     "stage": "queue",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "40 tickets are waiting.",
+     "lede": "Raised overnight by the NOC, customer care, field service, host accounts and billing. Each needs an engineering-level look."
+    },
+    {
+     "id": "q2",
+     "stage": "queue",
+     "desk": "coverage",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "The first 90 minutes overlap with India engineering.",
+     "lede": "Handover happens live, 07:00 to 08:30. After 15:30, automation keeps triaging and urgent issues page on-call."
+    },
+    {
+     "id": "t1",
+     "stage": "triage",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "Every ticket read. Every decision quoted.",
+     "lede": "The AI proposes an action for each of the 40 and quotes the words it relied on. A quote that is not in the ticket is rejected."
+    },
+    {
+     "id": "t2",
+     "stage": "triage",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "3 closures held. RB-05 has closed this 9 times in 21 days.",
+     "lede": "RB-05 only corrects the record. Past 3 uses in 21 days, the tickets stay open and become a pattern."
+    },
+    {
+     "id": "t3",
+     "stage": "triage",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "20 closures approved by a person.",
+     "lede": "Nothing closes on the AI's word. Every closure names a real runbook."
+    },
+    {
+     "id": "e1",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "One pattern, one incident: INC-0412.",
+     "lede": "14 tickets at 9 sites in 21 days. It crosses the escalation line three ways: it needs a code change, it spans 9 sites and billing is at risk."
+    },
+    {
+     "id": "e2",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "Every stuck session dropped its connection within 90 s of the unplug event.",
+     "lede": "14 of 14 sessions. The drop came 3 to 88 seconds after the charger reported losing communication with the EV (simulated here as unplugging)."
+    },
+    {
+     "id": "e3",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "The charger sent the Ended. This synthetic backend ignored it.",
+     "lede": "A known class of backend handling bug, exposed by OCPP reconnects, in a synthetic system: on FW-A the queued Ended arrived after the reconnect, and the backend dropped it as out of order because the connector already read Available."
+    },
+    {
+     "id": "e3b",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "On FW-B, the Ended never arrived.",
+     "lede": "Same drop, same reconnect, then nothing. Either the firmware lost its queue or the capture missed it; the logs alone cannot say which."
+    },
+    {
+     "id": "e4",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "FW-B: 12 of 19 drops near unplug ended stuck.",
+     "lede": "FW-A: 2 of 11. FW-C: 0 of 6. Drops at other times left 0 sessions stuck."
+    },
+    {
+     "id": "e5",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "Two hypotheses, neither confirmed. Support contains it today.",
+     "lede": "They may both be true. Meanwhile the 5 open sessions are corrected under the incident, and a detector is proposed for new ones."
+    },
+    {
+     "id": "e6",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "Reproduced on demand.",
+     "lede": "A small OCPP 2.0.1 backend and a simulated charger replay the sequence. With the legacy handling, the session stays open. It is a known class of reconnect bug; an open-source backend fixed a related reconnect problem in public."
+    },
+    {
+     "id": "v1",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 0",
+     "claim": "One packet to engineering. One ask, with the bug reproduced in a test.",
+     "lede": "A person approves it before it goes."
+    },
+    {
+     "id": "v2",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 6",
+     "claim": "Engineering's change, behind a flag on 5 canary sites.",
+     "lede": "6 control sites (4 FW-B, 2 FW-A) keep the legacy behaviour, so the control is not perfectly matched."
+    },
+    {
+     "id": "v3",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 20",
+     "claim": "Canary 5 → 0. Control 4 → 4.",
+     "lede": "Stuck sessions in the 14 days before and after. Drops near unplug kept happening; on the canary, reconciliation closed 5 of 6; the other had a newer session on the charger and went to a person."
+    },
+    {
+     "id": "v4",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 20",
+     "claim": "Consistent with the hypothesis. Not proof of it.",
+     "lede": "Only 5 reconciliations and 3 late Ended events exercised the change."
+    },
+    {
+     "id": "c1",
+     "stage": "close",
+     "desk": "kb",
+     "when": "The next ticket",
+     "claim": "Next time, support has the article.",
+     "lede": "A new ticket is checked against it. The first step is always the meter check, before RB-05."
+    },
+    {
+     "id": "c2",
+     "stage": "close",
+     "desk": "kb",
+     "when": "The whole chain",
+     "claim": "One shift, one chain.",
+     "lede": "Every step is in the desk, with its evidence, and in the repository, with its tests."
+    }
+   ]
+  }
+ },
+ "rules": {
+  "data": {
+   "source": "rules",
+   "origins": {
+    "investigate": "rules",
+    "handoff": "rules",
+    "verify": "rules",
+    "kb": "rules",
+    "classify": "rules",
+    "shiftnote": "rules"
+   },
+   "tickets": [
+    {
+     "id": "T-2040",
+     "lane": "close",
+     "runbook": "RB-03",
+     "quote": "heartbeat",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2041",
+     "lane": "held",
+     "runbook": "RB-05",
+     "quote": "still showed 'Charging'",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2042",
+     "lane": "close",
+     "runbook": "RB-01",
+     "quote": "badge",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2043",
+     "lane": "close",
+     "runbook": "RB-02",
+     "quote": "hold",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2044",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "Host wants a weekly utilization email",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2045",
+     "lane": "close",
+     "runbook": "RB-01",
+     "quote": "badge",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2046",
+     "lane": "close",
+     "runbook": "RB-03",
+     "quote": "offline",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2047",
+     "lane": "held",
+     "runbook": "RB-05",
+     "quote": "In use' on the public map",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2048",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "Question: can host invoices show sessions",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2049",
+     "lane": "close",
+     "runbook": "RB-02",
+     "quote": "hold",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2050",
+     "lane": "close",
+     "runbook": "RB-01",
+     "quote": "badge",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2051",
+     "lane": "close",
+     "runbook": "RB-04",
+     "quote": "export",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2052",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "holster",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2053",
+     "lane": "held",
+     "runbook": "RB-05",
+     "quote": "open 9h",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2054",
+     "lane": "info",
+     "runbook": "none",
+     "quote": "Auto-resolved",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2055",
+     "lane": "close",
+     "runbook": "RB-01",
+     "quote": "badge",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2056",
+     "lane": "close",
+     "runbook": "RB-03",
+     "quote": "heartbeat",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2057",
+     "lane": "close",
+     "runbook": "RB-02",
+     "quote": "hold",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2058",
+     "lane": "held",
+     "runbook": "RB-05",
+     "quote": "already have an active session",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2059",
+     "lane": "person",
+     "runbook": "RB-07",
+     "quote": "time-of-use",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2060",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "DC charger CP-073-01 delivering 50 kW",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2061",
+     "lane": "close",
+     "runbook": "RB-01",
+     "quote": "auth list",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2062",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "price",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2063",
+     "lane": "close",
+     "runbook": "RB-06",
+     "quote": "locked out",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2064",
+     "lane": "person",
+     "runbook": "RB-03",
+     "quote": "earlier offline events",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2065",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "closes on launch",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2066",
+     "lane": "held",
+     "runbook": "RB-05",
+     "quote": "energy stopped climbing",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2067",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "price",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2068",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "roaming",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2069",
+     "lane": "close",
+     "runbook": "RB-01",
+     "quote": "badge",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2070",
+     "lane": "close",
+     "runbook": "RB-03",
+     "quote": "heartbeat",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2071",
+     "lane": "close",
+     "runbook": "RB-02",
+     "quote": "hold",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2072",
+     "lane": "close",
+     "runbook": "RB-04",
+     "quote": "export",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2073",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "When is the next firmware rollout",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2074",
+     "lane": "person",
+     "runbook": "none",
+     "quote": "Host complains a petrol car keeps",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2075",
+     "lane": "person",
+     "runbook": "RB-03",
+     "quote": "no response",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2076",
+     "lane": "close",
+     "runbook": "RB-04",
+     "quote": "export",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2077",
+     "lane": "close",
+     "runbook": "RB-04",
+     "quote": "export",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2078",
+     "lane": "close",
+     "runbook": "RB-02",
+     "quote": "hold",
+     "provenance": "rules"
+    },
+    {
+     "id": "T-2079",
+     "lane": "close",
+     "runbook": "RB-03",
+     "quote": "offline",
+     "provenance": "rules"
+    }
+   ],
+   "investigation": {
+    "symptom": "Sessions stay open in the backend after the driver unplugs, while the charger reports the connector Available. Drivers are billed idle fees or blocked from new sessions, and hosts see empty bays marked in use.",
+    "impact": [
+     "14 tickets at 9 sites over 21 days.",
+     "Idle fees charged for time nobody was parked.",
+     "Drivers blocked from starting sessions elsewhere."
+    ],
+    "evidence": [
+     {
+      "point": "Every stuck session had a connection drop between 3 and 88 seconds after unplug.",
+      "source": "Unplug-to-drop timings",
+      "quote": ""
+     },
+     {
+      "point": "On FW-A the Ended event arrived after reconnect and the backend ignored it as out of order.",
+      "source": "Log CP-022-04",
+      "quote": "ignored: connector already Available (out of order)"
+     },
+     {
+      "point": "On FW-B the gateway shows no Ended event after the reconnect; the session stayed Charging.",
+      "source": "Log CP-014-02",
+      "quote": "(no TransactionEvent Ended received)"
+     },
+     {
+      "point": "Drops near unplug ended stuck 12 of 19 times on FW-B, 2 of 11 on FW-A, 0 of 6 on FW-C.",
+      "source": "Fleet view, 21 days",
+      "quote": ""
+     }
+    ],
+    "hypotheses": [
+     {
+      "statement": "The backend ignores an Ended event that arrives after the EVSE reports Available, leaving the transaction open.",
+      "status": "leading hypothesis",
+      "supports": [
+       "Seen directly in the CP-022-04 log.",
+       "Every case follows a reconnect near unplug."
+      ],
+      "against_or_gaps": [
+       "Only one log shows a late Ended event.",
+       "Does not explain FW-B logs with no Ended event."
+      ]
+     },
+     {
+      "statement": "FW-B does not send its queued Ended event after the websocket reconnects. May coexist with the first.",
+      "status": "alternative hypothesis",
+      "supports": [
+       "12 of 14 cases are on FW-B.",
+       "No Ended event at the gateway after reconnect."
+      ],
+      "against_or_gaps": [
+       "Inferred from absence; could be a capture gap.",
+       "No charger-side logs to confirm."
+      ]
+     }
+    ],
+    "ruled_out": [
+     "Payment provider",
+     "Driver app display",
+     "Single site or charger fault",
+     "Driver behaviour"
+    ],
+    "open_questions": [
+     "Is ignoring a late Ended event after Available intended behaviour?",
+     "Does FW-B keep queued TransactionEvents across a websocket reconnect?",
+     "Is gateway capture complete during reconnects?"
+    ]
+   },
+   "handoff": {
+    "title": "Sessions stay open after a charger reconnects near unplug",
+    "severity": "S2",
+    "scope": "14 tickets, 9 sites, two firmware lines, 21 days.",
+    "rules_triggered": [
+     "code",
+     "spread",
+     "billing"
+    ],
+    "reproduction": [
+     "Run the lab's reproduction test with the fix flag off: a simulated charger unplugs, reconnects, then sends a late Ended.",
+     "It passes by showing the bug: the backend ignores the Ended and the transaction stays Charging.",
+     "Compare with the gateway log: EVCommunicationLost, websocket 1006, Available, then the Ended ignored as out of order.",
+     "On a FW-B 4.2.x test charger with capture on, drop the connection before the Ended is sent and check whether it is ever sent."
+    ],
+    "evidence_attached": [
+     "Lab tests: bug reproduced; regression fails without the fix",
+     "Three OCPP 2.0.1 log excerpts",
+     "21-day fleet table by firmware",
+     "Unplug-to-drop timings",
+     "14 linked tickets"
+    ],
+    "ruled_out": [
+     "Payment provider",
+     "Driver app display",
+     "Single site or charger fault",
+     "Driver behaviour"
+    ],
+    "workaround_in_place": "Support closes stuck sessions with RB-05 and flags invoices for review; a proposed detector would flag new candidates for review within 45 minutes.",
+    "the_ask": "Decide how the backend should close a transaction left open after a reconnect without billing errors, and whether a late Ended event should be applied instead of ignored.",
+    "hypothesis_note": "The backend ignoring a late Ended is reproduced in a lab with a simulated charger. Whether FW-B drops its queued Ended is not confirmed."
+   },
+   "verify": {
+    "verdict": "consistent with hypothesis",
+    "reading": "Canary stuck sessions went from 5 to 0 while drops near unplug continued; control stayed at 4. No false closures or duplicate charges in 2140 canary sessions.",
+    "what_it_does_not_prove": [
+     "Which mechanism causes the missing Ended event.",
+     "That it holds beyond two weeks and five events.",
+     "That provisional billing is right without review."
+    ],
+    "keep_watching": [
+     "Provisional invoices and their adjustments.",
+     "Detector hits on control sites."
+    ],
+    "next_decision": "Keep the flag on the canary sites for another 14 days; widen only if billing reviews stay clean. A false closure or duplicate charge reverses it."
+   },
+   "kb": {
+    "title": "Session stuck in Charging after the charger reconnects",
+    "applies_when": [
+     "App or map shows Charging after the driver left.",
+     "Idle fee complaint with flat energy.",
+     "Driver told a session is already active."
+    ],
+    "how_to_confirm": [
+     "Gateway log: no TransactionEvent Ended after the unplug event.",
+     "Gateway log: connection lost and back within 90 seconds of unplug.",
+     "EVSE reports Available while the transaction is open."
+    ],
+    "steps": [
+     "Confirm the meter shows no energy change since unplug, before RB-05.",
+     "Apply RB-05: close at the session's last recorded meter value.",
+     "Reverse idle fees from the last meter change.",
+     "Flag the invoice for billing review and link the ticket to the parent incident."
+    ],
+    "escalate_if": [
+     "No connection drop near unplug.",
+     "Energy still climbing on the open session.",
+     "Firmware line other than FW-A or FW-B.",
+     "A newer session already started on the same connector."
+    ],
+    "status_note": "ENG-4471 reconciliation is on canary sites with billing marked provisional; the FW-B firmware question is open with the vendor.",
+    "related": [
+     "T-2041",
+     "T-2047",
+     "T-2053",
+     "T-2058",
+     "T-2066",
+     "RB-05",
+     "ENG-4471"
+    ]
+   },
+   "classify": {
+    "component": "session-state",
+    "severity": "S2",
+    "matches_known_pattern": true,
+    "matched_article": "Session stuck in Charging after the charger reconnects",
+    "suggested_action": "Confirm the meter is flat, then apply RB-05, reverse idle fees, flag the invoice and link to the parent incident.",
+    "confirm": "Before RB-05, a person checks the meter shows no energy change since unplug. The check above reads wording only.",
+    "escalate": false,
+    "why": "Rules fallback: matched \"open 7h\" (stuck session)."
+   },
+   "shiftnote": {
+    "headline": "Queue started at 40; 21 approved for closure by runbook, and the stuck-session pattern is with engineering.",
+    "done": [
+     "21 tickets approved for runbook closure.",
+     "Stuck-session pattern grouped and contained.",
+     "Detector query written; proposed to run every 15 minutes."
+    ],
+    "needs_you": [
+     "T-2044 Owner: India engineering on-call, by 07:00 ET.",
+     "T-2048 Owner: India engineering on-call, by 07:00 ET.",
+     "T-2052 Owner: India engineering on-call, by 07:00 ET.",
+     "T-2059 Owner: India engineering on-call, by 07:00 ET."
+    ],
+    "escalated": [
+     "Nothing sent to engineering yet."
+    ],
+    "watch": [
+     "Detector candidates for stuck sessions.",
+     "Repeat offline alerts."
+    ]
+   }
+  },
+  "start": {
+   "facts": {
+    "approvedIds": [],
+    "sent": false,
+    "meterChecked": [],
+    "approved": false,
+    "approvedCount": 0,
+    "approvable": [
+     "T-2040",
+     "T-2042",
+     "T-2043",
+     "T-2045",
+     "T-2046",
+     "T-2049",
+     "T-2050",
+     "T-2051",
+     "T-2055",
+     "T-2056",
+     "T-2057",
+     "T-2061",
+     "T-2063",
+     "T-2069",
+     "T-2070",
+     "T-2071",
+     "T-2072",
+     "T-2076",
+     "T-2077",
+     "T-2078",
+     "T-2079"
+    ],
+    "awaitingMeter": [],
+    "total": 40,
+    "lanes": {
+     "close": [
+      "T-2040",
+      "T-2042",
+      "T-2043",
+      "T-2045",
+      "T-2046",
+      "T-2049",
+      "T-2050",
+      "T-2051",
+      "T-2055",
+      "T-2056",
+      "T-2057",
+      "T-2061",
+      "T-2063",
+      "T-2069",
+      "T-2070",
+      "T-2071",
+      "T-2072",
+      "T-2076",
+      "T-2077",
+      "T-2078",
+      "T-2079"
+     ],
+     "person": [
+      "T-2044",
+      "T-2048",
+      "T-2052",
+      "T-2059",
+      "T-2060",
+      "T-2062",
+      "T-2064",
+      "T-2065",
+      "T-2067",
+      "T-2068",
+      "T-2073",
+      "T-2074",
+      "T-2075"
+     ],
+     "escalate": [],
+     "info": [
+      "T-2054"
+     ],
+     "held": [
+      "T-2041",
+      "T-2047",
+      "T-2053",
+      "T-2058",
+      "T-2066"
+     ]
+    },
+    "heldRunbook": "RB-05",
+    "prior": 9,
+    "priorSites": 7,
+    "triggers": [
+     "it needs a code change",
+     "it spans 9 sites",
+     "billing is at risk"
+    ],
+    "drop": {
+     "min": 3,
+     "max": 88,
+     "n": 14
+    },
+    "fleet": [
+     {
+      "fw": "FW-B 4.2.x",
+      "sessions": 4812,
+      "dropsNearUnplug": 19,
+      "stuck": 12,
+      "dropsElsewhere": 41,
+      "stuckFromElsewhere": 0
+     },
+     {
+      "fw": "FW-A 3.9.x",
+      "sessions": 3950,
+      "dropsNearUnplug": 11,
+      "stuck": 2,
+      "dropsElsewhere": 37,
+      "stuckFromElsewhere": 0
+     },
+     {
+      "fw": "FW-C 1.6.x",
+      "sessions": 2204,
+      "dropsNearUnplug": 6,
+      "stuck": 0,
+      "dropsElsewhere": 22,
+      "stuckFromElsewhere": 0
+     }
+    ],
+    "v": {
+     "windowDays": 14,
+     "canary": {
+      "sites": 5,
+      "before": {
+       "dropsNearUnplug": 6,
+       "stuck": 5
+      },
+      "after": {
+       "dropsNearUnplug": 6,
+       "stuck": 0,
+       "closedByReconciliation": 5
+      }
+     },
+     "control": {
+      "sites": 6,
+      "before": {
+       "dropsNearUnplug": 5,
+       "stuck": 4
+      },
+      "after": {
+       "dropsNearUnplug": 6,
+       "stuck": 4
+      }
+     },
+     "detector": {
+      "hits": 4,
+      "ticketsOpenedBeforeAnyComplaint": 4,
+      "medianMinutesToFlag": 31
+     },
+     "complaintsBeforeDetector": {
+      "medianHoursToFirstComplaint": 6.2
+     },
+     "correctness": {
+      "canarySessions": 2140,
+      "reconciled": 5,
+      "falseClosures": 0,
+      "newerTransactionSkips": 1,
+      "lateEndedArrived": 3,
+      "lateEndedApplied": 3,
+      "duplicateCharges": 0,
+      "invoicesReviewed": 5,
+      "invoicesAdjusted": 1
+     }
+    },
+    "shippedDay": 6
+   },
+   "canary": "on the canary, reconciliation closed 5 of 6; the other had a newer session on the charger and went to a person",
+   "beats": [
+    {
+     "id": "q1",
+     "stage": "queue",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "40 tickets are waiting.",
+     "lede": "Raised overnight by the NOC, customer care, field service, host accounts and billing. Each needs an engineering-level look."
+    },
+    {
+     "id": "q2",
+     "stage": "queue",
+     "desk": "coverage",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "The first 90 minutes overlap with India engineering.",
+     "lede": "Handover happens live, 07:00 to 08:30. After 15:30, automation keeps triaging and urgent issues page on-call."
+    },
+    {
+     "id": "t1",
+     "stage": "triage",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "Every ticket read. Every decision quoted.",
+     "lede": "The AI proposes an action for each of the 40 and quotes the words it relied on. A quote that is not in the ticket is rejected."
+    },
+    {
+     "id": "t2",
+     "stage": "triage",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "5 closures held. RB-05 has closed this 9 times in 21 days.",
+     "lede": "RB-05 only corrects the record. Past 3 uses in 21 days, the tickets stay open and become a pattern."
+    },
+    {
+     "id": "t3",
+     "stage": "triage",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "A person approves the 21 closures.",
+     "lede": "Nothing closes on the AI's word. Every closure names a real runbook."
+    },
+    {
+     "id": "e1",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "One pattern, one incident: INC-0412.",
+     "lede": "14 tickets at 9 sites in 21 days. It crosses the escalation line three ways: it needs a code change, it spans 9 sites and billing is at risk."
+    },
+    {
+     "id": "e2",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "Every stuck session dropped its connection within 90 s of the unplug event.",
+     "lede": "14 of 14 sessions. The drop came 3 to 88 seconds after the charger reported losing communication with the EV (simulated here as unplugging)."
+    },
+    {
+     "id": "e3",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "The charger sent the Ended. This synthetic backend ignored it.",
+     "lede": "A known class of backend handling bug, exposed by OCPP reconnects, in a synthetic system: on FW-A the queued Ended arrived after the reconnect, and the backend dropped it as out of order because the connector already read Available."
+    },
+    {
+     "id": "e3b",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "On FW-B, the Ended never arrived.",
+     "lede": "Same drop, same reconnect, then nothing. Either the firmware lost its queue or the capture missed it; the logs alone cannot say which."
+    },
+    {
+     "id": "e4",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "FW-B: 12 of 19 drops near unplug ended stuck.",
+     "lede": "FW-A: 2 of 11. FW-C: 0 of 6. Drops at other times left 0 sessions stuck."
+    },
+    {
+     "id": "e5",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "Two hypotheses, neither confirmed. Support contains it today.",
+     "lede": "They may both be true. Meanwhile the 5 open sessions are corrected under the incident, and a detector is proposed for new ones."
+    },
+    {
+     "id": "e6",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "Reproduced on demand.",
+     "lede": "A small OCPP 2.0.1 backend and a simulated charger replay the sequence. With the legacy handling, the session stays open. It is a known class of reconnect bug; an open-source backend fixed a related reconnect problem in public."
+    },
+    {
+     "id": "v1",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 0",
+     "claim": "One packet to engineering. One ask, with the bug reproduced in a test.",
+     "lede": "A person approves it before it goes."
+    },
+    {
+     "id": "v2",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 6",
+     "claim": "Engineering's change, behind a flag on 5 canary sites.",
+     "lede": "6 control sites (4 FW-B, 2 FW-A) keep the legacy behaviour, so the control is not perfectly matched."
+    },
+    {
+     "id": "v3",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 20",
+     "claim": "Canary 5 → 0. Control 4 → 4.",
+     "lede": "Stuck sessions in the 14 days before and after. Drops near unplug kept happening; on the canary, reconciliation closed 5 of 6; the other had a newer session on the charger and went to a person."
+    },
+    {
+     "id": "v4",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 20",
+     "claim": "Consistent with the hypothesis. Not proof of it.",
+     "lede": "Only 5 reconciliations and 3 late Ended events exercised the change."
+    },
+    {
+     "id": "c1",
+     "stage": "close",
+     "desk": "kb",
+     "when": "The next ticket",
+     "claim": "Next time, support has the article.",
+     "lede": "A new ticket is checked against it. The first step is always the meter check, before RB-05."
+    },
+    {
+     "id": "c2",
+     "stage": "close",
+     "desk": "kb",
+     "when": "The whole chain",
+     "claim": "One shift, one chain.",
+     "lede": "Every step is in the desk, with its evidence, and in the repository, with its tests."
+    }
+   ]
+  },
+  "done": {
+   "facts": {
+    "approvedIds": [
+     "T-2040",
+     "T-2041",
+     "T-2042",
+     "T-2043",
+     "T-2044",
+     "T-2045",
+     "T-2046",
+     "T-2047",
+     "T-2048",
+     "T-2049",
+     "T-2050",
+     "T-2051",
+     "T-2052",
+     "T-2053",
+     "T-2054",
+     "T-2055",
+     "T-2056",
+     "T-2057",
+     "T-2058",
+     "T-2059",
+     "T-2060",
+     "T-2061",
+     "T-2062",
+     "T-2063",
+     "T-2064",
+     "T-2065",
+     "T-2066",
+     "T-2067",
+     "T-2068",
+     "T-2069",
+     "T-2070",
+     "T-2071",
+     "T-2072",
+     "T-2073",
+     "T-2074",
+     "T-2075",
+     "T-2076",
+     "T-2077",
+     "T-2078",
+     "T-2079"
+    ],
+    "sent": true,
+    "meterChecked": [
+     "T-2040",
+     "T-2041",
+     "T-2042",
+     "T-2043",
+     "T-2044",
+     "T-2045",
+     "T-2046",
+     "T-2047",
+     "T-2048",
+     "T-2049",
+     "T-2050",
+     "T-2051",
+     "T-2052",
+     "T-2053",
+     "T-2054",
+     "T-2055",
+     "T-2056",
+     "T-2057",
+     "T-2058",
+     "T-2059",
+     "T-2060",
+     "T-2061",
+     "T-2062",
+     "T-2063",
+     "T-2064",
+     "T-2065",
+     "T-2066",
+     "T-2067",
+     "T-2068",
+     "T-2069",
+     "T-2070",
+     "T-2071",
+     "T-2072",
+     "T-2073",
+     "T-2074",
+     "T-2075",
+     "T-2076",
+     "T-2077",
+     "T-2078",
+     "T-2079"
+    ],
+    "approved": true,
+    "approvedCount": 21,
+    "approvable": [
+     "T-2040",
+     "T-2042",
+     "T-2043",
+     "T-2045",
+     "T-2046",
+     "T-2049",
+     "T-2050",
+     "T-2051",
+     "T-2055",
+     "T-2056",
+     "T-2057",
+     "T-2061",
+     "T-2063",
+     "T-2069",
+     "T-2070",
+     "T-2071",
+     "T-2072",
+     "T-2076",
+     "T-2077",
+     "T-2078",
+     "T-2079"
+    ],
+    "awaitingMeter": [],
+    "total": 40,
+    "lanes": {
+     "close": [
+      "T-2040",
+      "T-2042",
+      "T-2043",
+      "T-2045",
+      "T-2046",
+      "T-2049",
+      "T-2050",
+      "T-2051",
+      "T-2055",
+      "T-2056",
+      "T-2057",
+      "T-2061",
+      "T-2063",
+      "T-2069",
+      "T-2070",
+      "T-2071",
+      "T-2072",
+      "T-2076",
+      "T-2077",
+      "T-2078",
+      "T-2079"
+     ],
+     "person": [
+      "T-2044",
+      "T-2048",
+      "T-2052",
+      "T-2059",
+      "T-2060",
+      "T-2062",
+      "T-2064",
+      "T-2065",
+      "T-2067",
+      "T-2068",
+      "T-2073",
+      "T-2074",
+      "T-2075"
+     ],
+     "escalate": [],
+     "info": [
+      "T-2054"
+     ],
+     "held": [
+      "T-2041",
+      "T-2047",
+      "T-2053",
+      "T-2058",
+      "T-2066"
+     ]
+    },
+    "heldRunbook": "RB-05",
+    "prior": 9,
+    "priorSites": 7,
+    "triggers": [
+     "it needs a code change",
+     "it spans 9 sites",
+     "billing is at risk"
+    ],
+    "drop": {
+     "min": 3,
+     "max": 88,
+     "n": 14
+    },
+    "fleet": [
+     {
+      "fw": "FW-B 4.2.x",
+      "sessions": 4812,
+      "dropsNearUnplug": 19,
+      "stuck": 12,
+      "dropsElsewhere": 41,
+      "stuckFromElsewhere": 0
+     },
+     {
+      "fw": "FW-A 3.9.x",
+      "sessions": 3950,
+      "dropsNearUnplug": 11,
+      "stuck": 2,
+      "dropsElsewhere": 37,
+      "stuckFromElsewhere": 0
+     },
+     {
+      "fw": "FW-C 1.6.x",
+      "sessions": 2204,
+      "dropsNearUnplug": 6,
+      "stuck": 0,
+      "dropsElsewhere": 22,
+      "stuckFromElsewhere": 0
+     }
+    ],
+    "v": {
+     "windowDays": 14,
+     "canary": {
+      "sites": 5,
+      "before": {
+       "dropsNearUnplug": 6,
+       "stuck": 5
+      },
+      "after": {
+       "dropsNearUnplug": 6,
+       "stuck": 0,
+       "closedByReconciliation": 5
+      }
+     },
+     "control": {
+      "sites": 6,
+      "before": {
+       "dropsNearUnplug": 5,
+       "stuck": 4
+      },
+      "after": {
+       "dropsNearUnplug": 6,
+       "stuck": 4
+      }
+     },
+     "detector": {
+      "hits": 4,
+      "ticketsOpenedBeforeAnyComplaint": 4,
+      "medianMinutesToFlag": 31
+     },
+     "complaintsBeforeDetector": {
+      "medianHoursToFirstComplaint": 6.2
+     },
+     "correctness": {
+      "canarySessions": 2140,
+      "reconciled": 5,
+      "falseClosures": 0,
+      "newerTransactionSkips": 1,
+      "lateEndedArrived": 3,
+      "lateEndedApplied": 3,
+      "duplicateCharges": 0,
+      "invoicesReviewed": 5,
+      "invoicesAdjusted": 1
+     }
+    },
+    "shippedDay": 6
+   },
+   "canary": "on the canary, reconciliation closed 5 of 6; the other had a newer session on the charger and went to a person",
+   "beats": [
+    {
+     "id": "q1",
+     "stage": "queue",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "40 tickets are waiting.",
+     "lede": "Raised overnight by the NOC, customer care, field service, host accounts and billing. Each needs an engineering-level look."
+    },
+    {
+     "id": "q2",
+     "stage": "queue",
+     "desk": "coverage",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "The first 90 minutes overlap with India engineering.",
+     "lede": "Handover happens live, 07:00 to 08:30. After 15:30, automation keeps triaging and urgent issues page on-call."
+    },
+    {
+     "id": "t1",
+     "stage": "triage",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "Every ticket read. Every decision quoted.",
+     "lede": "The AI proposes an action for each of the 40 and quotes the words it relied on. A quote that is not in the ticket is rejected."
+    },
+    {
+     "id": "t2",
+     "stage": "triage",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "5 closures held. RB-05 has closed this 9 times in 21 days.",
+     "lede": "RB-05 only corrects the record. Past 3 uses in 21 days, the tickets stay open and become a pattern."
+    },
+    {
+     "id": "t3",
+     "stage": "triage",
+     "desk": "queue",
+     "when": "Day 0 · 07:00 ET",
+     "claim": "21 closures approved by a person.",
+     "lede": "Nothing closes on the AI's word. Every closure names a real runbook."
+    },
+    {
+     "id": "e1",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "One pattern, one incident: INC-0412.",
+     "lede": "14 tickets at 9 sites in 21 days. It crosses the escalation line three ways: it needs a code change, it spans 9 sites and billing is at risk."
+    },
+    {
+     "id": "e2",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "Every stuck session dropped its connection within 90 s of the unplug event.",
+     "lede": "14 of 14 sessions. The drop came 3 to 88 seconds after the charger reported losing communication with the EV (simulated here as unplugging)."
+    },
+    {
+     "id": "e3",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "The charger sent the Ended. This synthetic backend ignored it.",
+     "lede": "A known class of backend handling bug, exposed by OCPP reconnects, in a synthetic system: on FW-A the queued Ended arrived after the reconnect, and the backend dropped it as out of order because the connector already read Available."
+    },
+    {
+     "id": "e3b",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "On FW-B, the Ended never arrived.",
+     "lede": "Same drop, same reconnect, then nothing. Either the firmware lost its queue or the capture missed it; the logs alone cannot say which."
+    },
+    {
+     "id": "e4",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "FW-B: 12 of 19 drops near unplug ended stuck.",
+     "lede": "FW-A: 2 of 11. FW-C: 0 of 6. Drops at other times left 0 sessions stuck."
+    },
+    {
+     "id": "e5",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "Two hypotheses, neither confirmed. Support contains it today.",
+     "lede": "They may both be true. Meanwhile the 5 open sessions are corrected under the incident, and a detector is proposed for new ones."
+    },
+    {
+     "id": "e6",
+     "stage": "evidence",
+     "desk": "incident",
+     "when": "Day 0",
+     "claim": "Reproduced on demand.",
+     "lede": "A small OCPP 2.0.1 backend and a simulated charger replay the sequence. With the legacy handling, the session stays open. It is a known class of reconnect bug; an open-source backend fixed a related reconnect problem in public."
+    },
+    {
+     "id": "v1",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 0",
+     "claim": "One packet to engineering. One ask, with the bug reproduced in a test.",
+     "lede": "A person approves it before it goes."
+    },
+    {
+     "id": "v2",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 6",
+     "claim": "Engineering's change, behind a flag on 5 canary sites.",
+     "lede": "6 control sites (4 FW-B, 2 FW-A) keep the legacy behaviour, so the control is not perfectly matched."
+    },
+    {
+     "id": "v3",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 20",
+     "claim": "Canary 5 → 0. Control 4 → 4.",
+     "lede": "Stuck sessions in the 14 days before and after. Drops near unplug kept happening; on the canary, reconciliation closed 5 of 6; the other had a newer session on the charger and went to a person."
+    },
+    {
+     "id": "v4",
+     "stage": "verification",
+     "desk": "handoff",
+     "when": "Day 20",
+     "claim": "Consistent with the hypothesis. Not proof of it.",
+     "lede": "Only 5 reconciliations and 3 late Ended events exercised the change."
+    },
+    {
+     "id": "c1",
+     "stage": "close",
+     "desk": "kb",
+     "when": "The next ticket",
+     "claim": "Next time, support has the article.",
+     "lede": "A new ticket is checked against it. The first step is always the meter check, before RB-05."
+    },
+    {
+     "id": "c2",
+     "stage": "close",
+     "desk": "kb",
+     "when": "The whole chain",
+     "claim": "One shift, one chain.",
+     "lede": "Every step is in the desk, with its evidence, and in the repository, with its tests."
+    }
+   ]
+  }
+ }
+}

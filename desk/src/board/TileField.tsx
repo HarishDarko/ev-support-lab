@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
-import { useState } from "react";
-import { TICKETS } from "../data/synthetic";
+import { useMemo, useState } from "react";
+import { useRun, type DeskTicket } from "../run";
 import type { Lane, TicketView } from "../story/data";
 import { EASE, stagger } from "./motion";
 
@@ -19,9 +19,11 @@ const SOURCE_NAMES: Record<string, string> = {
   "NOC alert": "NOC",
   "Platform alert": "Platform alerts",
 };
-const sourceOrder = [...new Set(TICKETS.map((t) => t.from))].sort(
-  (a, b) => TICKETS.filter((t) => t.from === b).length - TICKETS.filter((t) => t.from === a).length,
-);
+/** Where the tickets came from, the biggest source first. */
+const sourcesOf = (tickets: readonly DeskTicket[]) =>
+  [...new Set(tickets.map((t) => t.from))].sort(
+    (a, b) => tickets.filter((t) => t.from === b).length - tickets.filter((t) => t.from === a).length,
+  );
 
 interface Props {
   mode: TileMode;
@@ -32,8 +34,10 @@ interface Props {
   onOpen: (id: string) => void;
 }
 
-/** The 40 tickets as tiles. The same tile (layoutId) travels from its source group into its lane. */
+/** The queue as tiles. The same tile (layoutId) travels from its source group into its lane. */
 export function TileField({ mode, tickets, approvedIds, onOpen }: Props) {
+  const queue = useRun().pack.tickets;
+  const sourceOrder = useMemo(() => sourcesOf(queue), [queue]);
   const approved = new Set(approvedIds);
   const [focused, setFocused] = useState<string | null>(null);
   const byId = new Map(tickets.map((t) => [t.id, t]));
@@ -43,7 +47,7 @@ export function TileField({ mode, tickets, approvedIds, onOpen }: Props) {
       ? sourceOrder.map((s) => ({
           key: s,
           name: SOURCE_NAMES[s] ?? s,
-          ids: TICKETS.filter((t) => t.from === s).map((t) => t.id),
+          ids: queue.filter((t) => t.from === s).map((t) => t.id),
         }))
       : LANE_ORDER.filter((l) => !(mode === "lanes-held" && l === "held")).map((l) => ({
           key: l,
@@ -52,7 +56,7 @@ export function TileField({ mode, tickets, approvedIds, onOpen }: Props) {
           ids: tickets.filter((t) => t.lane === l).map((t) => t.id),
         }));
 
-  const order = new Map(TICKETS.map((t, i) => [t.id, i]));
+  const order = new Map(queue.map((t, i) => [t.id, i]));
   const shown = focused ? byId.get(focused) : undefined;
 
   return (

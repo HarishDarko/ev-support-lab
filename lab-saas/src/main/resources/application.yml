@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: saas-support-lab
+  datasource:
+    url: ${LAB_DB_URL:jdbc:postgresql://localhost:5432/lab}
+    username: ${LAB_DB_USER:lab}
+    password: ${LAB_DB_PASSWORD:lab}
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+
+lab:
+  fix:
+    # Default for workspaces without a per-workspace override (workspace.fix_override).
+    # Override on the command line with -Dlab.fix.enabled=false to see the bug.
+    enabled: true
+  delivery:
+    # A delivery is given up after this many attempts.
+    max-attempts: 5
+    # The fix refreshes a token this long before it expires (minus a per-endpoint jitter of up to 60 s).
+    refresh-margin: 5m
+  pause:
+    failures: 15
+    window: 60m

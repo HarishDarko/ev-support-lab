@@ -39,7 +39,8 @@ const TRANSITION = { duration: 0.25, ease: [0.2, 0.8, 0.2, 1] } as const;
 
 /**
  * The desk: a right-hand sheet with six tabs. Esc closes it, focus is trapped while it is open and returns to
- * whatever opened it. Under 1000 px it fills the screen.
+ * whatever opened it. Under 1000 px it fills the screen. It opens in each industry's walkthrough; the Industry menu
+ * is in the top strip, outside the sheet, so switching industry never hides an open sheet.
  */
 export function DeskSheet(props: DeskSheetProps) {
   return createPortal(

@@ -1,27 +1,22 @@
-import { ESCALATION_LINE, HERO } from "../../data/synthetic";
+import { useIncident } from "../../incident";
 import { blockClass, originOfStep } from "../ui/origin";
 import { WINDOW_DAYS, priorUses, provenanceOfStep, useRun } from "../../run";
 import { Pill } from "../ui/Pill";
 import { ProvenanceNote } from "../ui/ProvenanceNote";
-import { RECORD_ONLY_RUNBOOK, incidentPattern, stuckByFirmware } from "./evidence";
+import { incidentPattern } from "./evidence";
 import "./PatternFacts.css";
 
 /** The pattern behind the incident: its facts, the escalation line and which triggers fired, and the AI's grouping. */
 export function PatternFacts() {
-  const { run, lanes, resultFor } = useRun();
-  const pattern = incidentPattern(run.steps.patterns.data.patterns, lanes.held);
-  const fired = new Set(ESCALATION_LINE.heroTriggers);
-  const firmware = stuckByFirmware();
-  const facts: [string, string, string][] = [
-    [String(HERO.totalTickets), "tickets", `${HERO.openIds.length} open, ${HERO.historyIds.length} closed before`],
-    [String(HERO.sites.length), "sites", "no single site or charger"],
-    [String(-HERO.firstSeenDay), "days", "since first seen"],
-    ...firmware.map(([fw, n]): [string, string, string] => [String(n), fw, `of ${HERO.totalTickets} stuck sessions`]),
-    [
-      String(priorUses(RECORD_ONLY_RUNBOOK).length),
-      `${RECORD_ONLY_RUNBOOK} closures`,
-      `as one-offs in ${WINDOW_DAYS} days`,
-    ],
+  const { pack, run, lanes, resultFor } = useRun();
+  const incident = useIncident();
+  const line = incident.escalation;
+  const pattern = incidentPattern(run.steps.patterns.data.patterns, lanes.held, incident);
+  const fired = new Set(line.fired);
+  const runbook = incident.recordOnlyRunbook;
+  const facts = [
+    ...incident.patternFacts,
+    [String(priorUses(runbook, pack).length), `${runbook} closures`, `as one-offs in ${WINDOW_DAYS} days`] as const,
   ];
 
   return (
@@ -40,11 +35,9 @@ export function PatternFacts() {
       </ul>
 
       <h4 className="dk-h4">Escalation line (proposed)</h4>
-      <p className="dk-note">
-        Support owns it when {ESCALATION_LINE.supportOwns.map((s) => s.toLowerCase()).join("; ")}.
-      </p>
+      <p className="dk-note">Support owns it when {line.supportOwns.map((s) => s.toLowerCase()).join("; ")}.</p>
       <ul className="dk-list dk-list--plain esc-rules" aria-label="Escalate to engineering when any of these is true">
-        {ESCALATION_LINE.escalateWhenAny.map((rule) => (
+        {line.escalateWhenAny.map((rule) => (
           <li key={rule.key} className={fired.has(rule.key) ? "rule rule--fired" : "rule"}>
             <span className="rule-box" aria-hidden="true">
               {fired.has(rule.key) ? "✓" : ""}

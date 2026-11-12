@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { TICKETS } from "../../data/synthetic";
 import { LANE_LABEL, LANES, useRun, type Lane } from "../../run";
 import { Inspector } from "./Inspector";
 import { RunBar } from "./RunBar";
@@ -11,11 +10,12 @@ type Filter = Lane | "all";
 
 /** The console: every ticket with its decision, and an inspector for the selected one. */
 export function QueueTab() {
-  const { lanes, counts, lane, resultFor } = useRun();
+  const { pack, lanes, counts, lane, resultFor } = useRun();
+  const tickets = pack.tickets;
   const [filter, setFilter] = useState<Filter>("all");
   // Open on the ticket the desk was opened for, else the first held ticket: the one the repeat rule is about.
   const asked = useDeskTicket();
-  const [selected, setSelected] = useState(() => asked ?? lanes.held[0] ?? TICKETS[0]?.id ?? "");
+  const [selected, setSelected] = useState(() => asked ?? lanes.held[0] ?? tickets[0]?.id ?? "");
 
   // Under 1000 px the inspector sits below the table, so bring it into view.
   const select = (id: string) => {
@@ -24,9 +24,9 @@ export function QueueTab() {
       document.getElementById("queue-inspector")?.scrollIntoView({ block: "nearest" });
   };
 
-  const rows = TICKETS.map((t) => t.id).filter((id) => filter === "all" || lane(id) === filter);
+  const rows = tickets.map((t) => t.id).filter((id) => filter === "all" || lane(id) === filter);
   const filters: { id: Filter; label: string; count: number }[] = [
-    { id: "all", label: "All", count: TICKETS.length },
+    { id: "all", label: "All", count: tickets.length },
     ...LANES.map((id) => ({ id, label: LANE_LABEL[id], count: counts[id] })),
   ];
 
@@ -53,7 +53,7 @@ export function QueueTab() {
         <div className="queue-table">
           <TicketTable rows={rows} resultFor={resultFor} selected={selected} onSelect={select} />
           <p className="dk-note" role="status">
-            Showing {rows.length} of {TICKETS.length} tickets. All data is synthetic.
+            Showing {rows.length} of {tickets.length} tickets. All data is synthetic.
           </p>
         </div>
         <Inspector entry={resultFor(selected)} />

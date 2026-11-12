@@ -1,6 +1,6 @@
-import { SITES } from "../../data/synthetic";
+import { Fragment } from "react";
 import { blockClass, pillTone } from "../ui/origin";
-import type { TicketResult } from "../../run";
+import { useRun, type TicketResult } from "../../run";
 import { Pill } from "../ui/Pill";
 import { ProvenanceNote } from "../ui/ProvenanceNote";
 import { QuotedText } from "../ui/QuotedText";
@@ -17,6 +17,7 @@ const ACTION_LABEL: Record<string, string> = {
 /** The selected ticket in full: its text with the quoted words highlighted, the decision, and how it was checked. */
 export function Inspector({ entry }: { entry: TicketResult | undefined }) {
   const gate = useMeterGate();
+  const { pack } = useRun();
   if (!entry) {
     return (
       <aside className="inspector" id="queue-inspector" aria-label="Selected ticket">
@@ -25,7 +26,6 @@ export function Inspector({ entry }: { entry: TicketResult | undefined }) {
     );
   }
   const { ticket, result, runbook, repeatRule, provenance } = entry;
-  const site = ticket.site === "-" ? null : `${ticket.site} · ${SITES[ticket.site] ?? ""}`;
 
   return (
     <aside className="inspector" id="queue-inspector" aria-label={`Ticket ${ticket.id}`}>
@@ -38,20 +38,12 @@ export function Inspector({ entry }: { entry: TicketResult | undefined }) {
       <dl className="dk-dl inspector-facts">
         <dt>Raised by</dt>
         <dd>{ticket.from}</dd>
-        {site && (
-          <>
-            <dt>Site</dt>
-            <dd>{site}</dd>
-          </>
-        )}
-        {ticket.charger !== "-" && (
-          <>
-            <dt>Charger</dt>
-            <dd className="dk-mono">{ticket.charger}</dd>
-            <dt>Firmware</dt>
-            <dd className="dk-mono">{ticket.fw}</dd>
-          </>
-        )}
+        {pack.facts(ticket).map((f) => (
+          <Fragment key={f.label}>
+            <dt>{f.label}</dt>
+            <dd className={f.mono ? "dk-mono" : undefined}>{f.value}</dd>
+          </Fragment>
+        ))}
       </dl>
 
       <section className={`${blockClass(provenance.origin)} inspector-ai`} aria-labelledby="inspector-decision">
@@ -117,18 +109,18 @@ export function Inspector({ entry }: { entry: TicketResult | undefined }) {
             Held: {repeatRule.runbook.id} has closed this {repeatRule.uses.length} times in {repeatRule.windowDays} days
           </h4>
           <p>
-            {repeatRule.runbook.id} only corrects the record; it does not change why the session stayed open. For "
+            {repeatRule.runbook.id} only corrects the record; it does not change {pack.heldNote}. For "
             {repeatRule.runbook.scope}" it has already closed {repeatRule.uses.length} tickets at {repeatRule.sites}{" "}
-            sites, each as a one-off. The rule: a record-only runbook is not applied again after {repeatRule.limit}{" "}
-            closures in {repeatRule.windowDays} days. The ticket stays open and joins the incident.
+            {pack.placeWord}, each as a one-off. The rule: a record-only runbook is not applied again after{" "}
+            {repeatRule.limit} closures in {repeatRule.windowDays} days. The ticket stays open and joins the incident.
           </p>
           <details>
             <summary>The {repeatRule.uses.length} earlier closures</summary>
             <ul className="dk-list dk-list--plain inspector-history">
               {repeatRule.uses.map((h) => (
                 <li key={h.id}>
-                  <span className="dk-mono">{h.id}</span> · day {h.day} · <span className="dk-mono">{h.site}</span> ·{" "}
-                  {h.resolution}
+                  <span className="dk-mono">{h.id}</span> · day {h.day} ·{" "}
+                  <span className="dk-mono">{pack.placeOf(h)}</span> · {h.resolution}
                 </li>
               ))}
             </ul>
@@ -138,10 +130,7 @@ export function Inspector({ entry }: { entry: TicketResult | undefined }) {
 
       {entry.needsMeterCheck && entry.lane !== "person" && (
         <div className="dk-note">
-          <p>
-            {runbook?.id} closes at the last recorded meter value, so a person checks that the meter shows no energy
-            change since unplug before it runs.
-          </p>
+          <p>{pack.gate.why(runbook?.id ?? "")}</p>
           {entry.lane === "close" && gate && (
             <label className="inspector-meter">
               <input
@@ -149,11 +138,11 @@ export function Inspector({ entry }: { entry: TicketResult | undefined }) {
                 checked={gate.checked.has(entry.ticket.id)}
                 onChange={(e) => gate.confirm(entry.ticket.id, e.currentTarget.checked)}
               />
-              I checked the meter: no energy change since unplug
+              {pack.gate.label}
             </label>
           )}
           {entry.lane === "close" && gate && !gate.checked.has(entry.ticket.id) && (
-            <p className="dk-mono">Not approvable until the meter is checked.</p>
+            <p className="dk-mono">{pack.gate.pending}</p>
           )}
         </div>
       )}
