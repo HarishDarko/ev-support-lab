@@ -14,7 +14,6 @@ import type {
   ShiftnoteModel,
   VerifyModel,
 } from "../ev-charging/steps";
-import type { ShiftSummary } from "../types";
 import { COMPONENTS, HISTORY, RUNBOOKS, TICKETS } from "./data";
 import {
   HANDOFF_NOTE,
@@ -314,7 +313,7 @@ ${clip(input?.summary, 8000)}`;
   validate(data: ShiftnoteModel, _input: StepInput, prompt: string) {
     return { data, checks: grounding(data, prompt) };
   },
-  fallback: (input: StepInput) => ruleShiftnote(input?.summary as ShiftSummary | null | undefined),
+  fallback: (input: StepInput) => ruleShiftnote(input?.summary),
 };
 
 // ---- classify ----

@@ -224,9 +224,9 @@ describe("shift-note fallbacks: crafted summaries give a safe note, never a thro
     ]),
   ];
   const fallbacks: [string, (s: unknown) => { [k: string]: unknown }][] = [
-    ["ev-charging", (s) => evShiftnote(s as never)],
-    ["saas-support", (s) => saasShiftnote(s as never)],
-    ["e-commerce", (s) => shopShiftnote(s as never)],
+    ["ev-charging", (s) => evShiftnote(s)],
+    ["saas-support", (s) => saasShiftnote(s)],
+    ["e-commerce", (s) => shopShiftnote(s)],
     ...PACK_IDS.map((id): [string, (s: unknown) => { [k: string]: unknown }] => {
       const { shiftnote } = shortChainSteps(PACKS[id] as unknown as Pack);
       return [`short chain (${id})`, (s) => shiftnote.fallback({ summary: s }) as unknown as { [k: string]: unknown }];
@@ -247,7 +247,7 @@ describe("shift-note fallbacks: crafted summaries give a safe note, never a thro
   }
 
   it("keeps the string items of a mixed list and ignores the rest", () => {
-    const note = evShiftnote({ needs_a_person: ["T-2041 needs a meter check.", 5, { toString: 1 }] } as never);
+    const note = evShiftnote({ needs_a_person: ["T-2041 needs a meter check.", 5, { toString: 1 }] });
     expect(note.needs_you).toHaveLength(1);
     expect(note.needs_you[0]).toMatch(/^T-2041 needs a meter check\./);
   });
