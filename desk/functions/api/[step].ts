@@ -96,13 +96,14 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
   };
   try {
     if (env.MOCK === "1") throw new StepError("AI is turned off in this environment.", 503);
-    await rateLimit(env, request);
     // Time budget per step: the fallback must arrive while the viewer is still on the screen.
     const budget = step.deep ? 40_000 : 15_000;
     let lastError: unknown;
     for (let attempt = 1; attempt <= 2; attempt += 1) {
-      const left = budget - (Date.now() - started);
-      if (attempt > 1 && left < budget / 2) break; // not enough time for a useful retry
+      if (attempt > 1 && budget - (Date.now() - started) < budget / 2) break; // not enough time for a useful retry
+      // Every model call counts against the limits, a retry too, so a day's budget of calls is never exceeded by
+      // retries. A refused retry ends here, and the rules answer.
+      await rateLimit(env, request);
       trace.attempts = attempt;
       try {
         const res = await callJSON(env, {
@@ -110,7 +111,7 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
           prompt,
           schema: step.schema,
           maxTokens: step.maxTokens,
-          timeout: left,
+          timeout: budget - (Date.now() - started),
           system: pack.prompts.system,
         });
         spend(res);
