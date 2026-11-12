@@ -3,7 +3,10 @@
 // Fake timers stand in for the model: each call takes the recorded run's own time for that step.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { recordedRun } from "../src/run/recorded";
-import { CHAIN_CALLS, TRIAGE_BATCHES, runChain, type PostStep } from "../src/run/live";
+import { CHAIN_CALLS, TRIAGE_BATCHES, chainCalls, runChain, triageBatches, type PostStep } from "../src/run/live";
+import { EV_DESK } from "../src/run/pack";
+import { SAAS_DESK } from "../src/packs/saas-desk";
+import { SHOP_DESK } from "../src/packs/ecommerce-desk";
 import { chainSeconds } from "../src/run/cost";
 import { runShortChain } from "../src/run/short";
 import { runStatusText, secondsLeft, slowestFirst } from "../src/run/status";
@@ -82,6 +85,38 @@ describe("the live chain's timing (SD-04)", () => {
       "verify",
     ]);
   });
+});
+
+describe("the live chain's timing for each industry (SD-04 on the pack-aware run model)", () => {
+  for (const pack of [EV_DESK, SAAS_DESK, SHOP_DESK]) {
+    it(`${pack.id}: starts its own triage batches, the investigation and the verification at once`, async () => {
+      const own = pack.recorded().steps;
+      const batches = triageBatches(pack);
+      const bodies: unknown[] = [];
+      // Every call takes 1 s here: the rules-only recordings of SaaS and e-commerce have near-zero step times.
+      const { post, startOf, endOf } = timedPost((step, body) => {
+        bodies.push(body);
+        if (step !== "triage") return { ...own[step], ms: 1000 } as StepResult<unknown>;
+        const ids = (body as { ids: string[] }).ids;
+        return { ...own.triage[batches.findIndex((b) => b[0] === ids[0])]!, ms: 1000 } as StepResult<unknown>;
+      });
+      const done = runChain({ post, base: own, pack });
+      await vi.runAllTimersAsync();
+      const report = await done;
+
+      expect(report.answered).toBe(chainCalls(pack));
+      expect(startOf("triage")).toEqual(batches.map(() => 0));
+      expect(startOf("investigate")).toEqual([0]);
+      expect(startOf("verify")).toEqual([0]);
+      expect(startOf("patterns")).toEqual([1000]);
+      expect(startOf("handoff")).toEqual([1000]);
+      expect(startOf("shiftnote")).toEqual([2000]);
+      expect(startOf("kb")).toEqual([2000]);
+      expect(startOf("classify")).toEqual([3000]);
+      // A pack other than EV charging is named in every request; EV's requests carry no pack, as before.
+      for (const body of bodies) expect((body as { pack?: string }).pack).toBe(pack.requestPack);
+    });
+  }
 });
 
 describe("the short chain's shift note", () => {

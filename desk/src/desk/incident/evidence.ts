@@ -1,4 +1,5 @@
-// Numbers for the incident tab, all computed from the synthetic data.
+// The EV incident's numbers, all computed from the synthetic data (src/incident/ev-charging.ts reads them), and
+// incidentPattern, which works for any incident's ticket ids.
 import { HERO, RUNBOOKS, type FleetRow, type UnplugToDrop } from "../../data/synthetic";
 import type { PatternModel } from "../../run/types";
 
@@ -29,8 +30,12 @@ export const stuckShare = (row: FleetRow): number =>
  * The AI pattern that is the incident: the one holding the most held tickets, then the one with the most tickets
  * of the incident (the prototype's rule).
  */
-export function incidentPattern(patterns: readonly PatternModel[], heldIds: readonly string[]): PatternModel | null {
-  const incident = new Set([...HERO.openIds, ...HERO.historyIds]);
+export function incidentPattern(
+  patterns: readonly PatternModel[],
+  heldIds: readonly string[],
+  ids: { openIds: readonly string[]; historyIds: readonly string[] } = HERO,
+): PatternModel | null {
+  const incident = new Set([...ids.openIds, ...ids.historyIds]);
   const held = new Set(heldIds);
   const score = (p: PatternModel) =>
     p.ticket_ids.filter((id) => held.has(id)).length * 100 +

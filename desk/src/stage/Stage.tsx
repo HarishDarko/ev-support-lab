@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode, Ref } from "react";
-import type { RunApi } from "../run";
+import { NO_LIVE_RUNS, type RunApi } from "../run";
 import { STAGES } from "../stages";
 import { BEATS, type Beat, type Facts } from "../story/beats";
 import { DUR, EASE } from "../board/motion";
@@ -127,9 +127,13 @@ export function RunControl({ api }: { api: RunApi }) {
       <p className="run-label">
         <span className="mono">{api.label}</span>
       </p>
-      <button type="button" className="btn btn--small" onClick={() => void api.runLive()} disabled={running}>
-        {running ? "Running live…" : "Run it live"}
-      </button>
+      {api.pack.liveRuns ? (
+        <button type="button" className="btn btn--small" onClick={() => void api.runLive()} disabled={running}>
+          {running ? "Running live…" : "Run it live"}
+        </button>
+      ) : (
+        <p className="run-message">{NO_LIVE_RUNS}</p>
+      )}
       {/* Visible text that changes every second, so it is not a live region. */}
       {api.statusText && <p className="run-status">{api.statusText}</p>}
       {api.message && (

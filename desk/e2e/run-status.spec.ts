@@ -1,6 +1,7 @@
 // While "Run it live" runs, both run controls say which step is running and about how long is left.
 // MOCK=1 answers every call from the rules at once, so the investigation call is held back here to see it running.
 import { test, expect, type Page } from "@playwright/test";
+import { openFromChooser } from "./chooser";
 
 /** Holds every /api/investigate answer until `release` is called. */
 async function holdInvestigation(page: Page) {
@@ -16,7 +17,7 @@ async function holdInvestigation(page: Page) {
 
 test("the stage's Run it live names the running step and the time left, then finishes", async ({ page }) => {
   const release = await holdInvestigation(page);
-  await page.goto("/");
+  await openFromChooser(page, "/");
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
   await expect(page.locator("main[data-beat='t1']")).toBeVisible();
@@ -34,7 +35,7 @@ test("the stage's Run it live names the running step and the time left, then fin
 
 test("the desk's Run it live shows the same status line", async ({ page }) => {
   const release = await holdInvestigation(page);
-  await page.goto("/?desk=queue");
+  await openFromChooser(page, "/?desk=queue");
   const dialog = page.getByRole("dialog", { name: "The desk" });
   await dialog.getByRole("button", { name: "Run it live" }).click();
   await expect(dialog.locator(".runbar-status")).toContainText("writing the investigation");

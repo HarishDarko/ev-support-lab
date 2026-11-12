@@ -1,10 +1,10 @@
 // The walkthrough as data: five stages, sixteen beats, one point each (docs/specs/desk-phase2.md, section 2).
 // Every number in a claim is computed here from the synthetic data or the run, never typed into the UI.
-import { ENGINEERING_CHANGE, ESCALATION_LINE, HERO, TICKETS } from "../data/synthetic";
-import { experiment } from "../data/experiment";
-import { LAB } from "../data/lab";
+import { EV_INCIDENT } from "../incident/ev-charging";
+import type { Incident, IncidentBeatId } from "../incident/types";
 import type { Stage } from "../stages";
 import { needsMeterCheck } from "../run/guardrail";
+import { EV_DESK, type DeskPack } from "../run/pack";
 import { priorUses, REPEAT_LIMIT, WINDOW_DAYS, type Lane, type StoryData } from "./data";
 
 export type DeskTab = "queue" | "incident" | "handoff" | "kb" | "coverage" | "scorecard";
@@ -51,35 +51,30 @@ export interface Facts extends Decisions {
   heldRunbook: string;
   prior: number;
   priorSites: number;
-  incident: typeof HERO;
+  incident: Incident;
   triggers: string[];
-  drop: { min: number; max: number; n: number };
-  fleet: typeof HERO.fleet;
-  v: typeof experiment.verification;
   shippedDay: number;
+  /** The pack's own numbers behind its beat texts (Incident.storyFacts), kept here so the story shows them. */
+  [key: string]: unknown;
 }
 
 const LANES: Lane[] = ["close", "person", "escalate", "info", "held"];
 
-const TRIGGER_WORDS: Record<string, (f: Pick<Facts, "incident">) => string> = {
-  code: () => "it needs a code change",
-  spread: (f) => `it spans ${f.incident.sites.length} sites`,
-  billing: () => "billing is at risk",
-  safety: () => "there is a safety concern",
-};
-
-export function facts(data: StoryData, decisions: Decisions): Facts {
+export function facts(
+  data: StoryData,
+  decisions: Decisions,
+  incident: Incident = EV_INCIDENT,
+  pack: DeskPack = EV_DESK,
+): Facts {
   const lanes = Object.fromEntries(LANES.map((l) => [l, [] as string[]])) as Record<Lane, string[]>;
   for (const t of data.tickets) lanes[t.lane].push(t.id);
-  const heldRunbook = data.tickets.find((t) => t.lane === "held")?.runbook ?? "RB-05";
-  const prior = priorUses(heldRunbook);
-  const secs = HERO.unplugToDropSec.map((d) => d.s);
-  const incident = HERO;
+  const heldRunbook = data.tickets.find((t) => t.lane === "held")?.runbook ?? incident.recordOnlyRunbook;
+  const prior = priorUses(heldRunbook, pack);
   // The meter gate (v1, kept): a record-only runbook closes at the last recorded meter value, so a person confirms
   // the meter is flat before such a closure can be approved.
   const runbookOf = new Map(data.tickets.map((t) => [t.id, t.runbook]));
   const checked = new Set(decisions.meterChecked);
-  const gated = (id: string) => needsMeterCheck(runbookOf.get(id) ?? "none") && !checked.has(id);
+  const gated = (id: string) => needsMeterCheck(runbookOf.get(id) ?? "none", pack) && !checked.has(id);
   const approvable = lanes.close.filter((id) => !gated(id));
   const awaitingMeter = lanes.close.filter(gated);
   const approvedSet = new Set(decisions.approvedIds);
@@ -90,42 +85,26 @@ export function facts(data: StoryData, decisions: Decisions): Facts {
     approvedCount,
     approvable,
     awaitingMeter,
-    total: TICKETS.length,
+    total: pack.tickets.length,
     lanes,
     heldRunbook,
     prior: prior.length,
-    priorSites: new Set(prior.map((h) => h.site)).size,
+    priorSites: new Set(prior.map((h) => pack.placeOf(h))).size,
     incident,
-    triggers: ESCALATION_LINE.heroTriggers.map((k) => TRIGGER_WORDS[k]!({ incident })),
-    drop: { min: Math.min(...secs), max: Math.max(...secs), n: secs.length },
-    fleet: experiment.fleet,
-    v: experiment.verification,
-    shippedDay: ENGINEERING_CHANGE.shippedDay,
+    triggers: [...incident.triggerWords],
+    ...incident.storyFacts,
+    shippedDay: incident.change.shippedDay,
   };
 }
 
-const list = (items: string[]) =>
-  items.length < 2 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
-const ofDrops = (f: Facts, i: number) => {
-  const row = f.fleet[i]!;
-  return `${row.fw.split(" ")[0]}: ${row.stuck} of ${row.dropsNearUnplug}`;
-};
-/** Rounds the slowest drop up to the next 30 s, the unit the detector and the article use. */
-const window30 = (s: number) => Math.ceil(s / 30) * 30;
+/** What happened on the canary, in the pack's words. */
+export const canaryOutcome = (f: Facts): string => f.incident.canaryOutcome(f);
 
-/** What happened to the canary's drops near unplug, from the lab's numbers. */
-export function canaryOutcome(f: Facts): string {
-  const drops = f.v.canary.after.dropsNearUnplug;
-  const closed = f.v.canary.after.closedByReconciliation;
-  const skipped = f.v.correctness.newerTransactionSkips;
-  if (closed >= drops) return `on the canary, reconciliation closed all ${closed}`;
-  const rest = drops - closed;
-  const why =
-    skipped === rest
-      ? `${rest === 1 ? "the other had" : `the other ${rest} had`} a newer session on the charger and went to a person`
-      : `${rest} went to a person`;
-  return `on the canary, reconciliation closed ${closed} of ${drops}; ${why}`;
-}
+/** A beat whose text belongs to the incident's pack. */
+const fromIncident = (id: IncidentBeatId) => ({
+  claim: (f: Facts) => f.incident.beats[id].claim(f),
+  lede: (f: Facts) => f.incident.beats[id].lede(f),
+});
 
 const day0 = () => "Day 0";
 const shiftStart = () => "Day 0 · 07:00 ET";
@@ -136,8 +115,7 @@ export const BEATS: readonly Beat[] = [
     stage: "queue",
     when: shiftStart,
     claim: (f) => `${f.total} tickets are waiting.`,
-    lede: () =>
-      "Raised overnight by the NOC, customer care, field service, host accounts and billing. Each needs an engineering-level look.",
+    lede: (f) => f.incident.queue.raisedBy,
     desk: "queue",
   },
   {
@@ -178,7 +156,7 @@ export const BEATS: readonly Beat[] = [
         : `A person approves the ${f.approvable.length} closures.`,
     lede: (f) =>
       f.awaitingMeter.length
-        ? `Nothing closes on the AI's word. ${f.awaitingMeter.length} more wait until a person confirms the meter in the desk.`
+        ? `Nothing closes on the AI's word. ${f.awaitingMeter.length} more wait until a person ${f.incident.queue.check} in the desk.`
         : "Nothing closes on the AI's word. Every closure names a real runbook.",
     desk: "queue",
     action: "approve",
@@ -187,71 +165,56 @@ export const BEATS: readonly Beat[] = [
     id: "e1",
     stage: "evidence",
     when: day0,
-    claim: (f) => `One pattern, one incident: ${f.incident.incidentId}.`,
-    lede: (f) =>
-      `${f.incident.totalTickets} tickets at ${f.incident.sites.length} sites in ${-f.incident.firstSeenDay} days. It crosses the escalation line three ways: ${list(f.triggers)}.`,
+    ...fromIncident("e1"),
     desk: "incident",
   },
   {
     id: "e2",
     stage: "evidence",
     when: day0,
-    claim: (f) => `Every stuck session dropped its connection within ${window30(f.drop.max)} s of the unplug event.`,
-    lede: (f) =>
-      `${f.drop.n} of ${f.drop.n} sessions. The drop came ${f.drop.min} to ${f.drop.max} seconds after the charger reported losing communication with the EV (simulated here as unplugging).`,
+    ...fromIncident("e2"),
     desk: "incident",
   },
   {
     id: "e3",
     stage: "evidence",
     when: day0,
-    claim: () => "The charger sent the Ended. This synthetic backend ignored it.",
-    lede: () =>
-      "A known class of backend handling bug, exposed by OCPP reconnects, in a synthetic system: on FW-A the queued Ended arrived after the reconnect, and the backend dropped it as out of order because the connector already read Available.",
+    ...fromIncident("e3"),
     desk: "incident",
   },
   {
     id: "e3b",
     stage: "evidence",
     when: day0,
-    claim: () => "On FW-B, the Ended never arrived.",
-    lede: () =>
-      "Same drop, same reconnect, then nothing. Either the firmware lost its queue or the capture missed it; the logs alone cannot say which.",
+    ...fromIncident("e3b"),
     desk: "incident",
   },
   {
     id: "e4",
     stage: "evidence",
     when: day0,
-    claim: (f) => `${ofDrops(f, 0)} drops near unplug ended stuck.`,
-    lede: (f) =>
-      `${ofDrops(f, 1)}. ${ofDrops(f, 2)}. Drops at other times left ${f.fleet.reduce((n, r) => n + r.stuckFromElsewhere, 0)} sessions stuck.`,
+    ...fromIncident("e4"),
     desk: "incident",
   },
   {
     id: "e5",
     stage: "evidence",
     when: day0,
-    claim: () => "Two hypotheses, neither confirmed. Support contains it today.",
-    lede: (f) =>
-      `They may both be true. Meanwhile the ${f.incident.openIds.length} open sessions are corrected under the incident, and a detector is proposed for new ones.`,
+    ...fromIncident("e5"),
     desk: "incident",
   },
   {
     id: "e6",
     stage: "evidence",
     when: day0,
-    claim: () => "Reproduced on demand.",
-    lede: () =>
-      "A small OCPP 2.0.1 backend and a simulated charger replay the sequence. With the legacy handling, the session stays open. It is a known class of reconnect bug; an open-source backend fixed a related reconnect problem in public.",
+    ...fromIncident("e6"),
     desk: "incident",
   },
   {
     id: "v1",
     stage: "verification",
     when: day0,
-    claim: () => "One packet to engineering. One ask, with the bug reproduced in a test.",
-    lede: () => "A person approves it before it goes.",
+    ...fromIncident("v1"),
     desk: "handoff",
     action: "send",
   },
@@ -259,37 +222,28 @@ export const BEATS: readonly Beat[] = [
     id: "v2",
     stage: "verification",
     when: (f) => `Day ${f.shippedDay}`,
-    claim: (f) => `Engineering's change, behind a flag on ${f.v.canary.sites} canary sites.`,
-    lede: (f) =>
-      `${f.v.control.sites} control sites (${LAB.controlMix}) keep the legacy behaviour, so the control is not perfectly matched.`,
+    ...fromIncident("v2"),
     desk: "handoff",
   },
   {
     id: "v3",
     stage: "verification",
-    when: (f) => `Day ${f.shippedDay + f.v.windowDays}`,
-    claim: (f) =>
-      `Canary ${f.v.canary.before.stuck} → ${f.v.canary.after.stuck}. Control ${f.v.control.before.stuck} → ${f.v.control.after.stuck}.`,
-    lede: (f) =>
-      `Stuck sessions in the ${f.v.windowDays} days before and after. Drops near unplug kept happening; ${canaryOutcome(f)}.`,
+    when: (f) => `Day ${f.shippedDay + f.incident.verification.windowDays}`,
+    ...fromIncident("v3"),
     desk: "handoff",
   },
   {
     id: "v4",
     stage: "verification",
-    when: (f) => `Day ${f.shippedDay + f.v.windowDays}`,
-    claim: () => "Consistent with the hypothesis. Not proof of it.",
-    lede: (f) =>
-      `Only ${f.v.correctness.reconciled} reconciliations and ${f.v.correctness.lateEndedArrived} late Ended events exercised the change.`,
+    when: (f) => `Day ${f.shippedDay + f.incident.verification.windowDays}`,
+    ...fromIncident("v4"),
     desk: "handoff",
   },
   {
     id: "c1",
     stage: "close",
     when: () => "The next ticket",
-    claim: () => "Next time, support has the article.",
-    lede: (f) =>
-      `A new ticket is checked against it. The first step is always the meter check, before ${f.heldRunbook}.`,
+    ...fromIncident("c1"),
     desk: "kb",
   },
   {

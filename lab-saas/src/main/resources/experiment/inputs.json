@@ -1,0 +1,102 @@
+{
+  "start": "2026-09-07T04:00:00Z",
+  "days": 14,
+  "eventsPerHour": 2,
+  "replayHour": 8,
+  "replayMinute": 30,
+  "tokenLifetimeSeconds": 3600,
+  "tokenRequestsPerMinute": 100,
+  "stormThreshold": 20,
+  "canary": ["ep-01", "ep-02", "ep-03", "ep-04", "ep-05", "ep-06", "ep-07", "ep-08", "ep-09", "ep-10"],
+  "control": ["ep-11", "ep-12", "ep-13", "ep-14", "ep-15", "ep-16", "ep-17", "ep-18", "ep-19", "ep-20"],
+  "hmac": { "endpoint": "ep-21", "day": 1, "hour": 14, "title": "Northwind Labs · ep_northwind · H-3111" },
+  "windows": [
+    {
+      "name": "before",
+      "fixOnCanary": false,
+      "bursts": [
+        { "endpoint": "ep-01", "day": 3, "hour": 1, "size": 32 },
+        { "endpoint": "ep-02", "day": 5, "hour": 2, "size": 28 },
+        { "endpoint": "ep-03", "day": 6, "hour": 3, "size": 26 },
+        { "endpoint": "ep-04", "day": 8, "hour": 2, "size": 22 },
+        { "endpoint": "ep-05", "day": 10, "hour": 4, "size": 20 },
+        { "endpoint": "ep-06", "day": 2, "hour": 14, "size": 12 },
+        { "endpoint": "ep-07", "day": 7, "hour": 9, "size": 10 },
+        { "endpoint": "ep-08", "day": 9, "hour": 16, "size": 9 },
+        { "endpoint": "ep-09", "day": 12, "hour": 11, "size": 8 },
+        { "endpoint": "ep-11", "day": 4, "hour": 4, "size": 30 },
+        { "endpoint": "ep-12", "day": 6, "hour": 1, "size": 24 },
+        { "endpoint": "ep-13", "day": 9, "hour": 2, "size": 21 },
+        { "endpoint": "ep-14", "day": 11, "hour": 3, "size": 19 },
+        { "endpoint": "ep-15", "day": 3, "hour": 15, "size": 14 },
+        { "endpoint": "ep-16", "day": 5, "hour": 10, "size": 11 },
+        { "endpoint": "ep-17", "day": 8, "hour": 13, "size": 9 },
+        { "endpoint": "ep-18", "day": 12, "hour": 17, "size": 7 }
+      ],
+      "outages": [],
+      "captures": [
+        { "endpoint": "ep-01", "day": 3, "hour": 1, "title": "Harbor Analytics · ep_harbor_main · T-3004" },
+        { "endpoint": "ep-11", "day": 4, "hour": 4, "title": "Saffron Foods · ep_saffron · T-3024" }
+      ]
+    },
+    {
+      "name": "after",
+      "fixOnCanary": true,
+      "bursts": [
+        { "endpoint": "ep-01", "day": 3, "hour": 1, "size": 32 },
+        { "endpoint": "ep-02", "day": 5, "hour": 2, "size": 28 },
+        { "endpoint": "ep-03", "day": 6, "hour": 3, "size": 26 },
+        { "endpoint": "ep-04", "day": 8, "hour": 2, "size": 22 },
+        { "endpoint": "ep-05", "day": 10, "hour": 4, "size": 20 },
+        { "endpoint": "ep-06", "day": 2, "hour": 14, "size": 12 },
+        { "endpoint": "ep-07", "day": 7, "hour": 9, "size": 10 },
+        { "endpoint": "ep-08", "day": 9, "hour": 16, "size": 9 },
+        { "endpoint": "ep-09", "day": 12, "hour": 11, "size": 8 },
+        { "endpoint": "ep-10", "day": 9, "hour": 14, "size": 20 },
+        { "endpoint": "ep-11", "day": 2, "hour": 1, "size": 32 },
+        { "endpoint": "ep-12", "day": 4, "hour": 2, "size": 29 },
+        { "endpoint": "ep-13", "day": 6, "hour": 3, "size": 25 },
+        { "endpoint": "ep-14", "day": 8, "hour": 1, "size": 22 },
+        { "endpoint": "ep-15", "day": 10, "hour": 4, "size": 19 },
+        { "endpoint": "ep-16", "day": 3, "hour": 11, "size": 13 },
+        { "endpoint": "ep-17", "day": 5, "hour": 15, "size": 10 },
+        { "endpoint": "ep-18", "day": 7, "hour": 9, "size": 8 },
+        { "endpoint": "ep-19", "day": 11, "hour": 16, "size": 7 }
+      ],
+      "outages": [{ "endpoint": "ep-10", "day": 9, "hour": 14, "status": 503, "minutes": 40 }],
+      "captures": [
+        { "endpoint": "ep-01", "day": 3, "hour": 1, "title": "Harbor Analytics · ep_harbor_main · T-3004, after the fix" }
+      ]
+    }
+  ],
+  "expectedStory": {
+    "before.canary.events": 6869,
+    "before.canary.tokenRequests": 10573,
+    "before.canary.storms": 9,
+    "before.canary.pauses": 5,
+    "before.canary.realOutagePauses": 0,
+    "before.canary.lost": 23,
+    "before.canary.deliveredTwice": 0,
+    "before.control.events": 6839,
+    "before.control.tokenRequests": 10474,
+    "before.control.storms": 8,
+    "before.control.pauses": 4,
+    "before.control.realOutagePauses": 0,
+    "before.control.lost": 25,
+    "before.control.deliveredTwice": 0,
+    "after.canary.events": 6887,
+    "after.canary.tokenRequests": 3342,
+    "after.canary.storms": 0,
+    "after.canary.pauses": 1,
+    "after.canary.realOutagePauses": 1,
+    "after.canary.lost": 0,
+    "after.canary.deliveredTwice": 0,
+    "after.control.events": 6867,
+    "after.control.tokenRequests": 10562,
+    "after.control.storms": 9,
+    "after.control.pauses": 5,
+    "after.control.realOutagePauses": 0,
+    "after.control.lost": 22,
+    "after.control.deliveredTwice": 0
+  }
+}

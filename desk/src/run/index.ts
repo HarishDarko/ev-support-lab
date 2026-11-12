@@ -25,3 +25,5 @@ export { formatUsd, formatUsdShort, formatSeconds, formatTokens } from "./format
 export { quoteSpans, splitByQuote } from "./quote";
 export * from "./types";
 export { classifyTicket, MAX_TICKET_CHARS } from "./classify";
+export { EV_DESK, NO_LIVE_RUNS } from "./pack";
+export type { DeskPack, DeskTicket, DeskHistory, DeskRunbook, DeskField, DeskColumn } from "./pack";

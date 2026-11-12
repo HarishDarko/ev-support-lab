@@ -1,10 +1,9 @@
 import { LayoutGroup, motion } from "motion/react";
-import { ENGINEERING_CHANGE } from "../data/synthetic";
-import { LAB, source } from "../data/lab";
+import { source } from "../data/lab";
 import { beatIndex, type BeatId, type Facts } from "../story/beats";
 import type { StoryData } from "../story/data";
 import { CoverageStrip } from "./Coverage";
-import { FleetBars, OcppReplay, TimingPlot } from "./Evidence";
+import { BreakdownBars, LogReplay, TimingPlot } from "./Evidence";
 import { ArticleNode, HandoffNode, Hypotheses, LabNode, ProveNode, ResultBars } from "./Findings";
 import { PatternNode } from "./PatternNode";
 import { TileField } from "./TileField";
@@ -36,18 +35,15 @@ const CHIPS: Chip[] = [
     id: "incident",
     after: "e1",
     node: "node-incident",
-    label: (f) => f.incident.incidentId,
-    value: (f, _d, at) =>
-      at > beatIndex("e5")
-        ? "2 hypotheses · not confirmed"
-        : `${f.incident.totalTickets} tickets · ${f.incident.sites.length} sites`,
+    label: (f) => f.incident.id,
+    value: (f, _d, at) => f.incident.board.incidentValue(at > beatIndex("e5")),
   },
   {
     id: "repro",
     after: "e6",
     node: "node-repro",
     label: () => "Reproduced",
-    value: () => "late Ended ignored, on demand",
+    value: (f) => f.incident.board.reproValue,
   },
   {
     id: "handoff",
@@ -61,16 +57,15 @@ const CHIPS: Chip[] = [
     id: "fix",
     after: "v2",
     node: "node-fix",
-    label: () => ENGINEERING_CHANGE.ref,
-    value: (f) => `flag on ${f.v.canary.sites} canary sites`,
+    label: (f) => f.incident.change.ref,
+    value: (f) => f.incident.board.fixValue,
   },
   {
     id: "result",
     after: "v3",
     node: "node-result",
-    label: (f) => `Day ${f.shippedDay + f.v.windowDays}`,
-    value: (f) =>
-      `canary ${f.v.canary.before.stuck} → ${f.v.canary.after.stuck} · control ${f.v.control.before.stuck} → ${f.v.control.after.stuck}`,
+    label: (f) => `Day ${f.shippedDay + f.incident.verification.windowDays}`,
+    value: (f) => f.incident.board.resultValue,
     tone: () => "ok",
   },
   { id: "article", after: "c1", node: "node-article", label: () => "Article", value: (_f, d) => d.kb.title },
@@ -146,21 +141,20 @@ export function Focus({ beat, data, f, onOpenTicket }: Omit<Props, "at">) {
     case "e1":
       return <PatternNode expanded f={f} onOpen={onOpenTicket} />;
     case "e2":
-      return <TimingPlot />;
+      return <TimingPlot incident={f.incident} />;
     case "e3":
-      return <OcppReplay which="late" />;
     case "e3b":
-      return <OcppReplay which="lost" />;
+      return <LogReplay incident={f.incident} beat={beat} />;
     case "e4":
-      return <FleetBars />;
+      return <BreakdownBars incident={f.incident} />;
     case "e5":
       return <Hypotheses data={data} f={f} />;
     case "e6":
-      return <LabNode variant="repro" />;
+      return <LabNode lab={f.incident.lab} variant="repro" />;
     case "v1":
       return <HandoffNode data={data} sent={f.sent} />;
     case "v2":
-      return <LabNode variant="fix" />;
+      return <LabNode lab={f.incident.lab} variant="fix" />;
     case "v3":
       return <ResultBars f={f} />;
     case "v4":
@@ -179,9 +173,10 @@ function Summary({ data, f }: { data: StoryData; f: Facts }) {
       text: f.approvedCount ? "closures approved by a person" : "closures awaiting a person",
     },
     { n: `${f.lanes.held.length} → 1`, text: "held tickets became one incident" },
-    { n: `${f.v.canary.before.stuck} → ${f.v.canary.after.stuck}`, text: "stuck sessions on the canary sites" },
+    f.incident.board.summary,
   ];
   const note = data.shiftnote;
+  const lab = f.incident.lab;
   return (
     <div className="summary">
       <dl className="numbers">
@@ -214,16 +209,16 @@ function Summary({ data, f }: { data: StoryData; f: Facts }) {
           <p className="node-kicker">The source</p>
           <ul className="source-links">
             <li>
-              <a href={source(LAB.reproduction.path)} target="_blank" rel="noreferrer">
+              <a href={source(lab.reproduction.path)} target="_blank" rel="noreferrer">
                 The reproduction test
               </a>
             </li>
             <li>
-              <a href={source(LAB.regression.path)} target="_blank" rel="noreferrer">
+              <a href={source(lab.regression.path)} target="_blank" rel="noreferrer">
                 The regression test
               </a>
             </li>
-            {LAB.adrs.map((a) => (
+            {lab.adrs.map((a) => (
               <li key={a.path}>
                 <a href={source(a.path)} target="_blank" rel="noreferrer">
                   Decision record: {a.title}

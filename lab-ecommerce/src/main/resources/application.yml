@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: ecommerce-lab
+  datasource:
+    url: ${LAB_DB_URL:jdbc:postgresql://localhost:5432/lab}
+    username: ${LAB_DB_USER:lab}
+    password: ${LAB_DB_PASSWORD:lab}
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
+
+lab:
+  fix:
+    # Default for stores without a per-store override (store.fix_override).
+    # Override on the command line with -Dlab.fix.enabled=false to see the bug.
+    enabled: true
+  checkout:
+    # Checkout stops waiting for the payment processor after this long.
+    timeout: 8s
+  orders:
+    # An order whose checkout saw an authorization is held if the processor's webhook has not arrived by then.
+    webhook-wait: 30s
