@@ -63,7 +63,12 @@ async function post(step: string, body: unknown, env: Env, origin = LOCAL) {
   return { status: res.status, body: (await res.json()) as Out };
 }
 interface Out {
-  trace: { source: string; attempts: number; fallbackReason?: string };
+  trace: {
+    source: string;
+    attempts: number;
+    fallbackReason?: string;
+    checks: { name: string; passed: boolean; detail: string }[];
+  };
 }
 
 // The limiter keeps a per-isolate count per key (functions/_lib/ai.ts), which would carry from one test to the
@@ -106,12 +111,17 @@ describe("patterns prompt: client triage values come only from the allowlist", (
       expect(prompt).not.toContain("close_everything");
     });
 
-    it(`${id}: keeps the good values of a row and drops the bad ones`, () => {
+    it(`${id}: keeps the good values of a row in their places and marks a dropped one with a dash`, () => {
       const prompt = patterns.build({
         triage: [{ id: a!.id, component: "made-up-component", severity: "S1", action: "escalation_candidate" }],
       });
-      expect(prompt).toContain("| triage: S1, escalation_candidate");
+      expect(prompt).toContain("| triage: -, S1, escalation_candidate");
       expect(prompt).not.toContain("made-up-component");
+    });
+
+    it(`${id}: checks each value against its own list, so an allowed value in the wrong place is dropped`, () => {
+      const prompt = patterns.build({ triage: [{ id: a!.id, component: "S1", severity: component, action: "S2" }] });
+      expect(prompt).toBe(patterns.build({}));
     });
   }
 });
@@ -147,7 +157,11 @@ describe("rate limit: every model call counts, a retry too", () => {
     const r = await post("patterns", {}, { ANTHROPIC_API_KEY: "k", DESK_KV: kv, RL_GLOBAL_DAY: "1" });
     expect(sdk.beta).toHaveBeenCalledTimes(1);
     expect(r.body.trace.source).toBe("rules");
-    expect(r.body.trace.fallbackReason).toBe("Today's live-run budget for this demo is used up.");
+    // The reason is the first attempt's failure; the refused retry is in the checks.
+    expect(r.body.trace.attempts).toBe(1);
+    expect(r.body.trace.fallbackReason).toBe("Output failed validation: No usable patterns");
+    expect(r.body.trace.checks.map((c) => c.name)).toEqual(["Attempt 1 validation", "Retry refused"]);
+    expect(r.body.trace.checks[1]!.detail).toBe("Today's live-run budget for this demo is used up.");
     const day = new Date().toISOString().slice(0, 10);
     expect(store.get(`rl:all:${day}`)).toBe("1");
   });
@@ -178,6 +192,17 @@ describe("rate limit: fails closed on a public host, open on a local one", () =>
     const { kv, store } = fakeKv();
     await rateLimit({ DESK_KV: kv }, req(PUBLIC));
     expect([...store.values()]).toEqual(["1", "1"]);
+  });
+
+  it("treats only localhost, 127.0.0.1 and [::1] as local", async () => {
+    for (const origin of [
+      "http://localhost.evil.example",
+      "http://evil.example/localhost",
+      "http://127.0.0.1.evil.example",
+      "http://0.0.0.0:8788",
+      "http://10.0.0.1",
+    ])
+      await expect(rateLimit({}, req(origin)), origin).rejects.toMatchObject({ status: 503 });
   });
 
   it("stays open for local development and tests", async () => {
