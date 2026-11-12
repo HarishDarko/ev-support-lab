@@ -101,9 +101,15 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
     let lastError: unknown;
     for (let attempt = 1; attempt <= 2; attempt += 1) {
       if (attempt > 1 && budget - (Date.now() - started) < budget / 2) break; // not enough time for a useful retry
-      // Every model call counts against the limits, a retry too, so a day's budget of calls is never exceeded by
-      // retries. A refused retry ends here, and the rules answer.
-      await rateLimit(env, request);
+      // Every model call counts against the limits, a retry too, so retries do not double the calls a day's budget
+      // allows. A refused retry is noted in the checks; the first attempt's failure stays the fallback reason.
+      try {
+        await rateLimit(env, request);
+      } catch (error) {
+        if (attempt === 1) throw error;
+        trace.checks.push(check("Retry refused", false, (error as Error).message));
+        break;
+      }
       trace.attempts = attempt;
       try {
         const res = await callJSON(env, {

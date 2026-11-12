@@ -130,7 +130,7 @@ export async function callJSON(
 const admitted = new Map<string, number>();
 
 // On a public host a paid call needs a working counter: with no binding, or a read that fails, the call is refused
-// and the rules answer. A local server or a test has no counter to read and is let through.
+// and the rules answer. On a local host (a test, or `wrangler pages dev` whose simulated KV fails) it is let through.
 const COUNTER_DOWN = "Live runs are paused: the usage counter is unavailable.";
 
 // Coarse abuse guard: the link may be forwarded. Counts model calls per IP per hour and per day overall.
@@ -166,6 +166,8 @@ export async function rateLimit(env: Env, request: Request): Promise<void> {
   if (dayCount >= perDay) throw new StepError("Today's live-run budget for this demo is used up.", 429);
   admitted.set(ipKey, ipCount + 1);
   admitted.set(dayKey, dayCount + 1);
+  // A failed write does not block the call: the reservation above already counts it in this isolate, and parallel
+  // calls would otherwise trip KV's limit of one write per key per second.
   await Promise.allSettled([
     kv.put(ipKey, String(ipCount + 1), { expirationTtl: 3700 }),
     kv.put(dayKey, String(dayCount + 1), { expirationTtl: 90000 }),

@@ -1,4 +1,5 @@
-// Errors a step can raise, and the input guard every step uses. Neutral: no model SDK, no industry content.
+// Errors a step can raise, and the input guards for client-supplied values: the prompt size cap, the fence, and the
+// shift summary check. Neutral: no model SDK, no industry content.
 import type { ShiftSummary } from "../../shared/packs/types";
 import type { Usage } from "./types";
 

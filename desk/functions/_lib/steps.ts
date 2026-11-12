@@ -55,8 +55,12 @@ export function queueSteps<C extends string, T extends PackTicket, H extends Pac
   const ticketById: Record<string, T> = Object.fromEntries(pack.tickets.map((t) => [t.id, t]));
   const ticketIds = new Set<string>(pack.tickets.map((t) => t.id));
   const historyIds = new Set<string>(pack.history.map((h) => h.id));
-  const triageValues = new Set<unknown>([...pack.components, ...SEVERITIES, ...TRIAGE_ACTIONS]);
-  const allowed = (value: unknown): value is string => typeof value === "string" && triageValues.has(value);
+  // The values a triage row may carry back into a prompt, one list per field.
+  const triageFields = [
+    new Set<unknown>(pack.components),
+    new Set<unknown>(SEVERITIES),
+    new Set<unknown>(TRIAGE_ACTIONS),
+  ];
 
   const triage = {
     deep: false,
@@ -219,13 +223,16 @@ ${pack.tickets
     }),
     build(input: StepInput): string {
       const triageIn: ClientTriage[] = Array.isArray(input?.triage) ? (input.triage as ClientTriage[]) : [];
-      // The client sends its triage rows back, so each value goes into the prompt only if it is one the triage
-      // step itself could give: one of this pack's components, S1 to S4, or a known action. Anything else is dropped.
-      const byId: Record<string, string> = Object.fromEntries(
-        triageIn
-          .filter((r) => ticketIds.has(r?.id as string))
-          .map((r) => [r!.id as string, [r!.component, r!.severity, r!.action].filter(allowed).join(", ")]),
-      );
+      // The client sends its triage rows back, so each value goes into the prompt only if the triage step itself
+      // could give it in that field: one of this pack's components, S1 to S4, or a known action. Anything else is
+      // dropped and shown as "-"; a row with nothing left adds nothing.
+      const byId: Record<string, string> = {};
+      for (const r of triageIn) {
+        if (!ticketIds.has(r?.id as string)) continue;
+        const values = [r!.component, r!.severity, r!.action].map((v, i) => (triageFields[i]!.has(v) ? v : "-"));
+        if (values.some((v) => v !== "-")) byId[r!.id as string] = values.join(", ");
+        else delete byId[r!.id as string];
+      }
       const open = pack.tickets
         .map((t) => `${pack.prompts.ticketLine(t)}${byId[t.id] ? ` | triage: ${byId[t.id]}` : ""}`)
         .join("\n");
