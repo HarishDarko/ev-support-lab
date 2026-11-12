@@ -133,6 +133,12 @@ const admitted = new Map<string, number>();
 // and the rules answer. On a local host (a test, or `wrangler pages dev` whose simulated KV fails) it is let through.
 const COUNTER_DOWN = "Live runs are paused: the usage counter is unavailable.";
 
+/** A limit from the environment, or the default when it is unset or not a number (so it never turns into NaN). */
+function limitOf(value: string | undefined, fallback: number): number {
+  const n = Number(value);
+  return value !== undefined && value.trim() !== "" && Number.isFinite(n) ? n : fallback;
+}
+
 // Coarse abuse guard: the link may be forwarded. Counts model calls per IP per hour and per day overall.
 export async function rateLimit(env: Env, request: Request): Promise<void> {
   const local = isLocalUrl(request.url);
@@ -145,16 +151,20 @@ export async function rateLimit(env: Env, request: Request): Promise<void> {
   const now = new Date();
   const hour = now.toISOString().slice(0, 13);
   const day = now.toISOString().slice(0, 10);
-  const perIp = Number(env.RL_PER_IP_HOUR ?? 80);
-  const perDay = Number(env.RL_GLOBAL_DAY ?? 400);
+  const perIp = limitOf(env.RL_PER_IP_HOUR, 80);
+  const perDay = limitOf(env.RL_GLOBAL_DAY, 400);
   const ipKey = `rl:${ip}:${hour}`;
   const dayKey = `rl:all:${day}`;
   // Across isolates KV is still last write wins (and one write per key per second), so the count is approximate;
-  // the hard cap is the spend limit on the API key itself. A failed read blocks the call on a public host.
+  // the hard cap is the spend limit on the API key itself. A failed read, or a stored count that is not a number,
+  // blocks the call on a public host.
   let stored: number[];
   try {
     stored = (await Promise.all([kv.get(ipKey), kv.get(dayKey)])).map((v) => Number(v ?? 0));
   } catch {
+    stored = [NaN];
+  }
+  if (!stored.every(Number.isFinite)) {
     if (local) return;
     throw new StepError(COUNTER_DOWN, 503);
   }

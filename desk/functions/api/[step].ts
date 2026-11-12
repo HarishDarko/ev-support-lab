@@ -103,8 +103,12 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
       if (attempt > 1 && budget - (Date.now() - started) < budget / 2) break; // not enough time for a useful retry
       // Every model call counts against the limits, a retry too, so retries do not double the calls a day's budget
       // allows. A refused retry is noted in the checks; the first attempt's failure stays the fallback reason.
+      // Reading the counter takes time too, so the call is skipped if none is left.
+      let left: number;
       try {
         await rateLimit(env, request);
+        left = budget - (Date.now() - started);
+        if (left <= 0) throw new StepError("No time was left for the model call.", 504);
       } catch (error) {
         if (attempt === 1) throw error;
         trace.checks.push(check("Retry refused", false, (error as Error).message));
@@ -117,7 +121,7 @@ export async function onRequestPost({ request, env, params }: Context): Promise<
           prompt,
           schema: step.schema,
           maxTokens: step.maxTokens,
-          timeout: budget - (Date.now() - started),
+          timeout: left,
           system: pack.prompts.system,
         });
         spend(res);
