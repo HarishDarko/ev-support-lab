@@ -94,7 +94,7 @@ describe("the live chain's timing for each industry (SD-04 on the pack-aware run
       const batches = triageBatches(pack);
       const bodies: unknown[] = [];
       // Every call takes 1 s here: the rules-only recordings of SaaS and e-commerce have near-zero step times.
-      const { post, startOf, endOf } = timedPost((step, body) => {
+      const { post, startOf } = timedPost((step, body) => {
         bodies.push(body);
         if (step !== "triage") return { ...own[step], ms: 1000 } as StepResult<unknown>;
         const ids = (body as { ids: string[] }).ids;
