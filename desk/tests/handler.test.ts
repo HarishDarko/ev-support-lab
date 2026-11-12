@@ -320,7 +320,7 @@ describe("rate limiting", () => {
     expect(r.body.trace.fallbackReason).toBe("Today's live-run budget for this demo is used up.");
   });
 
-  it("a broken counter never blocks a call", async () => {
+  it("a broken counter never blocks a call on a local host (a public host: tests/hardening.test.ts)", async () => {
     const kv: KVLike = { get: () => Promise.reject(new Error("kv down")), put: () => Promise.resolve() };
     sdk.beta.mockResolvedValueOnce(reply(verifyOut, { model: "claude-sonnet-5-5" }));
     const r = await post("verify", {}, { ...live, DESK_KV: kv });

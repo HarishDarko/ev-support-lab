@@ -166,6 +166,20 @@ describe("rate limit: every model call counts, a retry too", () => {
     expect(store.get(`rl:all:${day}`)).toBe("1");
   });
 
+  it("makes no model call when reading the counter used up the step's time", async () => {
+    const { kv } = fakeKv();
+    const slow: KVLike = {
+      get: (k) => {
+        vi.setSystemTime(Date.now() + 60_000);
+        return kv.get(k);
+      },
+      put: (k, v, o) => kv.put(k, v, o),
+    };
+    const r = await post("patterns", {}, { ANTHROPIC_API_KEY: "k", DESK_KV: slow });
+    expect(sdk.beta).not.toHaveBeenCalled();
+    expect(r.body.trace.source).toBe("rules");
+  });
+
   it("120 requests that all retry make at most 120 model calls", async () => {
     const { kv } = fakeKv();
     sdk.beta.mockResolvedValue(reply({}, "max_tokens"));
@@ -203,6 +217,22 @@ describe("rate limit: fails closed on a public host, open on a local one", () =>
       "http://10.0.0.1",
     ])
       await expect(rateLimit({}, req(origin)), origin).rejects.toMatchObject({ status: 503 });
+  });
+
+  it("refuses a paid call on a public host when a stored count is not a number", async () => {
+    const day = new Date().toISOString().slice(0, 10);
+    const { kv } = fakeKv({ [`rl:all:${day}`]: "garbage" });
+    await expect(rateLimit({ DESK_KV: kv }, req(PUBLIC))).rejects.toMatchObject({ status: 503 });
+  });
+
+  it("uses the default limits when the configured ones are not numbers", async () => {
+    const day = new Date().toISOString().slice(0, 10);
+    const { kv } = fakeKv({ [`rl:all:${day}`]: "400" });
+    const env = { DESK_KV: kv, RL_GLOBAL_DAY: "lots", RL_PER_IP_HOUR: "1000" };
+    await expect(rateLimit(env, req(PUBLIC))).rejects.toMatchObject({
+      status: 429,
+      message: "Today's live-run budget for this demo is used up.",
+    });
   });
 
   it("stays open for local development and tests", async () => {
