@@ -329,6 +329,10 @@ export const SHOP_INCIDENT: Incident = {
         title: "Site monitor sync",
         text: "Alerts and repeat offenders from the night: which orders, which channels, which payments were held before. During the day the site monitor reaches this shift directly, with an agreed time to acknowledge.",
       },
+      coverage: {
+        label: "Site monitor",
+        detail: "Watches checkout around the clock and escalates to payments ops, the warehouse and customer care.",
+      },
     },
     notes: {
       kicker: "Engineering notes · E-commerce",

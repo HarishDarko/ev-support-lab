@@ -1,12 +1,14 @@
 // The Pages _headers file: a Content-Security-Policy that allows the one inline script by its hash, frame
-// protection, and long caching for the hashed files only. If the inline theme script in index.html changes, its
-// hash here must change with it, or the browser blocks the script. The one outside origin allowed is Cloudflare
+// protection, nosniff, a referrer policy, and long caching for the hashed files only. Pages does not apply this file
+// to Functions, so the /api answers are checked for their own headers at the end. If the inline theme script in
+// index.html changes, its hash here must change with it, or the browser blocks the script. The one outside origin allowed is Cloudflare
 // Web Analytics: the edge injects its beacon script, which reports page views to its own endpoint.
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { API_HEADERS, onRequestGet, onRequestPost } from "../functions/api/[step]";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const headers = readFileSync(join(ROOT, "public", "_headers"), "utf8");
@@ -76,5 +78,60 @@ describe("_headers", () => {
   it("caches only the hashed files for a year", () => {
     expect(rule("/assets/*").get("cache-control")).toBe("public, max-age=31536000, immutable");
     expect(all.has("cache-control")).toBe(false);
+  });
+});
+
+describe("the static files' other security headers (F10)", () => {
+  const all = rule("/*");
+  it("sends nosniff and a referrer policy with every static file", () => {
+    expect(all.get("x-content-type-options")).toBe("nosniff");
+    expect(all.get("referrer-policy")).toBe("strict-origin-when-cross-origin");
+    expect(all.get("permissions-policy")).toBe("camera=(), microphone=(), geolocation=(), payment=(), usb=()");
+  });
+});
+
+describe("/api responses set their own security headers (F10)", () => {
+  // Pages applies _headers to static files only, so the Functions must send these themselves, on every answer.
+  const expectSecure = (res: Response) => {
+    expect(res.headers.get("content-type")).toBe("application/json");
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(res.headers.get("x-frame-options")).toBe("DENY");
+    expect(res.headers.get("referrer-policy")).toBe("no-referrer");
+    const csp = res.headers.get("content-security-policy") ?? "";
+    expect(csp.split(";").map((d) => d.trim())).toEqual([
+      "default-src 'none'",
+      "frame-ancestors 'none'",
+      "base-uri 'none'",
+      "form-action 'none'",
+    ]);
+  };
+  const post = (step: string, body: unknown) =>
+    onRequestPost({
+      request: new Request(`http://localhost/api/${step}`, { method: "POST", body: JSON.stringify(body) }),
+      env: { MOCK: "1" },
+      params: { step },
+    });
+
+  it("on a success, a fallback, a refusal and a not-found", async () => {
+    const get = (step: string) =>
+      onRequestGet({ request: new Request(`http://localhost/api/${step}`), env: {}, params: { step } });
+    expectSecure(get("health"));
+    expectSecure(get("nothing"));
+    expectSecure(await post("verify", {}));
+    expectSecure(await post("triage", { ids: [] }));
+    expectSecure(await post("triage", { pack: "nope" }));
+    expectSecure(await post("nothing", {}));
+  });
+
+  it("uses one header set for every answer", () => {
+    expect(Object.keys(API_HEADERS).sort()).toEqual([
+      "cache-control",
+      "content-security-policy",
+      "content-type",
+      "referrer-policy",
+      "x-content-type-options",
+      "x-frame-options",
+    ]);
   });
 });

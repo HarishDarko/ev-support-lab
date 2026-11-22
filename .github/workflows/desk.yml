@@ -1,6 +1,11 @@
 name: desk
 
 # One run per commit: pushes run only on main (where the deploy is); branches run through their pull request.
+# Pushes keep their paths filter, so a labs-only merge does not redeploy the desk. Every pull request runs, because
+# branch protection requires the `desk` check: the `changes` job looks at the files the pull request touches, and
+# when none is under desk/, docs/eval/ or this file, the `desk` job is skipped, which GitHub reports as a pass.
+# It fails closed: the `desk` job is skipped only when `changes` succeeded and said "false". If `changes` fails, the
+# `desk` job still starts, and its first step fails it, so the required check fails instead of passing by skip.
 on:
   push:
     branches: [main]
@@ -9,10 +14,6 @@ on:
       - "docs/eval/**"
       - ".github/workflows/desk.yml"
   pull_request:
-    paths:
-      - "desk/**"
-      - "docs/eval/**"
-      - ".github/workflows/desk.yml"
 
 # A newer push cancels an older run, except on main, where a run may be deploying.
 concurrency:
@@ -23,10 +24,42 @@ permissions:
   contents: read
 
 jobs:
+  # Fast, no container: does this run need the desk job? A push to main always does (its paths filter already chose).
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      desk: ${{ steps.diff.outputs.desk }}
+    steps:
+      - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
+        with:
+          fetch-depth: 0
+      - name: Files under desk/, docs/eval/ or this workflow
+        id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" != "pull_request" ]; then
+            echo "desk=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$BASE...$HEAD")
+          printf 'Changed files:\n%s\n' "$changed"
+          if printf '%s\n' "$changed" | grep -qE '^(desk/|docs/eval/|\.github/workflows/desk\.yml$)'; then
+            echo "desk=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No desk files changed: the desk job is skipped and reports as passed."
+            echo "desk=false" >> "$GITHUB_OUTPUT"
+          fi
+
   desk:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.desk != 'false' }}
     runs-on: ubuntu-24.04
     # Playwright's own image has Chromium and its system packages, so no apt install on every run. Its version
-    # must match @playwright/test in desk/package-lock.json; the first step below checks that.
+    # must match @playwright/test in desk/package-lock.json; a step below checks that.
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-noble
     timeout-minutes: 15
@@ -36,6 +69,13 @@ jobs:
     env:
       CI: "true"
     steps:
+      - name: The change check finished
+        if: needs.changes.result != 'success'
+        working-directory: .
+        run: |
+          echo "::error::The changes job ended with '${{ needs.changes.result }}', so this run cannot tell whether the desk changed. Failing instead of skipping."
+          exit 1
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4

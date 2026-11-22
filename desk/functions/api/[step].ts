@@ -9,11 +9,21 @@ import type { Check, Env, StepInput, Usage } from "../_lib/types";
 
 const isIncidentPack = (id: string): id is IncidentPackId => Object.hasOwn(INCIDENT_STEPS, id);
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json", "cache-control": "no-store" },
-  });
+/**
+ * Headers on every /api response. Pages applies public/_headers to static files only, never to Functions, so the
+ * API sets its own: no sniffing a JSON body as something else, no framing, no referrer, and a CSP that lets a JSON
+ * response load nothing at all. The analytics beacon is injected into HTML pages only, so it needs nothing here.
+ */
+export const API_HEADERS: Readonly<Record<string, string>> = {
+  "content-type": "application/json",
+  "cache-control": "no-store",
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "referrer-policy": "no-referrer",
+  "content-security-policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+};
+
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: API_HEADERS });
 
 /** The slice of a Pages Functions event context this route uses. */
 interface Context {

@@ -157,7 +157,7 @@ export const INCIDENT = {
     ref: CHANGE_REF,
     shippedDay: 5,
     summary:
-      "Checkout makes the idempotency key once per checkout and reuses it on every retry, so a retry returns the first authorization; it makes a new key only when the card or the amount changes. On a timeout it asks the processor for the payment by that key before showing anything, and says the payment is still processing. The order service captures under a per-order lock, so two authorizations can never both be captured.",
+      "Checkout makes the idempotency key once per checkout and reuses it on every retry, so a retry returns the first authorization; it makes a new key only when the card or the amount changes, or after the key's payment was declined. On a timeout it asks the processor for the payment by that key before showing anything, and says the payment is still processing. The order service captures under a per-order lock, so two authorizations can never both be captured.",
     rollout:
       "Behind a per-store flag on 1 of the shop's 5 regional stores (the canary); the other 4 stores stay on the old checkout (the control). The lab's experiment runs both arms over 14 days of scripted traffic.",
   },

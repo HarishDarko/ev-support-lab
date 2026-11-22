@@ -1,4 +1,6 @@
 import { motion } from "motion/react";
+import { EV_FRONT_LINE } from "../desk/coverage/coverage";
+import { useIncident } from "../incident";
 import { enter } from "./motion";
 
 type Span = [from: number, to: number];
@@ -9,9 +11,10 @@ interface Row {
   kind: "noc" | "india" | "shift" | "evening";
 }
 
-// Eastern time, 24 hours. Source: docs/design/brief.md (Coverage).
+// Eastern time, 24 hours. Source: docs/design/brief.md (Coverage). The first row is the industry's own
+// around-the-clock team, filled in when the strip renders.
 const ROWS: Row[] = [
-  { name: "NOC, levels 1 and 2", hours: "24/7", spans: [[0, 24]], kind: "noc" },
+  { name: EV_FRONT_LINE.label, hours: "24/7", spans: [[0, 24]], kind: "noc" },
   { name: "India engineering", hours: "23:30–08:30", spans: [[0, 8.5], [23.5, 24]], kind: "india" }, // prettier-ignore
   { name: "This shift", hours: "07:00–15:30", spans: [[7, 15.5]], kind: "shift" },
   {
@@ -26,13 +29,15 @@ const pct = (h: number) => `${(h / 24) * 100}%`;
 
 /** The 24-hour Eastern-time coverage strip, with the live overlap marked across every row. */
 export function CoverageStrip({ size = "board" }: { size?: "board" | "full" }) {
+  const front = useIncident().pages?.monitor.coverage ?? EV_FRONT_LINE;
+  const rows = ROWS.map((r) => (r.kind === "noc" ? { ...r, name: front.label } : r));
   return (
     <motion.figure className={`node coverage coverage--${size}`} {...enter}>
       <div className="coverage-grid">
         <div className="coverage-overlap" style={{ left: pct(OVERLAP[0]), width: pct(OVERLAP[1] - OVERLAP[0]) }}>
           <span>Overlap · 90 min</span>
         </div>
-        {ROWS.map((r) => (
+        {rows.map((r) => (
           <div key={r.name} className="coverage-row">
             <p className="coverage-name">
               {r.name} <span className="mono muted">{r.hours}</span>

@@ -35,9 +35,11 @@ export const SHOP_LAB: Lab = {
       ["fast-pay", "no retry, no lookup"],
       ["slow-web-wait", "told it is still processing, confirms"],
       ["decline-new-card", "a new key, one authorization"],
+      ["same card after a decline", "a new key, authorizes once the decline clears"],
       ["very-slow", "looked up by key, the second tap returns the first"],
       ["capture-webhook-timeout", "still held"],
       ["RB-21", "releases one capture, refuses two"],
+      ["capture refused", "not recorded, the order stays held"],
     ],
   },
   /** The rules of the fix, as the lab's README states them. */
@@ -46,7 +48,10 @@ export const SHOP_LAB: Lab = {
       name: "One key per checkout",
       text: "The idempotency key is made once per checkout and reused on every retry, so a retry returns the first authorization.",
     },
-    { name: "A new key only for a new payment", text: "Only a new card or a new amount makes a new key." },
+    {
+      name: "A new key only for a new payment",
+      text: "A new card, a new amount, or a decline on the key's payment makes a new key, so the same card can pay again once its decline clears.",
+    },
     {
       name: "Look it up before an error",
       text: "On a timeout, checkout asks the processor for the payment by its key and says it is still processing.",
