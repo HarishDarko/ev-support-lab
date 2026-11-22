@@ -327,7 +327,7 @@ describe("other steps", () => {
   });
 
   it("the handoff prompt describes the lab test and keeps the firmware question open", () => {
-    const p = STEPS.handoff.build({});
+    const p = STEPS.handoff.build({ investigation: {} });
     expect(p).toContain("reproduction test");
     expect(p).toContain(LAB_TEST_ATTACHMENT);
     expect(p).toContain("passes by asserting the bug");

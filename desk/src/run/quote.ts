@@ -1,5 +1,5 @@
 // Finding the quoted words in a ticket so they can be highlighted in place.
-// The server accepts a quote ignoring case, spacing, curly quotes and dashes, and a quote shortened with an
+// The server accepts a quote ignoring case, spacing, curly quotes, dashes and arrows, and a quote shortened with an
 // ellipsis only if every piece appears in order. This does the same search, but returns positions.
 
 export interface Span {
@@ -9,12 +9,21 @@ export interface Span {
 
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+// The server reads an arrow and its plain form as the same (functions/_lib/checks.ts, normalize), so this does too.
+// Arrows are matched in the same pass as dashes, so the dash in "->" is never read on its own.
+const ARROWS_AND_DASHES: Record<string, string> = {
+  "->": "(?:->|→)",
+  "→": "(?:->|→)",
+  "<-": "(?:<-|←)",
+  "←": "(?:<-|←)",
+};
+
 function patternFor(piece: string): RegExp {
   const source = escapeRegExp(piece)
     .replace(/\s+/g, "\\s+")
     .replace(/['‘’]/g, "['‘’]")
     .replace(/["“”]/g, '["“”]')
-    .replace(/[-–—]/g, "[-–—]");
+    .replace(/->|→|<-|←|[-–—]/g, (m) => ARROWS_AND_DASHES[m] ?? "[-–—]");
   return new RegExp(source, "i");
 }
 

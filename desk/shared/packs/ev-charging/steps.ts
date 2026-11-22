@@ -3,10 +3,15 @@
 // pack's rules. Server side only: the browser never imports this file.
 import { StepError, fenced } from "../../../functions/_lib/errors";
 import {
+  ARTICLE,
+  ARTICLE_STEPS_MAX,
+  CORRECTED,
+  HANDOFF_EVIDENCE_MAX,
   SHIFT_SUMMARY,
   articleFor,
   articleTitle,
   fencedJson,
+  fit,
   handoffField,
   investigationField,
 } from "../../../functions/_lib/prompt-inputs";
@@ -147,6 +152,7 @@ ${heroInput()}`;
     if (kept.length < 2)
       throw new ValidationError(`Only ${kept.length} of ${total} evidence quotes found in the source they cite`);
     data.evidence = kept.map((e) => ({ ...e, quote_verified: true }));
+    Object.assign(data, fit(data, INVESTIGATION));
     return {
       data,
       checks: [
@@ -223,8 +229,13 @@ ${heroInput()}`;
       throw new ValidationError("Packet has no ask or no escalation rule");
     // What the lab shows, and what it leaves open, is fixed wording: the model's own version is replaced.
     data.hypothesis_note = HANDOFF_NOTE;
-    if (!data.evidence_attached.includes(LAB_TEST_ATTACHMENT))
-      data.evidence_attached = [LAB_TEST_ATTACHMENT, ...data.evidence_attached];
+    // The lab test is always attached, and first when the list is too long for the next step and must be cut.
+    if (!data.evidence_attached.includes(LAB_TEST_ATTACHMENT) || data.evidence_attached.length > HANDOFF_EVIDENCE_MAX)
+      data.evidence_attached = [
+        LAB_TEST_ATTACHMENT,
+        ...data.evidence_attached.filter((e) => e !== LAB_TEST_ATTACHMENT),
+      ];
+    Object.assign(data, fit(data, HANDOFF, [LAB_TEST_ATTACHMENT]));
     return {
       data,
       checks: [
@@ -344,7 +355,10 @@ ${runbookList}`;
     const aboutBilling = (s: string) => /\binvoice\b/i.test(s) && /\breview\b/i.test(s);
     const replaced = data.steps.filter(aboutMeter).length;
     const replacedBilling = data.steps.filter((s) => !aboutMeter(s) && aboutBilling(s)).length;
-    data.steps = [METER_STEP, ...data.steps.filter((s) => !aboutMeter(s) && !aboutBilling(s)), BILLING_STEP];
+    // The model's own steps are cut so the whole article, with the fixed first and last steps, fits the next step.
+    const own = data.steps.filter((s) => !aboutMeter(s) && !aboutBilling(s)).slice(0, ARTICLE_STEPS_MAX - 2);
+    data.steps = [METER_STEP, ...own, BILLING_STEP];
+    Object.assign(data, fit(data, ARTICLE, [METER_STEP, BILLING_STEP]));
     return {
       data,
       checks: [
@@ -454,8 +468,11 @@ matched_article: the article title if it matches, else "none". suggested_action:
     // build() refuses a missing or empty title; a direct call without one never matches an article.
     const title = articleTitle(input);
     if (!title) data.matches_known_pattern = false;
-    const ok = data.matched_article === "none" || (Boolean(title) && data.matched_article === title);
-    if (!ok) data.matched_article = data.matches_known_pattern ? title : "none";
+    // A match names the article's title and no match names "none". When the two fields disagree, the title follows
+    // the yes or no, so a contradictory answer is never passed on.
+    const expected = data.matches_known_pattern ? title : "none";
+    const ok = data.matched_article === expected;
+    if (!ok) data.matched_article = expected;
     // The pattern's exceptions win: a ticket outside the known pattern is never routed to RB-05.
     // Only these named exceptions are enforced; anything else in the article is the model's reading.
     const exception = runbookException("RB-05", this.text(input));
@@ -474,7 +491,7 @@ matched_article: the article title if it matches, else "none". suggested_action:
     return {
       data,
       checks: [
-        check("Matched article exists", ok, ok ? "" : "corrected to the real title"),
+        check("Matched article exists", ok, ok ? "" : CORRECTED[expected === "none" ? "none" : "title"]),
         check(
           `Pattern exceptions checked by wording: ${names}`,
           !overridden,

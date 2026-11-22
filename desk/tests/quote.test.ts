@@ -39,3 +39,19 @@ describe("quote highlighting", () => {
     }
   });
 });
+
+describe("arrows (F2-12)", () => {
+  it("matches an arrow against its plain form, both ways, as the server does", () => {
+    const line = "Status went Charging → Available at 09:12.";
+    const [span] = quoteSpans(line, "charging -> available");
+    expect(line.slice(span!.start, span!.end)).toBe("Charging → Available");
+    expect(quoteSpans("meter went 18 -> 19 kWh", "18 → 19 kWh")).toHaveLength(1);
+    expect(quoteSpans("reply <- ack", "reply ← ack")).toHaveLength(1);
+    expect(quoteSpans("reply ← ack", "reply <- ack")).toHaveLength(1);
+  });
+
+  it("does not read an arrow as a dash, or a dash as an arrow", () => {
+    expect(quoteSpans("meter went 18 - 19 kWh", "18 -> 19 kWh")).toEqual([]);
+    expect(quoteSpans("meter went 18 → 19 kWh", "18 - 19 kWh")).toEqual([]);
+  });
+});

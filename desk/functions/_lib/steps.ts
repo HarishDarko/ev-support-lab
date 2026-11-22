@@ -5,7 +5,19 @@ import { INCIDENT_SOURCES, INCIDENT_STEPS, type IncidentPackId } from "../../sha
 import type { Pack, PackHistoryItem, PackTicket } from "../../shared/packs/types";
 import { ValidationError, check, exceptionIn, mentions, quoted } from "./checks";
 import { StepError } from "./errors";
-import { SEVERITIES, TRIAGE_ACTIONS, bool, obj, runbookListOf, severity, str, strs, type Step } from "./kit";
+import {
+  MAX_TOKENS,
+  SEVERITIES,
+  TRIAGE_ACTIONS,
+  bool,
+  obj,
+  runbookListOf,
+  severity,
+  str,
+  strs,
+  type Step,
+} from "./kit";
+import { TRIAGE_SUMMARY_MAX, clipText } from "./prompt-inputs";
 import { ruleTriageFor, rulePatternsFor } from "./rule-engine";
 import { shortChainSteps } from "./short-chain";
 import type { StepInput } from "./types";
@@ -154,6 +166,7 @@ ${pack.tickets
         n.ai += 1;
         const out = {
           ...r,
+          summary: clipText(r.summary, TRIAGE_SUMMARY_MAX),
           source: "ai",
           quote_verified: true,
           support: mentions(r.evidence, pack.componentTerms[r.component] ?? []) ? "strong" : "weak",
@@ -210,7 +223,7 @@ ${pack.tickets
 
   const patterns = {
     deep: true,
-    maxTokens: 6000,
+    maxTokens: MAX_TOKENS.patterns,
     schema: obj({
       patterns: {
         type: "array",

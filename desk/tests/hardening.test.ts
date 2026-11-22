@@ -329,3 +329,59 @@ describe("crafted request bodies never make the handler throw (every pack, every
     }
   }
 });
+
+describe("classify: matches_known_pattern and matched_article always agree (F2-03, all four implementations)", () => {
+  const title = "Known pattern article";
+  const implementations = [
+    ...(["ev-charging", "saas-support", "e-commerce"] as const).map(
+      (id) => [`${id} incident chain`, stepsFor(id).classify, PACKS[id]] as const,
+    ),
+    ...PACK_IDS.map(
+      (id) => [`${id} short chain`, shortChainSteps(PACKS[id] as unknown as Pack).classify, PACKS[id]] as const,
+    ),
+  ];
+  const answer = (matches: boolean, matched: string) => ({
+    component: PACKS["ev-charging"].components[0],
+    severity: "S3",
+    matches_known_pattern: matches,
+    matched_article: matched,
+    suggested_action: "Follow the article.",
+    escalate: false,
+    why: "It reads like the article.",
+  });
+  for (const [name, classify, pack] of implementations) {
+    const input = { text: pack.newTicketExample ?? pack.tickets[0]!.text, article: { title, related: [] } };
+    it(`${name}: a contradictory pair is corrected and its check fails`, () => {
+      for (const [matches, matched] of [
+        [true, "none"],
+        [false, title],
+        [true, "Some other article"],
+        [false, "Some other article"],
+      ] as const) {
+        const { data, checks } = classify.validate(
+          { ...answer(matches, matched), component: pack.components[0] },
+          input,
+        ) as {
+          data: { matches_known_pattern: boolean; matched_article: string; confirm?: string };
+          checks: { passed: boolean }[];
+        };
+        expect(data.matched_article, `${matches} ${matched}`).toBe(data.matches_known_pattern ? title : "none");
+        if (!data.matches_known_pattern) expect(data.confirm ?? "").toBe("");
+        expect(checks[0]!.passed, `${matches} ${matched}`).toBe(false);
+      }
+    });
+    it(`${name}: an agreeing pair passes unchanged`, () => {
+      for (const [matches, matched] of [
+        [true, title],
+        [false, "none"],
+      ] as const) {
+        const { data, checks } = classify.validate(
+          { ...answer(matches, matched), component: pack.components[0] },
+          input,
+        ) as { data: { matched_article: string }; checks: { passed: boolean }[] };
+        expect(checks[0]!.passed).toBe(true);
+        if (!matches) expect(data.matched_article).toBe("none");
+      }
+    });
+  }
+});
