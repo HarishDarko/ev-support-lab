@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { quoteSpans, splitByQuote } from "../src/run/quote";
+import { quoted } from "../functions/_lib/checks";
 import { TICKETS } from "../src/data/synthetic";
 import { indexRun } from "../src/run/selectors";
 import { recordedRun } from "../src/run/recorded";
@@ -53,5 +54,13 @@ describe("arrows (F2-12)", () => {
   it("does not read an arrow as a dash, or a dash as an arrow", () => {
     expect(quoteSpans("meter went 18 - 19 kWh", "18 -> 19 kWh")).toEqual([]);
     expect(quoteSpans("meter went 18 → 19 kWh", "18 - 19 kWh")).toEqual([]);
+  });
+
+  it("reads an en or em dash followed by > as an arrow, as the server's normalize() does", () => {
+    expect(quoteSpans("meter went 18 → 19 kWh", "18 –> 19 kWh")).toHaveLength(1);
+    expect(quoteSpans("meter went 18 –> 19 kWh", "18 -> 19 kWh")).toHaveLength(1);
+    expect(quoteSpans("meter went 18 —> 19 kWh", "18 → 19 kWh")).toHaveLength(1);
+    expect(quoteSpans("reply ← ack", "reply <– ack")).toHaveLength(1);
+    expect(quoted("18 –> 19 kWh", "meter went 18 → 19 kWh")).toBe(true);
   });
 });

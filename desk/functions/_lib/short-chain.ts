@@ -129,11 +129,15 @@ Runbooks:
 ${runbookList}`;
     },
     validate(data: KbModel, input: StepInput, prompt: string) {
-      data.related = data.related.filter((id) => known.has(id));
-      // The article always names its pattern's runbook, so the new-ticket check knows which exceptions apply.
+      // Each known id once. The article always names its pattern's runbook, so the new-ticket check knows which
+      // exceptions apply. When the list is over its cap, its runbook ids go first, so the cut never drops one.
       const runbook = runbookOf(patternOf(input).ticketIds);
-      if (runbook && !data.related.includes(runbook))
-        data.related = [...data.related.slice(0, ARTICLE_RELATED_MAX - 1), runbook];
+      const related = [...new Set([...data.related.filter((id) => known.has(id)), ...(runbook ? [runbook] : [])])];
+      const isRunbook = (id: string) => pack.runbooks.some((r) => r.id === id);
+      data.related =
+        related.length > ARTICLE_RELATED_MAX
+          ? [...related.filter(isRunbook), ...related.filter((id) => !isRunbook(id))].slice(0, ARTICLE_RELATED_MAX)
+          : related;
       const checks = [];
       if (fixed && recordOnly(runbook)) {
         // The fixed check and review frame the steps, whatever the model wrote; copies of them are removed.

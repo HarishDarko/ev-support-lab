@@ -30,7 +30,8 @@ public class TokenCache {
      *
      * @param attempt how many shared refreshes of the endpoint had finished, this one included
      * @param retryAt for a 429, when the identity provider allows the next request; null otherwise
-     * @param tokenThen the endpoint's stored token when the refresh failed; a different one since makes it stale
+     * @param tokenThen the endpoint's stored token when the failed refresh began; for a failure other than a 429,
+     *     a different one stored since makes it stale
      */
     private record Failure(Answer answer, long attempt, Instant retryAt, Token tokenThen) {}
 
@@ -69,8 +70,9 @@ public class TokenCache {
      * Fix: refresh unless another caller already did it while this one waited for the lock. A caller that waited
      * gets the other caller's result, a new token or a failure, so a refused or unreachable identity provider is
      * asked once for all of them. After a 429 every caller gets that 429, with the seconds left, until Retry-After
-     * has passed; after that the next caller asks again, even one that waited for the refresh that got the 429. A
-     * failure is forgotten once a token has been stored since it, by either path.
+     * has passed, even when a token has been stored since; after that the next caller asks again, even one that
+     * waited for the refresh that got the 429. Any other failure is not shared once a token has been stored since its
+     * refresh began, by either path.
      *
      * @param seen the token the caller found too old or was refused with (null if it had none)
      */
@@ -84,13 +86,11 @@ public class TokenCache {
                 return new Answer(200, current, 0, null);
             }
             Failure last = failures.get(endpoint.id());
-            if (last != null && !Objects.equals(last.tokenThen(), current)) {
-                failures.remove(endpoint.id());
-                last = null;
-            }
+            // A 429 holds everyone off until Retry-After, whatever token has been stored since. Any other failure
+            // is shared with the callers that waited for it, unless a token has been stored since it began.
             boolean share = last != null && (last.retryAt() != null
                     ? clock.instant().isBefore(last.retryAt())
-                    : last.attempt() > doneBefore);
+                    : last.attempt() > doneBefore && Objects.equals(last.tokenThen(), current));
             if (share) {
                 return shared(last);
             }
@@ -102,7 +102,7 @@ public class TokenCache {
                 Instant retryAt = answer.status() == 429
                         ? clock.instant().plusSeconds(Math.max(1, answer.retryAfterSeconds()))
                         : null;
-                failures.put(endpoint.id(), new Failure(answer, attempt, retryAt, tokens.get(endpoint.id())));
+                failures.put(endpoint.id(), new Failure(answer, attempt, retryAt, current));
             }
             return answer;
         }

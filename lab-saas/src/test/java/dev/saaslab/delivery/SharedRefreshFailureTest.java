@@ -129,7 +129,7 @@ class SharedRefreshFailureTest {
     }
 
     @Test
-    void aTokenStoredSinceAFailureMakesThatFailureStale() {
+    void a429HoldsEveryoneOffUntilRetryAfterEvenWhenATokenIsStoredSince() {
         AtomicInteger asked = new AtomicInteger();
         TokenCache cache = new TokenCache(scripted(() -> asked.incrementAndGet() == 1
                 ? new Answer(429, null, 30, "rate_limited")
@@ -140,10 +140,16 @@ class SharedRefreshFailureTest {
         Answer own = cache.refreshOwn(ENDPOINT);
         assertThat(own.ok()).isTrue();
 
-        // Refused with the token the legacy path stored after the 429, the caller refreshes again.
-        Answer again = cache.refreshShared(ENDPOINT, own.token());
-        assertThat(again.ok()).isTrue();
-        assertThat(asked).hasValue(3);
+        // Refused with the token the legacy path stored after the 429: still no request before Retry-After.
+        clock.advance(Duration.ofSeconds(10));
+        Answer held = cache.refreshShared(ENDPOINT, own.token());
+        assertThat(held.status()).isEqualTo(429);
+        assertThat(held.retryAfterSeconds()).isEqualTo(20);
+        assertThat(asked).hasValue(2);
+
+        clock.advance(Duration.ofSeconds(20));
+        assertThat(cache.refreshShared(ENDPOINT, own.token()).ok()).isTrue();
+        assertThat(asked).as("asked again once Retry-After has passed").hasValue(3);
     }
 
     @Test
