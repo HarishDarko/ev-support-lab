@@ -4,6 +4,8 @@ name: desk
 # Pushes keep their paths filter, so a labs-only merge does not redeploy the desk. Every pull request runs, because
 # branch protection requires the `desk` check: the `changes` job looks at the files the pull request touches, and
 # when none is under desk/, docs/eval/ or this file, the `desk` job is skipped, which GitHub reports as a pass.
+# It fails closed: the `desk` job is skipped only when `changes` succeeded and said "false". If `changes` fails, the
+# `desk` job still starts, and its first step fails it, so the required check fails instead of passing by skip.
 on:
   push:
     branches: [main]
@@ -54,10 +56,10 @@ jobs:
 
   desk:
     needs: changes
-    if: needs.changes.outputs.desk == 'true'
+    if: ${{ !cancelled() && needs.changes.outputs.desk != 'false' }}
     runs-on: ubuntu-24.04
     # Playwright's own image has Chromium and its system packages, so no apt install on every run. Its version
-    # must match @playwright/test in desk/package-lock.json; the first step below checks that.
+    # must match @playwright/test in desk/package-lock.json; a step below checks that.
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-noble
     timeout-minutes: 15
@@ -67,6 +69,13 @@ jobs:
     env:
       CI: "true"
     steps:
+      - name: The change check finished
+        if: needs.changes.result != 'success'
+        working-directory: .
+        run: |
+          echo "::error::The changes job ended with '${{ needs.changes.result }}', so this run cannot tell whether the desk changed. Failing instead of skipping."
+          exit 1
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
