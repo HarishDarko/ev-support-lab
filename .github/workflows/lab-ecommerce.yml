@@ -11,6 +11,7 @@ on:
       - "gradlew"
       - "settings.gradle.kts"
       - ".github/workflows/lab-ecommerce.yml"
+      - "desk/src/data/experiment.e-commerce.json"
   pull_request:
     paths:
       - "lab-ecommerce/**"
@@ -18,6 +19,7 @@ on:
       - "gradlew"
       - "settings.gradle.kts"
       - ".github/workflows/lab-ecommerce.yml"
+      - "desk/src/data/experiment.e-commerce.json"
 
 concurrency:
   group: lab-ecommerce-${{ github.ref }}
@@ -32,6 +34,15 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      # The desk shows the experiment from its own copy. ExperimentStoryTest pins lab-ecommerce/experiment.json to a
+      # fresh run, so the desk's copy must equal that file byte for byte.
+      - name: The desk's copy of the experiment matches the lab's
+        run: |
+          if ! cmp lab-ecommerce/experiment.json desk/src/data/experiment.e-commerce.json; then
+            diff lab-ecommerce/experiment.json desk/src/data/experiment.e-commerce.json || true
+            echo "::error::desk/src/data/experiment.e-commerce.json differs from lab-ecommerce/experiment.json. Copy the lab's file over it." >&2
+            exit 1
+          fi
       # Java 25 is the build's toolchain, so Gradle uses this JDK instead of provisioning another one.
       - uses: actions/setup-java@v4
         with:
