@@ -87,7 +87,11 @@ public class CheckoutService {
         if (!a.authorized()) {
             long id = store.addAttempt(checkoutId, c.orderId(), attemptNo, key, card, sent, "declined",
                     a.authorizationId(), a.answeredAt());
-            retireKey(c, key);
+            if ("declined".equals(a.status())) {
+                // Only a decline is final for the key. Any other answer may still become an authorization under it,
+                // so the key is kept and a retry returns that authorization instead of making a second one.
+                retireKey(c, key);
+            }
             trace.lineAt(c.orderId(), a.answeredAt(), actor(c), "declined in " + took + " -> shows \"Card declined\"");
             return new PayResult(id, attemptNo, key, Outcome.DECLINED, a.authorizationId(), sent, a.answeredAt());
         }
@@ -146,7 +150,7 @@ public class CheckoutService {
 
     /**
      * Fix: a declined payment is final for its key (the processor answers the same decline to that key forever), so
-     * the next attempt, even with the same card, gets a new key.
+     * the next attempt, even with the same card, gets a new key. Called only for a {@code declined} answer.
      */
     private void retireKey(Checkout c, String key) {
         if (flags.idempotentCheckout(c.storeId())) {

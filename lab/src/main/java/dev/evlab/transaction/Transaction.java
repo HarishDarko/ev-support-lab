@@ -162,7 +162,8 @@ public record Transaction(
         }
         if (closeSource == CloseSource.RECONCILED) {
             // Provisionally closed and still no Ended: keep the provisional close, only track the sequence. A later
-            // reading with more energy is not billed, but it goes on the invoice for the person reviewing it.
+            // reading with more energy is not billed, but the highest such reading goes on the invoice for the person
+            // reviewing it.
             return copy().lastSeqNo(Math.max(lastSeqNo, replayed.lastSeqNo))
                     .firstMissingSeqNo(replayed.firstMissingSeqNo)
                     .invoice(billing.reportedAfterProvisionalClose(invoice, replayed.meter.lastWh())).build();

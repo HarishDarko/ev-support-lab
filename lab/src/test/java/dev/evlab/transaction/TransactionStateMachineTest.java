@@ -241,6 +241,7 @@ class TransactionStateMachineTest {
         assertThat(rebased.invoice().energyWh()).isEqualTo(stored.invoice().energyWh());
         assertThat(rebased.invoice().amountCents()).isEqualTo(stored.invoice().amountCents());
         assertThat(rebased.invoice().chargesIssued()).isEqualTo(1);
+        assertThat(rebased.invoice().needsReview()).isTrue();
         // The 100 Wh reported after the close is not billed, but the person reviewing the invoice is told.
         assertThat(rebased.invoice().note()).isEqualTo(
                 "lost; after the provisional close the charger reported 2100.0 Wh, billed 2000.0 Wh");
@@ -409,6 +410,9 @@ class TransactionStateMachineTest {
         Invoice higher = BILLING.reportedAfterProvisionalClose(more, 7000.0);
         assertThat(higher.note()).isEqualTo(
                 "Ended not received; after the provisional close the charger reported 7000.0 Wh, billed 5000.0 Wh");
+
+        // A later but lower reading (still above the billed energy) does not replace the highest one.
+        assertThat(BILLING.reportedAfterProvisionalClose(higher, 6000.0)).isEqualTo(higher);
 
         Invoice settled = BILLING.onRealEnd(Invoice.NONE, 5000.0, null);
         assertThat(BILLING.reportedAfterProvisionalClose(settled, 9000.0)).as("only provisional invoices")

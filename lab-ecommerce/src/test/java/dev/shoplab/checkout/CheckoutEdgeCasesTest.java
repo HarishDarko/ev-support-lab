@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import dev.shoplab.checkout.CheckoutService.Outcome;
 import dev.shoplab.checkout.CheckoutService.PayResult;
 import dev.shoplab.checkout.CheckoutService.TimeoutView;
+import dev.shoplab.payment.ProcessorClient;
+import dev.shoplab.shop.FeatureFlags;
 import dev.shoplab.shop.ShopStore;
 import dev.shoplab.shop.ShopStore.Attempt;
 import dev.shoplab.simulator.FakeProcessor;
@@ -14,6 +16,8 @@ import dev.shoplab.support.ReleaseHoldService;
 import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /** The fix must not change what already worked, and must not hide holds that have another cause. */
@@ -21,6 +25,8 @@ class CheckoutEdgeCasesTest extends AbstractLabIT {
 
     @Autowired
     private ReleaseHoldService releaseHold;
+    @Autowired
+    private FeatureFlags flags;
 
     @Test
     void aFastAnswerNeverRetriesOrLooksUp() {
@@ -80,6 +86,32 @@ class CheckoutEdgeCasesTest extends AbstractLabIT {
             assertThat(retried.outcome()).isEqualTo(Outcome.AUTHORIZED);
             assertThat(processor.authorizations("51310")).isEqualTo(1);
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"200, processing", "500, error"})
+    void anAnswerThatIsNeitherAuthorizedNorDeclinedKeepsTheKeySoARetryCannotAuthorizeTwice(int httpStatus,
+            String status) {
+        // A processor that answers in time, but with neither an authorization nor a decline.
+        ProcessorClient undecided = new ProcessorClient(java.net.http.HttpClient.newHttpClient(), properties) {
+            @Override
+            public Answer authorize(String processorUrl, String idempotencyKey, String orderId, int amountPence,
+                    String card) {
+                return new Answer(httpStatus, status, null, clock.instant().plusSeconds(1));
+            }
+        };
+        CheckoutService service = new CheckoutService(store, flags, undecided, trace, clock, properties);
+        store.addStore("store-undecided", "Undecided processor store (synthetic)", "http://127.0.0.1:9", true);
+        service.start("co-51350", "store-undecided", "51350", "web", 2999);
+
+        PayResult first = service.pay("co-51350", "card-51350");
+        clock.advance(Duration.ofSeconds(20));
+        PayResult retried = service.pay("co-51350", "card-51350");
+
+        assertThat(first.outcome()).isNotEqualTo(Outcome.AUTHORIZED);
+        assertThat(retried.idempotencyKey()).as("the same key, so the processor returns the first payment")
+                .isEqualTo(first.idempotencyKey());
+        assertThat(store.checkout("co-51350").keySeq()).isEqualTo(1);
     }
 
     @Test

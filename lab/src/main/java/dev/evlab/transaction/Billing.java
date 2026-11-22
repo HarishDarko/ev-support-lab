@@ -1,11 +1,14 @@
 package dev.evlab.transaction;
 
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Invoice transitions. Pure; the caller persists the result. */
 public final class Billing {
 
     private static final String REPORTED_AFTER_CLOSE = "after the provisional close the charger reported";
+    private static final Pattern REPORTED_WH = Pattern.compile(Pattern.quote(REPORTED_AFTER_CLOSE) + " ([0-9.]+) Wh");
 
     private final Tariff tariff;
     private final double epsilonWh;
@@ -56,6 +59,10 @@ public final class Billing {
             return current;
         }
         String note = current.note() == null ? "" : current.note();
+        Matcher noted = REPORTED_WH.matcher(note);
+        if (noted.find() && Double.parseDouble(noted.group(1)) >= reportedWh) {
+            return current; // the note already gives a reading at least this high
+        }
         int earlier = note.indexOf(REPORTED_AFTER_CLOSE);
         if (earlier >= 0) {
             note = note.substring(0, earlier).replaceAll("[; ]+$", "");
