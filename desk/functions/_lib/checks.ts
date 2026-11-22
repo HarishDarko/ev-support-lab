@@ -20,14 +20,18 @@ export function normalize(text: unknown): string {
 }
 
 // True when the quote appears in the source text, ignoring case and spacing.
-// A quote shortened with an ellipsis passes only if every piece appears in the source, in order.
+// A quote shortened with an ellipsis passes only if every piece appears in the source, in order. It may have at most
+// three pieces of at least four characters each, so a string of single letters split by ellipses is not a quote.
+export const MAX_QUOTE_PIECES = 3;
+export const MIN_QUOTE_PIECE = 4;
 export function quoted(quote: unknown, source: unknown): boolean {
   const src = normalize(source);
   const pieces = normalize(quote)
     .split(/\.\.\.|…/)
     .map((p) => p.replace(/^["'.,\s]+|["'.,\s]+$/g, ""))
     .filter(Boolean);
-  if (!pieces.length || pieces.join("").length < 6) return false;
+  if (!pieces.length || pieces.length > MAX_QUOTE_PIECES || pieces.join("").length < 6) return false;
+  if (pieces.length > 1 && pieces.some((p) => p.length < MIN_QUOTE_PIECE)) return false;
   let from = 0;
   for (const piece of pieces) {
     const at = src.indexOf(piece, from);
@@ -56,15 +60,20 @@ export const exceptionNamesIn = (exceptions: Record<string, RunbookExceptionRule
 export const mentions = (text: unknown, terms: string[]): boolean =>
   terms.length === 0 || terms.some((t) => normalize(text).includes(t));
 
-// Numbers of 4 or more, or with decimals, that appear in the output but nowhere in the input.
+// Numbers of 4 or more, or with decimals, that appear in the output but nowhere in the input. A comma-grouped number
+// ("1,200", "$15,000") is one number, compared without its commas, so "1,200" in the output matches "1200" or "1,200"
+// in the input and is never read as "1" and "200".
+const NUMBER = /\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
 export function ungroundedNumbers(output: unknown, input: unknown): string[] {
-  const found = (text: unknown) => new Set(String(text).match(/\d+(?:\.\d+)?/g) ?? []);
-  const allowed = found(input);
-  const out: string[] = [];
-  for (const n of found(JSON.stringify(output))) {
-    if ((Number(n) >= 4 || n.includes(".")) && !allowed.has(n)) out.push(n);
+  const numbers = (text: unknown) => String(text).match(NUMBER) ?? [];
+  const plain = (n: string) => n.replace(/,/g, "");
+  const allowed = new Set(numbers(input).map(plain));
+  const out = new Map<string, string>();
+  for (const n of numbers(JSON.stringify(output))) {
+    const key = plain(n);
+    if ((Number(key) >= 4 || key.includes(".")) && !allowed.has(key) && !out.has(key)) out.set(key, n);
   }
-  return out;
+  return [...out.values()];
 }
 
 export const check = (name: string, passed: boolean, detail = ""): Check => ({ name, passed, detail });
