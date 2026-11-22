@@ -29,13 +29,14 @@ export const SAAS_LAB: Lab = {
       ["endpoint-down", "a real outage still pauses"],
       ["hmac-endpoint", "no token requests"],
       ["secret-rotated", "still fails"],
+      ["after a replay", "earlier failures no longer count toward a pause"],
     ],
   },
   /** The rules of the fix, as the lab's README states them. */
   rules: [
     {
       name: "One shared refresh",
-      text: "One token refresh per endpoint. The other delivery threads wait for it and use its token.",
+      text: "One token refresh per endpoint. The other delivery threads wait for it and use its result, the token or the failure, instead of asking again.",
     },
     {
       name: "Refresh early",
@@ -44,7 +45,7 @@ export const SAAS_LAB: Lab = {
     { name: "Retry once", text: "After a 401, one retry after the shared refresh. No retry at once, in a loop." },
     {
       name: "Wait on a rate limit",
-      text: "A 429 from the token endpoint makes deliveries wait for Retry-After. A revoked client and endpoint errors still count toward the pause.",
+      text: "A 429 from the token endpoint makes deliveries wait for Retry-After, and nobody asks again before then. A revoked client and endpoint errors still count toward the pause, but only those since the endpoint was last resumed.",
     },
   ],
   adrs: [],
