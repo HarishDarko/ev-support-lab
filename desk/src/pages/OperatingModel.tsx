@@ -1,5 +1,6 @@
 import { useIncident } from "../incident";
 import type { IndustryPages } from "../incident/types";
+import { EV_FRONT_LINE } from "../desk/coverage/coverage";
 import "./Page.css";
 
 // A plain page, not part of the animated story: how the Eastern-hours dev-support role would run day to day.
@@ -13,6 +14,7 @@ const NOC: IndustryPages["monitor"] = {
     title: "NOC sync",
     text: "Alerts and repeat offenders from the night: which chargers, which sites, which ones have been reset before. During the day the NOC reaches this shift directly, with an agreed time to acknowledge.",
   },
+  coverage: EV_FRONT_LINE,
 };
 
 const day = (monitor: IndustryPages["monitor"]) => [

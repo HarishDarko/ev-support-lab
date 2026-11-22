@@ -32,7 +32,7 @@ const all = (data: StoryData): Decisions => ({
 /** Words that belong to the EV or SaaS incidents only. The shop has a "Site monitor" (its website), so only EV's
  * plural "sites" counts. */
 const OTHER_WORDS =
-  /charger|\bmeter\b|OCPP|FW-[ABC]|INC-0412|ENG-4471|RB-05|idle fee|unplug|firmware|\bsites\b|INC-0527|ENG-5108|RB-14|webhook endpoint|token storm|identity provider/i;
+  /\bNOC\b|field service|host accounts|status monitor|charger|\bmeter\b|OCPP|FW-[ABC]|INC-0412|ENG-4471|RB-05|idle fee|unplug|firmware|\bsites\b|INC-0527|ENG-5108|RB-14|webhook endpoint|token storm|identity provider/i;
 /** The first such word in a text, so a failure names it. */
 const otherWord = (text: string) => OTHER_WORDS.exec(text)?.[0] ?? null;
 
@@ -222,6 +222,7 @@ describe("the e-commerce walkthrough", () => {
         ["../src/desk/handoff/HandoffTab", "HandoffTab"],
         ["../src/desk/queue/QueueTab", "QueueTab"],
         ["../src/desk/kb/KnowledgeBaseTab", "KnowledgeBaseTab"],
+        ["../src/desk/coverage/CoverageTab", "CoverageTab"],
         ["../src/desk/scorecard/ScorecardTab", "ScorecardTab"],
       ].map(async ([path, name]) => (await load(path!))[name!] as Component),
     );

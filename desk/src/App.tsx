@@ -237,6 +237,8 @@ function Walkthrough({
             onApprove={() => story.approve(f.approvable)}
             onSend={story.send}
             onDesk={(b) => openDesk(b.desk)}
+            onOpenTicket={(id) => openDesk("queue", id)}
+            runControl={<RunControl api={runApi} />}
             onStageInView={onPhoneStage}
             jumpTo={jumpTo}
           />

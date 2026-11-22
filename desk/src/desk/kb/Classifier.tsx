@@ -5,11 +5,10 @@ import { Pill } from "../ui/Pill";
 import { ProvenanceNote } from "../ui/ProvenanceNote";
 import "./Classifier.css";
 
+/** A check the visitor ran: the text they sent and the answer. */
 interface Checked {
   text: string;
   answer: StepResult<ClassifyModel>;
-  /** True for the recorded answer to the example; false once the visitor has run the check. */
-  recorded: boolean;
 }
 
 /** A new ticket, checked against the article. The one place a visitor types their own text. */
@@ -17,18 +16,17 @@ export function Classifier() {
   const { pack, run, classify, label } = useRun();
   const field = useId();
   const [text, setText] = useState(pack.newTicketExample);
-  const [checked, setChecked] = useState<Checked>({
-    text: pack.newTicketExample,
-    answer: run.steps.classify,
-    recorded: true,
-  });
+  // Only the visitor's own check is kept here. Until there is one, the example's answer is read from the run on
+  // every render, so a live run that arrives replaces the recorded answer instead of leaving a stale copy.
+  const [manual, setManual] = useState<Checked | null>(null);
+  const checked: Checked = manual ?? { text: pack.newTicketExample, answer: run.steps.classify };
   const [busy, setBusy] = useState(false);
 
   const check = async () => {
     const submitted = text.trim();
     setBusy(true);
     try {
-      setChecked({ text: submitted, answer: await classify(submitted), recorded: false });
+      setManual({ text: submitted, answer: await classify(submitted) });
     } finally {
       setBusy(false);
     }
@@ -77,7 +75,11 @@ export function Classifier() {
         {!busy && current && (
           <div className="classify-result" data-testid="classify-result">
             <p className="dk-kicker">
-              {checked.recorded ? `Recorded result for this example · ${label}` : "Checked just now"}
+              {manual
+                ? "Checked just now"
+                : checked.answer.live
+                  ? "Result for this example from the live run"
+                  : `Recorded result for this example · ${label}`}
             </p>
             <p className="classify-pills">
               <Pill tone={pillTone(origin)}>{fellBack ? "Rules fallback" : "AI, checked"}</Pill>

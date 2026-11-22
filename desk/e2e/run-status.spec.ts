@@ -43,3 +43,33 @@ test("the desk's Run it live shows the same status line", async ({ page }) => {
   release();
   await expect(dialog.getByRole("button", { name: "Run it live" })).toBeEnabled();
 });
+
+test("the knowledge base's example follows a live run that lands while the tab is open", async ({ page }) => {
+  // MOCK=1 answers from the rules, which never replace a recorded AI answer, so the classify answer is held and then
+  // returned as an AI answer with a marked suggested action.
+  let release!: () => void;
+  const released = new Promise<void>((resolve) => (release = resolve));
+  await page.route("**/api/classify", async (route) => {
+    const response = await route.fetch();
+    const body = (await response.json()) as { data: Record<string, unknown>; trace: Record<string, unknown> };
+    await released;
+    body.data["suggested_action"] = "Answer from the live run.";
+    body.trace = { ...body.trace, source: "ai", reliability: "high", fallbackReason: undefined };
+    await route.fulfill({ response, json: body });
+  });
+  await openFromChooser(page, "/");
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator("main[data-beat='t1']")).toBeVisible();
+  await page.getByRole("button", { name: "Run it live" }).click();
+
+  await page.getByRole("button", { name: "Open the desk" }).click();
+  const dialog = page.getByRole("dialog", { name: "The desk" });
+  await dialog.getByRole("tab", { name: "Knowledge base", exact: true }).click();
+  const result = dialog.getByTestId("classify-result");
+  await expect(result).toContainText("Recorded result for this example");
+
+  release();
+  await expect(result).toContainText("Result for this example from the live run");
+  await expect(result).toContainText("Answer from the live run.");
+});

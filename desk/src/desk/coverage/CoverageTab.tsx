@@ -1,12 +1,14 @@
 import { META } from "../../data/synthetic";
-import { DAY_MINUTES, HOUR_TICKS, coverageBands, minutes } from "./coverage";
+import { useIncident } from "../../incident";
+import { DAY_MINUTES, EV_FRONT_LINE, HOUR_TICKS, coverageBands, minutes } from "./coverage";
 import "./CoverageTab.css";
 
 const pct = (minute: number) => `${(minute / DAY_MINUTES) * 100}%`;
 
-/** Who is covering the network at each hour of the Eastern-time day. */
+/** Who covers support at each hour of the Eastern-time day, with this industry's around-the-clock team. */
 export function CoverageTab() {
-  const bands = coverageBands();
+  const { pages } = useIncident();
+  const bands = coverageBands(pages?.monitor.coverage ?? EV_FRONT_LINE);
   const start = minutes(META.shiftStart);
   const overlapMinutes = (bands.find((b) => b.id === "overlap")?.segments ?? []).reduce((n, [a, b]) => n + b - a, 0);
 
