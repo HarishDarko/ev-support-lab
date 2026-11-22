@@ -63,20 +63,22 @@ export const mentions = (text: unknown, terms: string[]): boolean =>
 // Numbers of 4 or more, or with decimals, that appear in the output but nowhere in the input.
 // A comma counts as a thousands separator only inside a valid group pattern: 1 to 3 digits, then groups of exactly 3,
 // not part of a longer run of digits and commas. So "1,200" and "$15,000" are one number each (compared without their
-// commas, never read as "1" and "200"), while "1,2,3" or "1,2345" are separate numbers. A token whose first group
-// also has 3 digits ("500,503", "120,450") can be a short list as well as a number, so either reading grounds it.
-// The output is read value by value, so a list of numbers ([120, 450]) is never joined into one.
+// commas, never read as "1" and "200"), while "1,2,3" or "1,2345" are separate numbers. A token whose groups are all
+// 3-digit numbers with no leading zero ("500,503", "120,450") can be a short list as well as a number, so either
+// reading grounds it. A group with a leading zero ("100,000", "429,014") is only ever a thousands group, so "100" in
+// the input never grounds "100,000". The output is read value by value, so a list of numbers ([120, 450]) is never
+// joined into one.
 const NUMBER = /(?<![\d,])\d{1,3}(?:,\d{3})+(?:\.\d+)?(?!\d|,\d)|\d+(?:\.\d+)?/g;
 interface NumberToken {
   raw: string;
   joined: string;
-  /** The comma-separated parts, when the token could also be a list of 3-digit numbers. */
+  /** The comma-separated parts, when the token could also be a list of 3-digit numbers (100 to 999). */
   parts: string[] | null;
 }
 function numberTokens(text: string): NumberToken[] {
   return (text.match(NUMBER) ?? []).map((raw) => {
     const parts = raw.split(",");
-    const list = parts.length > 1 && parts[0]!.length === 3 && !raw.includes(".");
+    const list = parts.length > 1 && parts.every((part) => /^[1-9]\d{2}$/.test(part));
     return { raw, joined: raw.replace(/,/g, ""), parts: list ? parts : null };
   });
 }
@@ -102,7 +104,7 @@ export function ungroundedNumbers(output: unknown, input: unknown): string[] {
   const out = new Map<string, string>();
   for (const t of numberTokens(textOf(output))) {
     if (!counts(t.joined) || allowed.has(t.joined) || out.has(t.joined)) continue;
-    if (t.parts?.every((part) => !counts(part) || allowed.has(part))) continue;
+    if (t.parts?.every((part) => allowed.has(part))) continue;
     out.set(t.joined, t.raw);
   }
   return [...out.values()];

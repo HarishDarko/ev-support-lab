@@ -51,12 +51,20 @@ export interface Trace {
 export async function onRequestPost({ request, env, params }: Context): Promise<Response> {
   const name = params.step as string;
   if (!Object.hasOwn(STEPS, name)) return json({ error: "Unknown step." }, 404);
+  // An empty body is a step that reads nothing. Anything else must be a JSON object: a body that does not parse, or
+  // parses to null, a list or a single value, is refused here, before any model call.
   let input: StepInput = {};
-  try {
-    const body: unknown = await request.json();
-    input = body as StepInput;
-  } catch {
-    /* steps that take no input */
+  const raw = await request.text();
+  if (raw.trim()) {
+    let body: unknown;
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      body = undefined;
+    }
+    if (!body || typeof body !== "object" || Array.isArray(body))
+      return json({ error: "Request body must be a JSON object." }, 400);
+    input = body;
   }
   // The industry pack, from an allowlist. No pack means the default one, so the recorded run and older clients
   // are unchanged.

@@ -142,10 +142,11 @@ describe("MOCK=1", () => {
     ["triage", { ids: [ticket.id] }],
     ["patterns", {}],
     ["investigate", {}],
-    ["handoff", {}],
+    // Since F2-04 these need what the earlier step wrote; an empty one is enough for the rules.
+    ["handoff", { investigation: {} }],
     ["verify", {}],
-    ["kb", {}],
-    ["shiftnote", {}],
+    ["kb", { investigation: {}, handoff: {} }],
+    ["shiftnote", { summary: {} }],
     // An article with a title is required since F22; the rules answer from it as before.
     ["classify", { text: "Session open 7h, energy stopped climbing. Charging.", article: { title: "Session stuck" } }],
   ];
@@ -215,7 +216,7 @@ describe("live path (mocked SDK)", () => {
           { model: "claude-sonnet-5-5", input: 3000, output: 1000 },
         ),
       );
-    const r = await post("handoff", {}, live);
+    const r = await post("handoff", { investigation: {} }, live);
     expect(r.body.trace).toMatchObject({
       source: "ai",
       attempts: 2,
@@ -228,7 +229,7 @@ describe("live path (mocked SDK)", () => {
 
   it("falls back to rules after two invalid answers and still reports what was spent", async () => {
     sdk.beta.mockResolvedValue(reply(badHandoff, { model: "claude-sonnet-5-5", input: 2000, output: 1000 }));
-    const r = await post("handoff", {}, live);
+    const r = await post("handoff", { investigation: {} }, live);
     expect(r.body.trace).toMatchObject({
       source: "rules",
       reliability: "low",
@@ -375,5 +376,52 @@ describe("rate limiting under parallel calls", () => {
     const results = await Promise.allSettled([rateLimit(env, request("4.4.4.4")), rateLimit(env, request("4.4.4.4"))]);
     expect(results.map((r) => r.status)).toEqual(["fulfilled", "rejected"]);
     expect(store.get(`rl:4.4.4.4:${hour}`)).toBe("45");
+  });
+});
+
+describe("request bodies: refused before any model call unless they are a JSON object (F2-04)", () => {
+  const STEP_NAMES = ["triage", "patterns", "investigate", "handoff", "verify", "kb", "classify", "shiftnote"];
+
+  it.each([
+    ["truncated JSON", '{"investigation":'],
+    ["not JSON", "{oops"],
+    ["null", "null"],
+    ["a list", "[]"],
+    ["a number", "42"],
+    ["a string", '"investigation"'],
+  ])("%s gets a 400 on every step, with no model call", async (_label, raw) => {
+    for (const step of STEP_NAMES) {
+      const r = await post(step, raw, live);
+      expect(r.status, step).toBe(400);
+      expect((r.body as unknown as { error: string }).error).toBe("Request body must be a JSON object.");
+    }
+    expect(sdk.plain).not.toHaveBeenCalled();
+    expect(sdk.beta).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["handoff", {}, "investigation is required."],
+    ["handoff", { investigation: null }, "investigation is required."],
+    ["kb", { handoff: {} }, "investigation is required."],
+    ["kb", { investigation: {} }, "handoff is required."],
+    ["shiftnote", {}, "summary is required."],
+  ])("%s without what the earlier step wrote (%j) gets a 400, with no model call", async (step, body, message) => {
+    const r = await post(step, body, live);
+    expect(r.status).toBe(400);
+    expect((r.body as unknown as { error: string }).error).toBe(message);
+    expect(sdk.beta).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["no body", undefined],
+    ["an empty body", ""],
+    ["a blank body", "  \n"],
+    ["an empty object", {}],
+  ])("steps that read nothing still answer with %s", async (_label, body) => {
+    for (const step of ["investigate", "verify", "patterns"]) {
+      const r = await post(step, body, { ...live, MOCK: "1" });
+      expect(r.status, step).toBe(200);
+      expect(r.body.trace.source).toBe("rules");
+    }
   });
 });

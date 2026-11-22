@@ -6,7 +6,17 @@ import type { Pack, PackHistoryItem, PackTicket } from "../../shared/packs/types
 import { check, exceptionIn, exceptionNamesIn, normalize } from "./checks";
 import { StepError, fenced, shiftSummaryOf } from "./errors";
 import { MAX_TOKENS, bool, groundingIn, knownIds, knownIdsIn, obj, runbookListOf, severity, str, strs } from "./kit";
-import { SHIFT_SUMMARY, articleFor, articleTitle, fencedJson } from "./prompt-inputs";
+import {
+  ARTICLE,
+  ARTICLE_RELATED_MAX,
+  ARTICLE_STEPS_MAX,
+  CORRECTED,
+  SHIFT_SUMMARY,
+  articleFor,
+  articleTitle,
+  fencedJson,
+  fit,
+} from "./prompt-inputs";
 import { ruleTriageFor } from "./rule-engine";
 import type { StepInput } from "./types";
 import type { ClassifyModel, KbModel, ShiftnoteModel } from "../../shared/packs/steps";
@@ -122,15 +132,18 @@ ${runbookList}`;
       data.related = data.related.filter((id) => known.has(id));
       // The article always names its pattern's runbook, so the new-ticket check knows which exceptions apply.
       const runbook = runbookOf(patternOf(input).ticketIds);
-      if (runbook && !data.related.includes(runbook)) data.related.push(runbook);
+      if (runbook && !data.related.includes(runbook))
+        data.related = [...data.related.slice(0, ARTICLE_RELATED_MAX - 1), runbook];
       const checks = [];
       if (fixed && recordOnly(runbook)) {
         // The fixed check and review frame the steps, whatever the model wrote; copies of them are removed.
         const same = (a: string, b: string) => normalize(a) === normalize(b);
         const rest = data.steps.filter((s) => !same(s, fixed.confirmStep) && !same(s, fixed.reviewStep));
-        data.steps = [fixed.confirmStep, ...rest, fixed.reviewStep];
+        // The model's own steps are cut so the framed article still fits the next step.
+        data.steps = [fixed.confirmStep, ...rest.slice(0, ARTICLE_STEPS_MAX - 2), fixed.reviewStep];
         checks.push(check(`Fixed check and review around ${fixed.runbook}`, true, "added"));
       }
+      Object.assign(data, fit(data, ARTICLE, [fixed?.confirmStep, fixed?.reviewStep, runbook]));
       return { data, checks: [...checks, ...grounding(data, prompt)] };
     },
     fallback(input: StepInput): KbModel {
@@ -194,8 +207,11 @@ matched_article: the article title if it matches, else "none". suggested_action:
       // build() refuses a missing or empty title; a direct call without one never matches an article.
       const title = articleTitle(input);
       if (!title) data.matches_known_pattern = false;
-      const ok = data.matched_article === "none" || (Boolean(title) && data.matched_article === title);
-      if (!ok) data.matched_article = data.matches_known_pattern ? title : "none";
+      // A match names the article's title and no match names "none". When the two fields disagree, the title follows
+      // the yes or no, so a contradictory answer is never passed on.
+      const expected = data.matches_known_pattern ? title : "none";
+      const ok = data.matched_article === expected;
+      if (!ok) data.matched_article = expected;
       // The article's runbook exceptions win: a ticket outside the pattern is never routed to its runbook.
       const runbook = articleRunbook(input?.article);
       const exception = runbook ? exceptionIn(pack.runbookExceptions, runbook, this.text(input)) : null;
@@ -212,7 +228,7 @@ matched_article: the article title if it matches, else "none". suggested_action:
       return {
         data,
         checks: [
-          check("Matched article exists", ok, ok ? "" : "corrected to the real title"),
+          check("Matched article exists", ok, ok ? "" : CORRECTED[expected === "none" ? "none" : "title"]),
           check(
             "Pattern exceptions checked by wording",
             !overridden,

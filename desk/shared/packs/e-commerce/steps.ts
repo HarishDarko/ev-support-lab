@@ -4,10 +4,15 @@
 // committed recording is an AI one (functions/_lib/live-packs.ts), so today only the fallbacks answer.
 import { StepError, fenced } from "../../../functions/_lib/errors";
 import {
+  ARTICLE,
+  ARTICLE_STEPS_MAX,
+  CORRECTED,
+  HANDOFF_EVIDENCE_MAX,
   SHIFT_SUMMARY,
   articleFor,
   articleTitle,
   fencedJson,
+  fit,
   handoffField,
   investigationField,
 } from "../../../functions/_lib/prompt-inputs";
@@ -142,6 +147,7 @@ ${incidentInput()}`;
     if (kept.length < 2)
       throw new ValidationError(`Only ${kept.length} of ${total} evidence quotes found in the source they cite`);
     data.evidence = kept.map((e) => ({ ...e, quote_verified: true }));
+    Object.assign(data, fit(data, INVESTIGATION));
     return {
       data,
       checks: [
@@ -205,8 +211,13 @@ ${incidentInput()}`;
       throw new ValidationError("Packet has no ask or no escalation rule");
     // What the lab shows, and what it leaves open, is fixed wording: the model's own version is replaced.
     data.hypothesis_note = HANDOFF_NOTE;
-    if (!data.evidence_attached.includes(LAB_TEST_ATTACHMENT))
-      data.evidence_attached = [LAB_TEST_ATTACHMENT, ...data.evidence_attached];
+    // The lab test is always attached, and first when the list is too long for the next step and must be cut.
+    if (!data.evidence_attached.includes(LAB_TEST_ATTACHMENT) || data.evidence_attached.length > HANDOFF_EVIDENCE_MAX)
+      data.evidence_attached = [
+        LAB_TEST_ATTACHMENT,
+        ...data.evidence_attached.filter((e) => e !== LAB_TEST_ATTACHMENT),
+      ];
+    Object.assign(data, fit(data, HANDOFF, [LAB_TEST_ATTACHMENT]));
     return {
       data,
       checks: [
@@ -304,7 +315,10 @@ ${runbookList}`;
     const aboutReview = (s: string) => /\bpayments review\b/i.test(s);
     const replaced = data.steps.filter(aboutCapture).length;
     const replacedReview = data.steps.filter((s) => !aboutCapture(s) && aboutReview(s)).length;
-    data.steps = [CONFIRM_STEP, ...data.steps.filter((s) => !aboutCapture(s) && !aboutReview(s)), REVIEW_STEP];
+    // The model's own steps are cut so the whole article, with the fixed first and last steps, fits the next step.
+    const own = data.steps.filter((s) => !aboutCapture(s) && !aboutReview(s)).slice(0, ARTICLE_STEPS_MAX - 2);
+    data.steps = [CONFIRM_STEP, ...own, REVIEW_STEP];
+    Object.assign(data, fit(data, ARTICLE, [CONFIRM_STEP, REVIEW_STEP]));
     return {
       data,
       checks: [
@@ -389,8 +403,11 @@ matched_article: the article title if it matches, else "none". suggested_action:
     // build() refuses a missing or empty title; a direct call without one never matches an article.
     const title = articleTitle(input);
     if (!title) data.matches_known_pattern = false;
-    const ok = data.matched_article === "none" || (Boolean(title) && data.matched_article === title);
-    if (!ok) data.matched_article = data.matches_known_pattern ? title : "none";
+    // A match names the article's title and no match names "none". When the two fields disagree, the title follows
+    // the yes or no, so a contradictory answer is never passed on.
+    const expected = data.matches_known_pattern ? title : "none";
+    const ok = data.matched_article === expected;
+    if (!ok) data.matched_article = expected;
     // The pattern's exceptions win: a ticket outside the known pattern is never routed to RB-21.
     const exception = exceptionIn(EXCEPTIONS, "RB-21", this.text(input));
     const overridden = Boolean(exception && (data.matches_known_pattern || !data.escalate));
@@ -408,7 +425,7 @@ matched_article: the article title if it matches, else "none". suggested_action:
     return {
       data,
       checks: [
-        check("Matched article exists", ok, ok ? "" : "corrected to the real title"),
+        check("Matched article exists", ok, ok ? "" : CORRECTED[expected === "none" ? "none" : "title"]),
         check(
           `Pattern exceptions checked by wording: ${names}`,
           !overridden,

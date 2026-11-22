@@ -2918,7 +2918,7 @@
   "requests": [
    {
     "model": "claude-sonnet-5-5",
-    "max_tokens": 6000,
+    "max_tokens": 3500,
     "betas": [
      "server-side-fallback-2026-07-01"
     ],

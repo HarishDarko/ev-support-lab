@@ -61,11 +61,77 @@ export function pick(value: unknown, field: Field, path: string): unknown {
 /**
  * Client JSON as prompt data: the whole value is size-capped first (the same "Input too large." as before), then
  * checked against its field, then written inside a triple-quote fence. JSON.stringify escapes every double quote in a
- * string, so no text the client sends can close the fence. A missing value is written as null, as before.
+ * string, so no text the client sends can close the fence. Every step that fences a value needs it, so a missing
+ * value is refused with a 400 before any model call.
  */
-export function fencedJson(value: unknown, field: Field, name: string, max = 6000): string {
+export function fencedJson(value: unknown, field: Field, name: string, max = FENCE_MAX): string {
   clip(value, max);
-  return `"""${clip(value == null ? null : pick(value, field, name), max)}"""`;
+  if (value == null) return refuse(name, "is required");
+  return `"""${clip(pick(value, field, name), max)}"""`;
+}
+
+/** A text cut to `max` characters, ending with an ellipsis when it was longer. */
+export function clipText(value: string, max: number): string {
+  return value.length > max ? `${value.slice(0, max - 1).trimEnd()}…` : value;
+}
+
+/** The size cap on a whole fenced value, as JSON (the shift summary has a larger one). */
+export const FENCE_MAX = 6000;
+
+/**
+ * A step's own answer cut to what the next step accepts, so a 200 from one step is never a 400 on the next. First
+ * each list keeps its first items and each text its first characters, up to its field's caps. Values of another
+ * type, texts with a fixed set of values, and keys the field does not name are left as they are: the step's schema
+ * already fixed those. Then, while the whole value is still over the size cap, the longest list loses its last item.
+ * Every list keeps at least one item, and the `keep` values (the fixed texts a step adds) are never removed.
+ */
+export function fit<T>(value: T, field: Field, keep: readonly unknown[] = [], max = FENCE_MAX): T {
+  const out = fitField(structuredClone(value), field);
+  while (JSON.stringify(out).length > max && dropOne(out, keep)) {
+    /* one item at a time, from the longest list */
+  }
+  return out;
+}
+
+function fitField<T>(value: T, field: Field): T {
+  switch (field.kind) {
+    case "text":
+      return (typeof value === "string" && !field.values ? clipText(value, field.max) : value) as T;
+    case "list":
+      return (Array.isArray(value) ? value.slice(0, field.max).map((v: unknown) => fitField(v, field.of)) : value) as T;
+    case "object": {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+      const out = value as Record<string, unknown>;
+      for (const [key, f] of Object.entries(field.fields))
+        if (Object.hasOwn(out, key)) out[key] = fitField(out[key], f);
+      return value;
+    }
+    default:
+      return value;
+  }
+}
+
+/** Every list in a value, nested ones too. */
+function listsIn(value: unknown, found: unknown[][] = []): unknown[][] {
+  if (Array.isArray(value)) {
+    found.push(value);
+    for (const v of value) listsIn(v, found);
+  } else if (value && typeof value === "object") for (const v of Object.values(value)) listsIn(v, found);
+  return found;
+}
+
+/** Removes the last item that may go from the longest list that has more than one item. False when none can. */
+function dropOne(value: unknown, keep: readonly unknown[]): boolean {
+  const size = (v: unknown) => JSON.stringify(v).length;
+  const lists = listsIn(value).filter((l) => l.length > 1 && l.some((x) => !keep.includes(x)));
+  const longest = lists.sort((a, b) => size(b) - size(a))[0];
+  if (!longest) return false;
+  for (let i = longest.length - 1; i >= 0; i -= 1)
+    if (!keep.includes(longest[i])) {
+      longest.splice(i, 1);
+      break;
+    }
+  return true;
 }
 
 // The caps are about two to four times the longest value the recorded runs and the rules give for that field
@@ -91,6 +157,15 @@ export const investigationField = (sources: readonly string[]): Field =>
     open_questions: list(text(300), 6),
   });
 
+/** The most items a handoff's attached evidence may have, the lab test included. */
+export const HANDOFF_EVIDENCE_MAX = 10;
+/** The most steps an article may have, the desk's fixed first and last steps included. */
+export const ARTICLE_STEPS_MAX = 8;
+/** The most ids an article's related list may have. */
+export const ARTICLE_RELATED_MAX = 60;
+/** The longest triage summary a step keeps: the shift summary lists it after the ticket id, in a 300-character item. */
+export const TRIAGE_SUMMARY_MAX = 200;
+
 /** An engineering handoff, as the handoff step writes it. `rules` are the pack's escalation rule keys. */
 export const handoffField = (rules: readonly string[]): Field =>
   record({
@@ -99,7 +174,7 @@ export const handoffField = (rules: readonly string[]): Field =>
     scope: text(400),
     rules_triggered: list(text(40, rules), 10),
     reproduction: list(text(500), 8),
-    evidence_attached: list(text(300), 10),
+    evidence_attached: list(text(300), HANDOFF_EVIDENCE_MAX),
     ruled_out: list(text(300), 8),
     workaround_in_place: text(500),
     the_ask: text(600),
@@ -111,10 +186,10 @@ export const ARTICLE = record({
   title: text(200),
   applies_when: list(text(300), 6),
   how_to_confirm: list(text(400), 6),
-  steps: list(text(400), 8),
+  steps: list(text(400), ARTICLE_STEPS_MAX),
   escalate_if: list(text(300), 8),
   status_note: text(500),
-  related: list(text(20), 60),
+  related: list(text(20), ARTICLE_RELATED_MAX),
 });
 
 /** The shift summary the desk sends to the shift note (src/run/selectors.ts, shiftSummary). */
@@ -141,6 +216,12 @@ export function articleFor(input: { article?: unknown } | null | undefined): { t
     throw new StepError("Send the knowledge base article, with a title.", 400);
   return { title, fenced: fencedJson(article, ARTICLE, "article") };
 }
+
+/** The new-ticket check's detail when it corrected a matched article that disagreed with the yes or no. */
+export const CORRECTED = {
+  title: "corrected to the real title",
+  none: 'corrected to "none", as there is no match',
+} as const;
 
 /** The article's title for a check that already passed `articleFor`, or "" for a direct call with no article. */
 export function articleTitle(input: { article?: unknown } | null | undefined): string {

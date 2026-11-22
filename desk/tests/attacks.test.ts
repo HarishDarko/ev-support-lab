@@ -309,3 +309,29 @@ describe("guardrail bypasses from the external review (F08)", () => {
     expect(quoted("the session still showed ... unplugged the car", source)).toBe(true);
   });
 });
+
+describe("number grounding: a 3-digit prefix or a leading-zero group never grounds a bigger number (F2-01)", () => {
+  // The verifier's probe strings: before the fix, "100" in the input grounded "$100,000" in the output.
+  it.each([
+    ["$100,000 lost", "100 requests in a minute", ["100,000"]],
+    ["429,000 failed", "HTTP 429 from the IdP", ["429,000"]],
+    ["100,000,000", "100 sessions", ["100,000,000"]],
+    ["$100,000 lost", "no such number", ["100,000"]],
+    ["120", "120,000 sessions", ["120"]],
+    ["4812 sessions", "4,812 sessions", []],
+  ])("%j against %j", (output, input, expected) => {
+    expect(ungroundedNumbers({ n: output }, input)).toEqual(expected);
+  });
+
+  it("reads a group with a leading zero as a thousands group, never as a list item", () => {
+    expect(ungroundedNumbers({ n: "429,014" }, "429 and 014")).toEqual(["429,014"]);
+    expect(ungroundedNumbers({ n: "500,001" }, "500 then 001")).toEqual(["500,001"]);
+    // The same numbers written in full are still grounded, with or without commas.
+    expect(ungroundedNumbers({ n: "429,014" }, "429014")).toEqual([]);
+    expect(ungroundedNumbers({ n: "100000" }, "100,000 sessions")).toEqual([]);
+  });
+
+  it("still reads a list of 3-digit codes with no leading zero either way", () => {
+    expect(ungroundedNumbers({ codes: "500,503" }, "errors 500 and 503")).toEqual([]);
+  });
+});

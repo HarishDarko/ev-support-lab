@@ -5114,7 +5114,7 @@
   [
    "patterns",
    true,
-   6000,
+   3500,
    {
     "type": "object",
     "properties": {
