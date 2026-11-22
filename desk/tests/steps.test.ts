@@ -340,9 +340,10 @@ describe("other steps", () => {
   });
 
   it("classify needs 1 to 600 characters of ticket text", () => {
+    const article = { title: "A" };
     for (const text of ["", "   ", "x".repeat(601), 5, undefined])
-      expect(() => STEPS.classify.build({ text })).toThrow(StepError);
-    expect(STEPS.classify.build({ text: "  hello " })).toContain('"""hello"""');
+      expect(() => STEPS.classify.build({ text, article })).toThrow("Ticket text must be 1–600 characters.");
+    expect(STEPS.classify.build({ text: "  hello ", article })).toContain('"""hello"""');
   });
 
   it("classify corrects a matched_article that is not the real title", () => {

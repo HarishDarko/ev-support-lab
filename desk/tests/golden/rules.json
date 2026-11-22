@@ -5169,7 +5169,7 @@
   [
    "investigate",
    true,
-   null,
+   3500,
    {
     "type": "object",
     "properties": {
@@ -5278,7 +5278,7 @@
   [
    "handoff",
    true,
-   null,
+   2500,
    {
     "type": "object",
     "properties": {
@@ -5355,7 +5355,7 @@
   [
    "verify",
    true,
-   null,
+   1500,
    {
     "type": "object",
     "properties": {
@@ -5399,7 +5399,7 @@
   [
    "kb",
    true,
-   null,
+   2000,
    {
     "type": "object",
     "properties": {
@@ -5455,7 +5455,7 @@
   [
    "shiftnote",
    true,
-   null,
+   1500,
    {
     "type": "object",
     "properties": {
