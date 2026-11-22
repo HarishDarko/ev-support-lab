@@ -63,10 +63,13 @@ export const runbookListOf = (runbooks: { id: string; title: string; scope: stri
  * The ids an answer cites. An id that is not in the pack is a validation error, so the answer is retried or the
  * rules answer instead.
  */
+const ID = /\b(?:T-\d{4}|H-\d{4}|RB-\d{2}|ENG-\d{4}|INC-\d{4})\b/g;
 export function knownIdsIn(known: Set<string>) {
-  return function citedIds(data: unknown): string[] {
-    const ids = JSON.stringify(data).match(/\b(?:T-\d{4}|H-\d{4}|RB-\d{2}|ENG-\d{4}|INC-\d{4})\b/g) ?? [];
-    const unknown = [...new Set(ids)].filter((id) => !known.has(id));
+  /** `seen` is text the model was given that may carry ids of its own (a visitor's ticket): those are allowed too. */
+  return function citedIds(data: unknown, seen = ""): string[] {
+    const ids = JSON.stringify(data).match(ID) ?? [];
+    const alsoAllowed = new Set(seen.match(ID) ?? []);
+    const unknown = [...new Set(ids)].filter((id) => !known.has(id) && !alsoAllowed.has(id));
     if (unknown.length) throw new ValidationError(`Referenced unknown ids: ${unknown.join(", ")}`);
     return ids;
   };

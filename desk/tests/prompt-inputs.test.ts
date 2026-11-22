@@ -273,4 +273,17 @@ describe("classify cites only ids that exist", () => {
     const real = PACKS[_id === "short chain" ? "saas-support" : _id].tickets[0]!.id;
     expect(step.validate(model(`Like ${real}.`), input).data.why).toBe(`Like ${real}.`);
   });
+
+  it.each(steps)("%s: an id the visitor's ticket or the article carries may be echoed back", (_id, step) => {
+    // The review's probe: the visitor's text mentions T-9999 and the model repeats it. That is grounded in what the
+    // model was given, so it is not a validation error (which would cost a second rate-limited call).
+    const fromTicket = { text: "Same symptom as T-9999 last week.", article: { title: "A" } };
+    expect(step.validate(model("The ticket refers to T-9999."), fromTicket).data.why).toBe(
+      "The ticket refers to T-9999.",
+    );
+    const fromArticle = { text: "A new ticket.", article: { title: "A", related: ["INC-9999"] } };
+    expect(() => step.validate(model("See INC-9999."), fromArticle)).not.toThrow();
+    // An id that is in neither is still refused.
+    expect(() => step.validate(model("See T-8888."), fromTicket)).toThrow("Referenced unknown ids: T-8888");
+  });
 });
