@@ -5,7 +5,9 @@
 # that passes with the fix off, or a crash in place of an assertion all fail the gate.
 #
 # Usage: regression-must-fail.sh <report.xml> <failure type> <test name>...
-# Test names are the method names; Gradle's "()" suffix for JUnit 5 methods is ignored.
+# Test names are the method names; Gradle's "()" suffix for JUnit 5 methods is ignored. For a parameterized test,
+# name each case by its argument: Gradle writes a case as `[1] scenario = "slow-web-repay"` (or `[1] slow-web-repay`),
+# and the gate reads that as slow-web-repay. Every case must be named, so a dropped case fails the gate.
 set -euo pipefail
 
 if [ "$#" -lt 3 ]; then
@@ -26,14 +28,16 @@ fail() {
 
 suite=$(grep -o '<testsuite [^>]*>' "$report" | head -n 1 || true)
 [ -n "$suite" ] || fail "$report has no <testsuite> element."
-attr() { printf '%s' "$suite" | grep -o " $1=\"[0-9]*\"" | tr -dc '0-9'; }
+# An attribute that is missing reads as empty (grep finding nothing is not an error here), and an empty count never
+# equals the expected one, so a missing attribute fails the gate with a message instead of passing or ending silently.
+attr() { printf '%s' "$suite" | { grep -o " $1=\"[0-9]*\"" || true; } | tr -dc '0-9'; }
 tests=$(attr tests)
 failures=$(attr failures)
 errors=$(attr errors)
 skipped=$(attr skipped)
 want=${#want_names[@]}
 echo "With the fix off: tests=${tests:-?} failures=${failures:-?} errors=${errors:-?} skipped=${skipped:-?} (expected $want, $want, 0, 0)"
-if [ "${tests:-}" != "$want" ] || [ "${failures:-}" != "$want" ] || [ "${errors:-}" != "0" ] || [ "${skipped:-0}" != "0" ]; then
+if [ "${tests:-}" != "$want" ] || [ "${failures:-}" != "$want" ] || [ "${errors:-}" != "0" ] || [ "${skipped:-}" != "0" ]; then
   fail "Expected all $want tests to fail on assertions with the fix off; got tests=${tests:-?} failures=${failures:-?} errors=${errors:-?} skipped=${skipped:-?}."
 fi
 
@@ -57,6 +61,12 @@ actual=$(awk '
   }
   line ~ /<testcase / {
     match(line, / name="[^"]*"/); name = substr(line, RSTART + 7, RLENGTH - 8); sub(/\(\)$/, "", name)
+    # A parameterized case, `[1] scenario = &quot;slow-web-repay&quot;` or `[1] slow-web-repay`, is read as its argument.
+    if (name ~ /^\[[0-9]+\] /) {
+      sub(/^\[[0-9]+\] /, "", name)
+      sub(/^[A-Za-z_][A-Za-z0-9_]* = /, "", name)
+      if (name ~ /^&quot;.*&quot;$/) name = substr(name, 7, length(name) - 12)
+    }
     order[++n] = name; type[name] = "-"
   }
   line ~ /<failure / && n { match(line, / type="[^"]*"/); type[order[n]] = substr(line, RSTART + 7, RLENGTH - 8) }

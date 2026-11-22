@@ -6,8 +6,11 @@ import dev.saaslab.LabProperties;
 import dev.saaslab.clock.MutableClock;
 import dev.saaslab.delivery.DeliveryStore.Endpoint;
 import dev.saaslab.delivery.TokenClient.Answer;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -16,6 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
@@ -80,6 +84,69 @@ class SharedRefreshFailureTest {
     }
 
     @Test
+    void aCallerThatWaitedPastRetryAfterAsksAgainInsteadOfGettingAnOld429() throws Exception {
+        AtomicInteger asked = new AtomicInteger();
+        CountDownLatch inFlight = new CountDownLatch(1);
+        AtomicReference<Thread> late = new AtomicReference<>();
+        // The waiting caller's clock reads 5 s after the first caller's, so it gets the lock after Retry-After (1 s).
+        Clock perThread = new Clock() {
+            @Override
+            public ZoneId getZone() {
+                return ZoneOffset.UTC;
+            }
+
+            @Override
+            public Clock withZone(ZoneId zone) {
+                return this;
+            }
+
+            @Override
+            public Instant instant() {
+                return Thread.currentThread() == late.get() ? EPOCH.plusSeconds(5) : EPOCH;
+            }
+        };
+        TokenCache cache = new TokenCache(scripted(() -> {
+            if (asked.incrementAndGet() == 1) {
+                inFlight.countDown();
+                awaitBlocked(late);
+                return new Answer(429, null, 1, "rate_limited");
+            }
+            return new Answer(200, new TokenClient.Token("tok-2", EPOCH.plusSeconds(3600)), 0, null);
+        }), perThread);
+
+        try (ExecutorService first = Executors.newSingleThreadExecutor()) {
+            Future<Answer> refused = first.submit(() -> cache.refreshShared(ENDPOINT, null));
+            inFlight.await();
+            Answer[] waited = new Answer[1];
+            Thread waiter = new Thread(() -> waited[0] = cache.refreshShared(ENDPOINT, null));
+            late.set(waiter);
+            waiter.start();
+            assertThat(refused.get().status()).isEqualTo(429);
+            waiter.join(Duration.ofSeconds(20));
+            assertThat(asked).as("the late caller asked again").hasValue(2);
+            assertThat(waited[0].ok()).isTrue();
+        }
+    }
+
+    @Test
+    void aTokenStoredSinceAFailureMakesThatFailureStale() {
+        AtomicInteger asked = new AtomicInteger();
+        TokenCache cache = new TokenCache(scripted(() -> asked.incrementAndGet() == 1
+                ? new Answer(429, null, 30, "rate_limited")
+                : new Answer(200, new TokenClient.Token("tok-" + asked.get(), clock.instant().plusSeconds(3600)), 0,
+                        null)), clock);
+
+        assertThat(cache.refreshShared(ENDPOINT, null).status()).isEqualTo(429);
+        Answer own = cache.refreshOwn(ENDPOINT);
+        assertThat(own.ok()).isTrue();
+
+        // Refused with the token the legacy path stored after the 429, the caller refreshes again.
+        Answer again = cache.refreshShared(ENDPOINT, own.token());
+        assertThat(again.ok()).isTrue();
+        assertThat(asked).hasValue(3);
+    }
+
+    @Test
     void aSuccessfulRefreshForgetsTheFailure() {
         AtomicInteger asked = new AtomicInteger();
         TokenCache cache = new TokenCache(scripted(() -> asked.incrementAndGet() == 1
@@ -103,6 +170,17 @@ class SharedRefreshFailureTest {
                 return answer.get();
             }
         };
+    }
+
+    /** Waits until the one thread in {@code holder} exists and is blocked on a monitor (the refresh lock). */
+    private static void awaitBlocked(AtomicReference<Thread> holder) {
+        long deadline = System.nanoTime() + Duration.ofSeconds(20).toNanos();
+        while (holder.get() == null || holder.get().getState() != Thread.State.BLOCKED) {
+            if (System.nanoTime() > deadline) {
+                throw new IllegalStateException("the late caller never reached the refresh lock");
+            }
+            Thread.onSpinWait();
+        }
     }
 
     /** Waits until every worker thread but the caller is blocked on a monitor (the refresh lock). */
