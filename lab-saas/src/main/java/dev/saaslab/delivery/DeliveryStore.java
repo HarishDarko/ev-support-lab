@@ -111,11 +111,17 @@ public class DeliveryStore {
                 .params(eventId, endpointId, ts(at), outcome, detail, countsTowardPause).update();
     }
 
+    /**
+     * Failed attempts that count toward the pause, after {@code since} and not before the endpoint's latest resume:
+     * a replay starts the count again, so failures from before it never add to the next pause.
+     */
     public int failuresSince(String endpointId, Instant since) {
         return jdbc.sql("""
                 select count(*) from delivery_attempt
-                where endpoint_id = ? and outcome = 'failed' and counts_toward_pause and at > ?""")
-                .params(endpointId, ts(since)).query(Integer.class).single();
+                where endpoint_id = ? and outcome = 'failed' and counts_toward_pause and at > ?
+                and at >= coalesce((select max(resumed_at) from endpoint_pause where endpoint_id = ?),
+                                   '-infinity'::timestamptz)""")
+                .params(endpointId, ts(since), endpointId).query(Integer.class).single();
     }
 
     // ---- tokens and pauses ----

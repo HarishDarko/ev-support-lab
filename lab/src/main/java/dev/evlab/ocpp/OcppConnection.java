@@ -43,4 +43,9 @@ public class OcppConnection {
     Consumer<JsonNode> takePending(String uniqueId) {
         return pendingCalls.remove(uniqueId);
     }
+
+    /** CALLs sent and not yet answered by a CALLRESULT or a CALLERROR. */
+    int pendingCalls() {
+        return pendingCalls.size();
+    }
 }

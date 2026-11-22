@@ -62,8 +62,13 @@ public class TransactionRepository {
                 .param("station", stationId).param("id", id).query(MAPPER).optional();
     }
 
+    /**
+     * Open transactions of a station in transactionId order. Callers lock each row in turn, so every caller takes
+     * the row locks in the same order (ADR 0001).
+     */
     public List<Transaction> findOpenByStation(String stationId) {
-        return jdbc.sql("select " + COLUMNS + " from transaction where station_id = :s and state = 'CHARGING'")
+        return jdbc.sql("select " + COLUMNS
+                + " from transaction where station_id = :s and state = 'CHARGING' order by transaction_id")
                 .param("s", stationId).query(MAPPER).list();
     }
 

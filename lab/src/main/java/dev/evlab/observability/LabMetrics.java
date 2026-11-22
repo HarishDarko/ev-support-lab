@@ -35,6 +35,11 @@ public class LabMetrics {
         registry.counter("ocpp.ended.late.applied", "after", after).increment();
     }
 
+    /** After a provisional close the charger reported more energy than the provisional invoice bills. */
+    public void energyAfterProvisionalClose() {
+        registry.counter("ocpp.provisional.energy_after_close").increment();
+    }
+
     public void flagged(ReviewReason reason) {
         registry.counter("ocpp.transactions.flagged", "reason", reason.name().toLowerCase()).increment();
     }

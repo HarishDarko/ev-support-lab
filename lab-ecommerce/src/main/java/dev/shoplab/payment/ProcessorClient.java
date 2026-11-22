@@ -1,12 +1,15 @@
 package dev.shoplab.payment;
 
+import dev.shoplab.LabProperties;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,14 +37,17 @@ public class ProcessorClient {
     private static final Pattern STATUS = Pattern.compile("\"status\"\\s*:\\s*\"([^\"]+)\"");
 
     private final HttpClient http;
+    private final Duration requestTimeout;
 
-    public ProcessorClient(HttpClient http) {
+    public ProcessorClient(HttpClient http, LabProperties properties) {
         this.http = http;
+        this.requestTimeout = properties.http().requestTimeout();
     }
 
     public Answer authorize(String processorUrl, String idempotencyKey, String orderId, int amountPence, String card) {
         String body = "{\"orderId\":\"" + orderId + "\",\"amountPence\":" + amountPence + ",\"card\":\"" + card + "\"}";
         return send(HttpRequest.newBuilder(URI.create(processorUrl + "/v1/authorizations"))
+                .timeout(requestTimeout)
                 .header("Content-Type", "application/json")
                 .header("Idempotency-Key", idempotencyKey)
                 .POST(HttpRequest.BodyPublishers.ofString(body)).build());
@@ -49,17 +55,17 @@ public class ProcessorClient {
 
     public Answer lookup(String processorUrl, String idempotencyKey) {
         return send(HttpRequest.newBuilder(URI.create(processorUrl + "/v1/authorizations?idempotency_key="
-                + URLEncoder.encode(idempotencyKey, StandardCharsets.UTF_8))).GET().build());
+                + URLEncoder.encode(idempotencyKey, StandardCharsets.UTF_8))).timeout(requestTimeout).GET().build());
     }
 
     public Answer capture(String processorUrl, String authorizationId) {
         return send(HttpRequest.newBuilder(URI.create(processorUrl + "/v1/authorizations/" + authorizationId
-                + "/capture")).POST(HttpRequest.BodyPublishers.noBody()).build());
+                + "/capture")).timeout(requestTimeout).POST(HttpRequest.BodyPublishers.noBody()).build());
     }
 
     public Answer voidAuthorization(String processorUrl, String authorizationId) {
         return send(HttpRequest.newBuilder(URI.create(processorUrl + "/v1/authorizations/" + authorizationId
-                + "/void")).POST(HttpRequest.BodyPublishers.noBody()).build());
+                + "/void")).timeout(requestTimeout).POST(HttpRequest.BodyPublishers.noBody()).build());
     }
 
     private Answer send(HttpRequest request) {
@@ -71,6 +77,9 @@ public class ProcessorClient {
             Instant answeredAt = response.headers().firstValue("Answered-At").map(Instant::parse).orElse(null);
             return new Answer(response.statusCode(), status.find() ? status.group(1) : "error",
                     id.find() ? id.group(1) : null, answeredAt);
+        } catch (HttpTimeoutException e) {
+            throw new IllegalStateException("payment processor did not answer within " + requestTimeout.toSeconds()
+                    + " s: " + request.uri(), e);
         } catch (IOException e) {
             throw new IllegalStateException("payment processor unreachable: " + request.uri(), e);
         } catch (InterruptedException e) {

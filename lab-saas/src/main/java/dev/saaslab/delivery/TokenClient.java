@@ -1,12 +1,15 @@
 package dev.saaslab.delivery;
 
+import dev.saaslab.LabProperties;
 import dev.saaslab.delivery.DeliveryStore.Endpoint;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,16 +35,19 @@ public class TokenClient {
     private final HttpClient http;
     private final DeliveryStore store;
     private final Clock clock;
+    private final Duration requestTimeout;
 
-    public TokenClient(HttpClient http, DeliveryStore store, Clock clock) {
+    public TokenClient(HttpClient http, DeliveryStore store, Clock clock, LabProperties properties) {
         this.http = http;
         this.store = store;
         this.clock = clock;
+        this.requestTimeout = properties.http().requestTimeout();
     }
 
     public Answer request(Endpoint endpoint) {
         Instant at = clock.instant();
         HttpRequest request = HttpRequest.newBuilder(URI.create(endpoint.tokenUrl()))
+                .timeout(requestTimeout)
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .POST(HttpRequest.BodyPublishers.ofString(
                         "grant_type=client_credentials&client_id=" + endpoint.clientId()))
@@ -62,6 +68,9 @@ public class TokenClient {
             long retryAfter = response.headers().firstValueAsLong("Retry-After").orElse(0);
             Matcher error = ERROR.matcher(body);
             return new Answer(response.statusCode(), null, retryAfter, error.find() ? error.group(1) : null);
+        } catch (HttpTimeoutException e) {
+            store.tokenRequest(endpoint.id(), at, 0);
+            return new Answer(0, null, 0, "timed out");
         } catch (IOException e) {
             store.tokenRequest(endpoint.id(), at, 0);
             return new Answer(0, null, 0, "unreachable");

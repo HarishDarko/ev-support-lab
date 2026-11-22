@@ -42,6 +42,7 @@ public class DeliveryWorker {
     private final HttpClient http;
     private final Clock clock;
     private final LabProperties.Delivery settings;
+    private final Duration requestTimeout;
 
     public DeliveryWorker(DeliveryStore store, TokenCache tokens, FeatureFlags flags, EndpointHealth health,
             DeliveryTrace trace, HttpClient http, Clock clock, LabProperties properties) {
@@ -53,6 +54,7 @@ public class DeliveryWorker {
         this.http = http;
         this.clock = clock;
         this.settings = properties.delivery();
+        this.requestTimeout = properties.http().requestTimeout();
     }
 
     /** Delivers these events of one endpoint, in flight together at the current instant. */
@@ -218,9 +220,13 @@ public class DeliveryWorker {
         }
     }
 
-    /** One POST to the endpoint. Returns the HTTP status, or 0 when the endpoint cannot be reached. */
+    /**
+     * One POST to the endpoint. Returns the HTTP status, or 0 when the endpoint cannot be reached or does not answer
+     * within lab.http.request-timeout.
+     */
     int send(Endpoint endpoint, String eventId, Token token) {
         HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(endpoint.url()))
+                .timeout(requestTimeout)
                 .header("Content-Type", "application/json")
                 .header("X-Event-Id", eventId)
                 .POST(HttpRequest.BodyPublishers.ofString("{\"id\":\"" + eventId + "\"}"));

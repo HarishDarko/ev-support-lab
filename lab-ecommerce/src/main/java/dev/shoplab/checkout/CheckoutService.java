@@ -24,8 +24,8 @@ import org.springframework.stereotype.Service;
  * so the processor makes a second authorization.
  *
  * <p>Fix (ENG-5230), per store: the key is made once per checkout and reused on every retry, so a retry returns the
- * first authorization; a new key only when the card or the amount changes; on a timeout, checkout asks the processor
- * for the payment by its key before it shows anything.
+ * first authorization; a new key when the card or the amount changes, or after the key's payment was declined; on a
+ * timeout, checkout asks the processor for the payment by its key before it shows anything.
  */
 @Service
 public class CheckoutService {
@@ -87,6 +87,7 @@ public class CheckoutService {
         if (!a.authorized()) {
             long id = store.addAttempt(checkoutId, c.orderId(), attemptNo, key, card, sent, "declined",
                     a.authorizationId(), a.answeredAt());
+            retireKey(c, key);
             trace.lineAt(c.orderId(), a.answeredAt(), actor(c), "declined in " + took + " -> shows \"Card declined\"");
             return new PayResult(id, attemptNo, key, Outcome.DECLINED, a.authorizationId(), sent, a.answeredAt());
         }
@@ -126,6 +127,7 @@ public class CheckoutService {
                 yield TimeoutView.CONFIRMED;
             }
             case "declined" -> {
+                retireKey(c, attempt.idempotencyKey());
                 trace.line(c.orderId(), actor(c), asked + " -> shows \"Card declined\"");
                 yield TimeoutView.DECLINED;
             }
@@ -142,7 +144,17 @@ public class CheckoutService {
         return "ck_" + c.orderId() + "_a" + attemptNo;
     }
 
-    /** Fix: one key per checkout, renewed only when the card or the amount changes. */
+    /**
+     * Fix: a declined payment is final for its key (the processor answers the same decline to that key forever), so
+     * the next attempt, even with the same card, gets a new key.
+     */
+    private void retireKey(Checkout c, String key) {
+        if (flags.idempotentCheckout(c.storeId())) {
+            store.retireCheckoutKey(c.id(), key);
+        }
+    }
+
+    /** Fix: one key per checkout, renewed when the card or the amount changes, or after a decline. */
     private String keyForCheckout(Checkout c, String card) {
         boolean same = c.idempotencyKey() != null && card.equals(c.keyCard()) && c.keyAmount() != null
                 && c.keyAmount() == c.amountPence();

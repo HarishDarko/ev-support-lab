@@ -5,7 +5,10 @@ import java.time.Clock;
 import java.time.Instant;
 import org.springframework.stereotype.Component;
 
-/** The pause rule: after too many failed attempts in the window, an endpoint is paused until support replays it. */
+/**
+ * The pause rule: after too many failed attempts in the window, an endpoint is paused until support replays it. A
+ * replay resumes the endpoint and starts the count again: failures from before the resume do not count.
+ */
 @Component
 public class EndpointHealth {
 

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 /**
  * What support's runbook RB-21 does: "Release a stuck order hold and void the duplicate authorization". Its confirm
  * step is that the processor shows exactly one capture; with two captures it refuses, because that is a refund for
- * payments engineering, not a hold to release.
+ * payments engineering, not a hold to release. If the processor refuses a void, the hold stays.
  */
 @Service
 public class ReleaseHoldService {
@@ -44,12 +44,21 @@ public class ReleaseHoldService {
         }
         String url = store.processorUrl(order.storeId());
         List<String> voided = new ArrayList<>();
+        List<String> refused = new ArrayList<>();
         for (Authorization a : store.authorizationsFor(orderId)) {
             if ("authorized".equals(a.status())) {
-                processor.voidAuthorization(url, a.id());
-                store.setAuthorizationStatus(a.id(), "voided");
-                voided.add(a.id());
+                ProcessorClient.Answer answer = processor.voidAuthorization(url, a.id());
+                if (answer.httpStatus() / 100 == 2 && "voided".equals(answer.status())) {
+                    store.setAuthorizationStatus(a.id(), "voided");
+                    voided.add(a.id());
+                } else {
+                    refused.add(a.id() + " (HTTP " + answer.httpStatus() + ", " + answer.status() + ")");
+                }
             }
+        }
+        if (!refused.isEmpty()) {
+            trace.line(orderId, "support-tool", "RB-21: void refused for " + refused + ", hold kept");
+            return new Result(false, voided, "void refused for " + refused + ": the hold stays");
         }
         store.setOrderStatus(orderId, ShopStore.CONFIRMED, null, clock.instant());
         trace.line(orderId, "support-tool", "RB-21: one capture confirmed, voided " + voided + ", hold released");

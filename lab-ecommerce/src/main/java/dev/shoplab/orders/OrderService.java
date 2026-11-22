@@ -20,7 +20,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * and the worker captures the payment and confirms the order.
  *
  * <p>The hold rule, by design: an extra authorization on an order that is already captured holds the order in
- * Payment pending for a person to look at. So does a second capture.
+ * Payment pending for a person to look at. So does a second capture, and a capture the processor refused.
  *
  * <p>Legacy path: "is there a capture yet?" and "capture" are separate steps, so two webhooks for one order that
  * arrive together can both pass the check and both capture. Fix (ENG-5230), per store: the worker takes a per-order
@@ -76,7 +76,13 @@ public class OrderService {
             return;
         }
         gate.pass(id);
-        processor.capture(store.processorUrl(order.storeId()), authorizationId);
+        ProcessorClient.Answer capture = processor.capture(store.processorUrl(order.storeId()), authorizationId);
+        if (capture.httpStatus() / 100 != 2 || !"captured".equals(capture.status())) {
+            // Nothing was charged, so nothing is recorded as captured.
+            hold(id, "capture of " + authorizationId + " refused by the processor (HTTP " + capture.httpStatus()
+                    + ", " + capture.status() + ")");
+            return;
+        }
         Instant now = clock.instant();
         store.addCapture(id, authorizationId, amountPence, now);
         store.setAuthorizationStatus(authorizationId, "captured");

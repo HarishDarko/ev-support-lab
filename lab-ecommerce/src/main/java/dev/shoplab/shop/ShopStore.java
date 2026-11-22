@@ -98,6 +98,12 @@ public class ShopStore {
                 .params(key, card, amountPence, seq, checkoutId).update();
     }
 
+    /** Forgets the checkout's key if it is still {@code key}; the next attempt makes a new one (key_seq + 1). */
+    public void retireCheckoutKey(String checkoutId, String key) {
+        jdbc.sql("update checkout set idempotency_key = null where id = ? and idempotency_key = ?")
+                .params(checkoutId, key).update();
+    }
+
     public Order order(String id) {
         return jdbc.sql("""
                 select id, store_id, checkout_id, amount_pence, status, hold_reason from orders where id = ?""")

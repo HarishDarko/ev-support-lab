@@ -5,7 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 @ConfigurationProperties(prefix = "lab")
-public record LabProperties(@DefaultValue Fix fix, @DefaultValue Delivery delivery, @DefaultValue Pause pause) {
+public record LabProperties(@DefaultValue Fix fix, @DefaultValue Delivery delivery, @DefaultValue Pause pause,
+        @DefaultValue Http http) {
 
     /** {@code enabled} is the default for workspaces that have no per-workspace override. */
     public record Fix(@DefaultValue("true") boolean enabled) {}
@@ -14,4 +15,10 @@ public record LabProperties(@DefaultValue Fix fix, @DefaultValue Delivery delive
 
     /** An endpoint is paused after {@code failures} failed attempts within {@code window}. */
     public record Pause(@DefaultValue("15") int failures, @DefaultValue("60m") Duration window) {}
+
+    /**
+     * A request to an identity provider or an endpoint gives up after {@code requestTimeout} and counts as
+     * unreachable, so a party that stops answering fails the attempt instead of hanging the worker.
+     */
+    public record Http(@DefaultValue("10s") Duration requestTimeout) {}
 }

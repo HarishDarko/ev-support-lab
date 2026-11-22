@@ -105,11 +105,22 @@ public class OcppGateway {
             case OcppFrame.CallResult result -> {
                 var callback = connection.takePending(result.uniqueId());
                 if (callback != null) {
-                    callback.accept(result.payload());
+                    // A result the backend cannot use (malformed, or its handler fails) must not close the
+                    // websocket: log it and carry on. The sweeper treats the missing answer as NO_STATUS_ANSWER.
+                    try {
+                        callback.accept(result.payload());
+                    } catch (RuntimeException e) {
+                        log.warn("event=call_result_failed station={} uniqueId={}", connection.stationId(),
+                                result.uniqueId(), e);
+                    }
                 }
             }
-            case OcppFrame.CallError error -> log.warn("event=call_error station={} code={} description={}",
-                    connection.stationId(), error.errorCode(), error.errorDescription());
+            case OcppFrame.CallError error -> {
+                // The CALL is answered, if with an error: it is no longer pending.
+                connection.takePending(error.uniqueId());
+                log.warn("event=call_error station={} uniqueId={} code={} description={}", connection.stationId(),
+                        error.uniqueId(), error.errorCode(), error.errorDescription());
+            }
         }
     }
 
