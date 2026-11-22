@@ -69,12 +69,28 @@ public class OcppGateway {
         if (flags.transactionAwareReconciliation(station)) {
             for (String transactionId : reconciliation.onStationReconnected(station)) {
                 connection.call("GetTransactionStatus", new GetTransactionStatusRequest(transactionId),
-                        result -> reconciliation.onStatusAnswer(station, transactionId,
-                                OcppJson.fromNode(result, GetTransactionStatusResponse.class)));
+                        result -> onStatusResult(station, transactionId, result));
             }
         }
         // Last on purpose: once "opened" is visible, the reconnect has been noted and the queries are sent.
         connectionLog.opened(station, now);
+    }
+
+    /**
+     * The charger's answer to GetTransactionStatus. A malformed answer is the charger's fault and is dropped here
+     * (the sweeper then flags NO_STATUS_ANSWER, which is true). A failure while recording a valid answer is the
+     * backend's and propagates to {@link #onText}, which logs it as such.
+     */
+    private void onStatusResult(String station, String transactionId, JsonNode result) {
+        GetTransactionStatusResponse answer;
+        try {
+            answer = OcppJson.fromNode(result, GetTransactionStatusResponse.class);
+        } catch (OcppProtocolException e) {
+            log.warn("event=status_answer_malformed station={} transactionId={} reason={}", station, transactionId,
+                    e.getMessage());
+            return;
+        }
+        reconciliation.onStatusAnswer(station, transactionId, answer);
     }
 
     public void onClose(OcppConnection connection, int closeCode) {
@@ -105,11 +121,23 @@ public class OcppGateway {
             case OcppFrame.CallResult result -> {
                 var callback = connection.takePending(result.uniqueId());
                 if (callback != null) {
-                    callback.accept(result.payload());
+                    // A malformed result is dropped by its callback. What reaches this catch is a backend failure
+                    // while handling a valid result: log it as an error of its own kind and keep the websocket
+                    // open. The answer was not recorded, so the sweeper later flags the transaction for a person.
+                    try {
+                        callback.accept(result.payload());
+                    } catch (RuntimeException e) {
+                        log.error("event=call_result_handler_failed station={} uniqueId={}", connection.stationId(),
+                                result.uniqueId(), e);
+                    }
                 }
             }
-            case OcppFrame.CallError error -> log.warn("event=call_error station={} code={} description={}",
-                    connection.stationId(), error.errorCode(), error.errorDescription());
+            case OcppFrame.CallError error -> {
+                // The CALL is answered, if with an error: it is no longer pending.
+                connection.takePending(error.uniqueId());
+                log.warn("event=call_error station={} uniqueId={} code={} description={}", connection.stationId(),
+                        error.uniqueId(), error.errorCode(), error.errorDescription());
+            }
         }
     }
 

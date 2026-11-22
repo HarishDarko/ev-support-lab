@@ -19,7 +19,8 @@ import org.junit.jupiter.api.Test;
 /**
  * The refresh itself, with real threads: 32 threads meet the same expired token at once (released together by a
  * latch). The legacy refresh asks the identity provider 32 times; the shared refresh asks once and every thread
- * gets that token.
+ * gets that token. When the identity provider answers 429, the shared refresh still asks once, every thread gets
+ * the 429, and nobody asks again before Retry-After.
  */
 class SingleFlightRefreshIT extends AbstractLabIT {
 
@@ -45,6 +46,24 @@ class SingleFlightRefreshIT extends AbstractLabIT {
             List<Answer> answers = together(t -> tokens.refreshShared(ep, expired));
             assertThat(idp.requests() - before).isEqualTo(1);
             assertThat(answers).extracting(a -> a.token().value()).containsOnly(tokens.get(ep.id()).value());
+        }
+    }
+
+    @Test
+    void sharedRefreshAsksOnceWhenTheIdentityProviderAnswers429AndWaitsForRetryAfter() throws Exception {
+        // A quota of 0 per minute: every token request is answered 429, Retry-After until the next minute.
+        try (FakeIdentityProvider idp = new FakeIdentityProvider(clock, 3600, 0)) {
+            Endpoint ep = endpoint(idp);
+            List<Answer> answers = together(t -> tokens.refreshShared(ep, null));
+            assertThat(idp.requests()).isEqualTo(1);
+            assertThat(answers).hasSize(THREADS).allSatisfy(a -> {
+                assertThat(a.status()).isEqualTo(429);
+                assertThat(a.retryAfterSeconds()).isPositive();
+            });
+
+            clock.advance(java.time.Duration.ofSeconds(answers.getFirst().retryAfterSeconds()));
+            tokens.refreshShared(ep, null);
+            assertThat(idp.requests()).as("asked again once Retry-After has passed").isEqualTo(2);
         }
     }
 

@@ -190,6 +190,61 @@ class ReconciliationEdgeCasesTest extends AbstractLabIT {
     }
 
     @Test
+    void a_late_Updated_with_more_energy_after_a_provisional_close_is_noted_on_the_invoice_but_not_billed() {
+        String id = "TX-LATE-UPDATED";
+        clock.set(T0.plusSeconds(1900));
+        try (SimulatedCharger second = reconnectAfter(id, StatusAnswerSpec.NOTHING_PENDING, first -> {
+            send(first, id, TransactionEventType.Started, 0, T0, 0.0);
+            send(first, id, TransactionEventType.Updated, 1, T0.plusSeconds(600), 5000.0);
+            send(first, id, TransactionEventType.Updated, 2, T0.plusSeconds(1200), 5000.0);
+        })) {
+            clock.set(T0.plusSeconds(1900 + 60));
+            reconciliation.sweep(STATION);
+            assertThat(tx(id).closeSource()).isEqualTo(CloseSource.RECONCILED);
+            assertThat(tx(id).invoice().energyWh()).isEqualTo(5000.0);
+
+            // The charger had queued one more Updated: energy kept rising after the backend closed the session.
+            send(second, id, TransactionEventType.Updated, 3, T0.plusSeconds(1500), 6500.0);
+            Transaction t = tx(id);
+            assertThat(t.closeSource()).isEqualTo(CloseSource.RECONCILED);
+            assertThat(t.invoice().status()).isEqualTo(InvoiceStatus.PROVISIONAL);
+            assertThat(t.invoice().energyWh()).as("not re-billed").isEqualTo(5000.0);
+            assertThat(t.invoice().chargesIssued()).isEqualTo(1);
+            assertThat(t.invoice().needsReview()).isTrue();
+            assertThat(t.invoice().note()).contains("6500.0 Wh, billed 5000.0 Wh");
+            assertThat(counter("ocpp.provisional.energy_after_close")).isEqualTo(1.0);
+
+            // A higher reading replaces the earlier one in the note; it does not pile up.
+            send(second, id, TransactionEventType.Updated, 4, T0.plusSeconds(1600), 7000.0);
+            assertThat(tx(id).invoice().note()).contains("7000.0 Wh, billed 5000.0 Wh").doesNotContain("6500.0");
+            assertThat(counter("ocpp.provisional.energy_after_close")).isEqualTo(2.0);
+
+            // The real Ended then settles the same charge.
+            send(second, id, TransactionEventType.Ended, 5, T0.plusSeconds(1700), 7000.0);
+            Transaction ended = tx(id);
+            assertThat(ended.invoice().status()).isEqualTo(InvoiceStatus.ADJUSTED);
+            assertThat(ended.invoice().energyWh()).isEqualTo(7000.0);
+            assertThat(ended.invoice().chargesIssued()).isEqualTo(1);
+            assertThat(ended.invoice().needsReview()).isFalse();
+        }
+    }
+
+    @Test
+    void the_open_transactions_of_a_station_are_listed_in_transactionId_order() {
+        clock.set(T0.plusSeconds(600));
+        try (SimulatedCharger charger = driver.newCharger(STATION)) {
+            charger.connect();
+            for (String id : java.util.List.of("TX-ORDER-C", "TX-ORDER-A", "TX-ORDER-B")) {
+                send(charger, id, TransactionEventType.Started, 0, T0, 0.0);
+            }
+            // An update writes a new row version, which can change the order a plain scan returns.
+            send(charger, "TX-ORDER-A", TransactionEventType.Updated, 1, T0.plusSeconds(300), 1000.0);
+        }
+        assertThat(transactions.findOpenByStation(STATION)).extracting(Transaction::id)
+                .containsExactly("TX-ORDER-A", "TX-ORDER-B", "TX-ORDER-C");
+    }
+
+    @Test
     void a_late_Ended_with_the_same_energy_confirms_the_provisional_invoice() {
         Played p = play(Scenarios.VERY_LATE_ENDED);
 

@@ -100,6 +100,11 @@ public final class FakeProcessor implements AutoCloseable {
         decliningCards.add(card);
     }
 
+    /** The card no longer declines (a soft decline cleared): new authorizations with it succeed. */
+    public void approves(String card) {
+        decliningCards.remove(card);
+    }
+
     /** Successful authorizations the processor made for this order. */
     public int authorizations(String orderId) {
         return (int) byId.values().stream().filter(a -> a.orderId().equals(orderId) && "authorized".equals(a.status()))

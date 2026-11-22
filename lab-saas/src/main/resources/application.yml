@@ -30,3 +30,6 @@ lab:
   pause:
     failures: 15
     window: 60m
+  http:
+    # A request to an identity provider or an endpoint that has not answered by then counts as unreachable.
+    request-timeout: 10s

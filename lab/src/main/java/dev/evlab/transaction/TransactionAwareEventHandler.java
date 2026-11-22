@@ -77,6 +77,11 @@ public class TransactionAwareEventHandler implements TransactionEventHandler {
             log.info("event=late_ended_applied station={} transactionId={} invoice={} provisionalWh={} finalWh={}",
                     stationId, next.id(), next.invoice().status(), stored.invoice().energyWh(),
                     next.invoice().energyWh());
+        } else if (stored.closeSource() == CloseSource.RECONCILED && next.closeSource() == CloseSource.RECONCILED
+                && !next.invoice().equals(stored.invoice())) {
+            metrics.energyAfterProvisionalClose();
+            log.warn("event=energy_after_provisional_close station={} transactionId={} billedWh={} reportedWh={}",
+                    stationId, next.id(), next.invoice().energyWh(), replayed.meter().lastWh());
         }
         transactions.save(next);
         return EventOutcome.APPLIED;

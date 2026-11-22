@@ -1,9 +1,14 @@
 package dev.evlab.transaction;
 
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Invoice transitions. Pure; the caller persists the result. */
 public final class Billing {
+
+    private static final String REPORTED_AFTER_CLOSE = "after the provisional close the charger reported";
+    private static final Pattern REPORTED_WH = Pattern.compile(Pattern.quote(REPORTED_AFTER_CLOSE) + " ([0-9.]+) Wh");
 
     private final Tariff tariff;
     private final double epsilonWh;
@@ -41,6 +46,31 @@ public final class Billing {
                             current.energyWh()))
                     : current;
         };
+    }
+
+    /**
+     * The transaction is still provisionally closed and the charger has since reported {@code reportedWh}, for
+     * example in an Updated it sent late. More energy than the provisional invoice is not billed: the invoice keeps
+     * its amount and stays for review, and its note says what the charger reported. Only the highest reading is
+     * kept in the note.
+     */
+    public Invoice reportedAfterProvisionalClose(Invoice current, double reportedWh) {
+        if (current.status() != InvoiceStatus.PROVISIONAL || reportedWh - current.energyWh() <= epsilonWh) {
+            return current;
+        }
+        String note = current.note() == null ? "" : current.note();
+        Matcher noted = REPORTED_WH.matcher(note);
+        if (noted.find() && Double.parseDouble(noted.group(1)) >= reportedWh) {
+            return current; // the note already gives a reading at least this high
+        }
+        int earlier = note.indexOf(REPORTED_AFTER_CLOSE);
+        if (earlier >= 0) {
+            note = note.substring(0, earlier).replaceAll("[; ]+$", "");
+        }
+        String reported = String.format(Locale.ROOT, REPORTED_AFTER_CLOSE + " %.1f Wh, billed %.1f Wh", reportedWh,
+                current.energyWh());
+        return new Invoice(current.status(), current.energyWh(), current.amountCents(), current.chargesIssued(), true,
+                note.isEmpty() ? reported : note + "; " + reported);
     }
 
     private Invoice settled(InvoiceStatus status, double energyWh, int chargesIssued) {

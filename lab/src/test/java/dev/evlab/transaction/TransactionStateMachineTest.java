@@ -223,7 +223,7 @@ class TransactionStateMachineTest {
     }
 
     @Test
-    void further_events_for_a_provisionally_closed_transaction_keep_the_provisional_close() {
+    void further_events_for_a_provisionally_closed_transaction_keep_the_provisional_close_and_its_amount() {
         Transaction stored = open()
                 .apply(event(TransactionEventType.Started, 0, 0, 0.0))
                 .apply(event(TransactionEventType.Updated, 1, 60, 2000.0))
@@ -236,7 +236,15 @@ class TransactionStateMachineTest {
         Transaction rebased = stored.rebase(replayed, BILLING);
 
         assertThat(rebased.closeSource()).isEqualTo(CloseSource.RECONCILED);
-        assertThat(rebased.invoice()).isEqualTo(stored.invoice());
+        assertThat(rebased.stoppedAt()).isEqualTo(stored.stoppedAt());
+        assertThat(rebased.invoice().status()).isEqualTo(InvoiceStatus.PROVISIONAL);
+        assertThat(rebased.invoice().energyWh()).isEqualTo(stored.invoice().energyWh());
+        assertThat(rebased.invoice().amountCents()).isEqualTo(stored.invoice().amountCents());
+        assertThat(rebased.invoice().chargesIssued()).isEqualTo(1);
+        assertThat(rebased.invoice().needsReview()).isTrue();
+        // The 100 Wh reported after the close is not billed, but the person reviewing the invoice is told.
+        assertThat(rebased.invoice().note()).isEqualTo(
+                "lost; after the provisional close the charger reported 2100.0 Wh, billed 2000.0 Wh");
         assertThat(rebased.lastSeqNo()).isEqualTo(2);
     }
 
@@ -381,5 +389,55 @@ class TransactionStateMachineTest {
         assertThat(moving.energyMoving(1.0)).isTrue();
         assertThat(one.spacing()).isNull();
         assertThat(flat.spacing()).isEqualTo(java.time.Duration.ofSeconds(60));
+    }
+
+    @Test
+    void more_energy_reported_after_a_provisional_close_is_noted_for_review_without_re_billing() {
+        Invoice provisional = BILLING.provisional(5000.0, "Ended not received");
+
+        Invoice same = BILLING.reportedAfterProvisionalClose(provisional, 5000.5);
+        assertThat(same).as("within epsilon").isEqualTo(provisional);
+
+        Invoice more = BILLING.reportedAfterProvisionalClose(provisional, 6500.0);
+        assertThat(more.status()).isEqualTo(InvoiceStatus.PROVISIONAL);
+        assertThat(more.energyWh()).isEqualTo(5000.0);
+        assertThat(more.amountCents()).isEqualTo(provisional.amountCents());
+        assertThat(more.chargesIssued()).isEqualTo(1);
+        assertThat(more.needsReview()).isTrue();
+        assertThat(more.note()).isEqualTo(
+                "Ended not received; after the provisional close the charger reported 6500.0 Wh, billed 5000.0 Wh");
+
+        Invoice higher = BILLING.reportedAfterProvisionalClose(more, 7000.0);
+        assertThat(higher.note()).isEqualTo(
+                "Ended not received; after the provisional close the charger reported 7000.0 Wh, billed 5000.0 Wh");
+
+        // A later but lower reading (still above the billed energy) does not replace the highest one.
+        assertThat(BILLING.reportedAfterProvisionalClose(higher, 6000.0)).isEqualTo(higher);
+
+        Invoice settled = BILLING.onRealEnd(Invoice.NONE, 5000.0, null);
+        assertThat(BILLING.reportedAfterProvisionalClose(settled, 9000.0)).as("only provisional invoices")
+                .isEqualTo(settled);
+    }
+
+    @Test
+    void a_reconciled_transaction_keeps_its_close_when_a_late_Updated_arrives_and_notes_the_energy() {
+        Transaction reconciled = open()
+                .apply(event(TransactionEventType.Started, 0, 0, 0.0))
+                .apply(event(TransactionEventType.Updated, 1, 600, 5000.0))
+                .apply(event(TransactionEventType.Updated, 2, 1200, 5000.0))
+                .reconciled(T0.plusSeconds(1960), "Ended not received", BILLING);
+        Transaction replayed = Transaction.replay("TX-1", "CP-1", 1, List.of(
+                event(TransactionEventType.Started, 0, 0, 0.0),
+                event(TransactionEventType.Updated, 1, 600, 5000.0),
+                event(TransactionEventType.Updated, 2, 1200, 5000.0),
+                event(TransactionEventType.Updated, 3, 1500, 6500.0)));
+
+        Transaction next = reconciled.rebase(replayed, BILLING);
+
+        assertThat(next.closeSource()).isEqualTo(CloseSource.RECONCILED);
+        assertThat(next.stoppedAt()).isEqualTo(reconciled.stoppedAt());
+        assertThat(next.lastSeqNo()).isEqualTo(3);
+        assertThat(next.invoice().energyWh()).isEqualTo(5000.0);
+        assertThat(next.invoice().note()).contains("reported 6500.0 Wh");
     }
 }

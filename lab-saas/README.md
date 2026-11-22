@@ -13,11 +13,13 @@ A small webhook delivery service and its scripted customers. It reproduces, on d
 Support's runbook RB-14 (test delivery, then replay) works every time, because by morning a single test delivery gets one token. So the replays look like a fix and the pattern stays hidden.
 
 **The fix** (ENG-5108), on per workspace:
-- One shared refresh per endpoint: other threads wait for it and use its token.
+- One shared refresh per endpoint: other threads wait for it and use its result, its token or its failure, instead of asking again.
 - Refresh 5 minutes before expiry, minus a fixed per-endpoint jitter of up to 60 s, so the refresh does not land on the hourly burst.
 - After a 401, one retry after the shared refresh.
-- A 429 from the token endpoint makes deliveries wait for `Retry-After` instead of failing.
+- A 429 from the token endpoint makes deliveries wait for `Retry-After` instead of failing, and nobody asks the identity provider again before then.
 - A revoked client and HTTP errors from the endpoint still count toward the pause.
+
+**The pause rule** counts failed attempts in the last 60 minutes, and only those since the endpoint was last resumed: a replay starts the count again. Every request to an identity provider or an endpoint gives up after `lab.http.request-timeout` (10 s) and counts as unreachable.
 
 ## Requirements
 
@@ -35,8 +37,10 @@ Real PostgreSQL, real HTTP to the scripted identity provider and endpoint, scrip
 | --- | --- |
 | `TokenStormReproductionTest` | flag off: `burst-at-expiry` sends more than 100 token requests, the identity provider answers 429, and the endpoint is paused while it is up ("reproduces: endpoint paused by a token storm") |
 | `TokenStormRegressionTest` | flag on (the application default): one shared token request for the burst, all 33 events delivered once, no pause |
-| `DeliveryEdgeCasesTest` | `quiet-expiry` refreshes before expiry and never sees a 401 (and costs extra tokens but no pause on the legacy path); `idp-rate-limited` waits for `Retry-After`, then delivers (the legacy path fails the same burst); `revoked-client` and `endpoint-down` still fail and pause; `hmac-endpoint` sends no token requests; `secret-rotated` still fails; a workspace with the flag off keeps the old path |
-| `SingleFlightRefreshIT` | with real threads: 32 threads meet an expired token at once (released by a latch); the legacy refresh asks the identity provider 32 times, the shared refresh once, and every thread gets that token |
+| `DeliveryEdgeCasesTest` | `quiet-expiry` refreshes before expiry and never sees a 401 (and costs extra tokens but no pause on the legacy path); `idp-rate-limited` waits for `Retry-After`, then delivers (the legacy path fails the same burst); `revoked-client` and `endpoint-down` still fail and pause; `hmac-endpoint` sends no token requests; `secret-rotated` still fails; failures from before a replay do not count toward the next pause; a workspace with the flag off keeps the old path |
+| `SingleFlightRefreshIT` | with real threads: 32 threads meet an expired token at once (released by a latch); the legacy refresh asks the identity provider 32 times, the shared refresh once, and every thread gets that token; when the identity provider answers 429 the shared refresh still asks once, every thread gets the 429, and the next request waits for `Retry-After` |
+| `SharedRefreshFailureTest` | no database: callers that waited for a refresh that failed share its answer instead of asking again, a later caller asks again, a 429 keeps every caller away until `Retry-After`, and a success forgets the failure |
+| `RequestTimeoutTest` | no database: a token request to an identity provider that never answers gives up after the request timeout |
 | `ExperimentStoryTest` | the experiment, run with the committed inputs, yields the story values the support desk shows |
 
 ### The regression test fails without the fix

@@ -14,7 +14,7 @@ Support's runbook RB-21 (check one capture, void the extra authorization, releas
 
 **The fix** (ENG-5230), on per store:
 - The idempotency key is made once per checkout and reused on every retry, so a retry returns the first authorization.
-- A new key only when the card or the amount changes, so a new card after a decline still authorizes normally.
+- A new key when the card or the amount changes, or after the key's payment was declined, so a new card after a decline still authorizes normally, and so does the same card once its decline clears.
 - On a timeout, checkout asks the processor for the payment by its key before it shows anything ("Your payment is still processing").
 - The order service captures under a per-order lock (`select ... for update`), so two authorizations can never both be captured.
 
@@ -34,7 +34,8 @@ Real PostgreSQL, real HTTP both ways (checkout to the processor, the processor's
 | --- | --- |
 | `SecondAuthorizationReproductionTest` | flag off: `slow-web-repay` and `slow-app-retry` leave two keys, two authorizations, one capture and the order in Payment pending; `app-race` captures twice ("reproduces: second authorization, order held") |
 | `SecondAuthorizationRegressionTest` | flag on (the application default): the same three scenarios give one key, one authorization, one capture and a confirmed order |
-| `CheckoutEdgeCasesTest` | `fast-pay` never retries or looks up; `slow-web-wait` is told "still processing" and confirms (and sees the old error on the legacy path, but still confirms); `decline-new-card` gets a new key and a correct authorization; `very-slow` is looked up by key and the second tap returns the first authorization; `capture-webhook-timeout` is still held with the fix on (not this bug); a store with the flag off keeps the old path; RB-21 releases a held order and voids the extra authorization, and refuses an order captured twice |
+| `CheckoutEdgeCasesTest` | `fast-pay` never retries or looks up; `slow-web-wait` is told "still processing" and confirms (and sees the old error on the legacy path, but still confirms); `decline-new-card` gets a new key and a correct authorization; `very-slow` is looked up by key and the second tap returns the first authorization; `capture-webhook-timeout` is still held with the fix on (not this bug); a store with the flag off keeps the old path; RB-21 releases a held order and voids the extra authorization, and refuses an order captured twice; the same card after a decline gets a new key and authorizes once the decline clears (also when the decline is found by the lookup after a timeout); a capture the processor refuses is not recorded and the order is held; RB-21 keeps the hold when the processor refuses a void |
+| `ProcessorClientTimeoutTest` | no database: a processor that never answers fails the call after the request timeout (`lab.http.request-timeout`, 10 s, above checkout's scripted 8 s) instead of hanging it |
 | `CaptureSerializationIT` | the double capture, with real threads, made deterministic: worker 1 is held between its check and its capture; worker 2 then runs until it finishes or PostgreSQL shows it waiting for a lock (`pg_locks`). Off, both capture; on, worker 2 waits for the order lock, sees the first capture and holds the order |
 | `ExperimentStoryTest` | the experiment, run with the committed inputs, yields the story values the support desk shows and exactly the committed `experiment.json` |
 

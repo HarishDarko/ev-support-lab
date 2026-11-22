@@ -22,3 +22,7 @@ lab:
   orders:
     # An order whose checkout saw an authorization is held if the processor's webhook has not arrived by then.
     webhook-wait: 30s
+  http:
+    # A real request to the processor that has not answered by then fails like an unreachable processor. It sits
+    # above the 8 s checkout timeout, which is scripted through the processor's Answered-At stamp.
+    request-timeout: 10s
