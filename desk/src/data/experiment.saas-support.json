@@ -70,7 +70,147 @@
     "title" : "Harbor Analytics · ep_harbor_main · T-3004, after the fix",
     "lines" : [ [ "01:00:00", "recurring-jobs", "burst: 32 task events on the hour" ], [ "01:00:00", "token-cache", "token refreshed before it expired: 1 shared token request" ] ]
   } ],
-  "storyComparison" : [ ],
+  "storyComparison" : [ {
+    "metric" : "before.canary.events",
+    "expected" : 6869,
+    "computed" : 6869,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.tokenRequests",
+    "expected" : 10573,
+    "computed" : 10573,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.storms",
+    "expected" : 9,
+    "computed" : 9,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.pauses",
+    "expected" : 5,
+    "computed" : 5,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.realOutagePauses",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.lost",
+    "expected" : 23,
+    "computed" : 23,
+    "matches" : true
+  }, {
+    "metric" : "before.canary.deliveredTwice",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "before.control.events",
+    "expected" : 6839,
+    "computed" : 6839,
+    "matches" : true
+  }, {
+    "metric" : "before.control.tokenRequests",
+    "expected" : 10474,
+    "computed" : 10474,
+    "matches" : true
+  }, {
+    "metric" : "before.control.storms",
+    "expected" : 8,
+    "computed" : 8,
+    "matches" : true
+  }, {
+    "metric" : "before.control.pauses",
+    "expected" : 4,
+    "computed" : 4,
+    "matches" : true
+  }, {
+    "metric" : "before.control.realOutagePauses",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "before.control.lost",
+    "expected" : 25,
+    "computed" : 25,
+    "matches" : true
+  }, {
+    "metric" : "before.control.deliveredTwice",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.events",
+    "expected" : 6887,
+    "computed" : 6887,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.tokenRequests",
+    "expected" : 3342,
+    "computed" : 3342,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.storms",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.pauses",
+    "expected" : 1,
+    "computed" : 1,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.realOutagePauses",
+    "expected" : 1,
+    "computed" : 1,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.lost",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "after.canary.deliveredTwice",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "after.control.events",
+    "expected" : 6867,
+    "computed" : 6867,
+    "matches" : true
+  }, {
+    "metric" : "after.control.tokenRequests",
+    "expected" : 10562,
+    "computed" : 10562,
+    "matches" : true
+  }, {
+    "metric" : "after.control.storms",
+    "expected" : 9,
+    "computed" : 9,
+    "matches" : true
+  }, {
+    "metric" : "after.control.pauses",
+    "expected" : 5,
+    "computed" : 5,
+    "matches" : true
+  }, {
+    "metric" : "after.control.realOutagePauses",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  }, {
+    "metric" : "after.control.lost",
+    "expected" : 22,
+    "computed" : 22,
+    "matches" : true
+  }, {
+    "metric" : "after.control.deliveredTwice",
+    "expected" : 0,
+    "computed" : 0,
+    "matches" : true
+  } ],
   "settings" : {
     "tokenLifetimeSeconds" : 3600,
     "eventsPerHour" : 2,

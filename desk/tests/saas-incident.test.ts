@@ -43,7 +43,10 @@ describe("the SaaS incident's numbers come from the lab and the pack's synthetic
         expect(lab.windows[w][arm].endpoints).toBe(RESULTS[arm].endpoints);
       }
     expect(lab.settings.days).toBe(RESULTS.windowDays);
-    expect(lab.storyComparison).toEqual([]);
+    // The lab compares every story metric with its own run (F09: the copy used to be stale, with an empty list).
+    expect(lab.storyComparison).toHaveLength(28);
+    expect(lab.storyComparison.filter((c) => !c.matches)).toEqual([]);
+    expect(SAAS_INCIDENT.verification.differences).toEqual([]);
   });
 
   it("the log excerpts the prompts quote are the lab's own, unchanged", () => {
