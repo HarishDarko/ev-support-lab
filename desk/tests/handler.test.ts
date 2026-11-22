@@ -146,7 +146,8 @@ describe("MOCK=1", () => {
     ["verify", {}],
     ["kb", {}],
     ["shiftnote", {}],
-    ["classify", { text: "Session open 7h, energy stopped climbing. Charging." }],
+    // An article with a title is required since F22; the rules answer from it as before.
+    ["classify", { text: "Session open 7h, energy stopped climbing. Charging.", article: { title: "Session stuck" } }],
   ];
   it.each(steps)("%s answers from the rules and never calls the SDK", async (step, input) => {
     const r = await post(step, input, { ...live, MOCK: "1" });

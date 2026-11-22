@@ -29,7 +29,8 @@ const all = (data: StoryData): Decisions => ({
   meterChecked: data.tickets.map((t) => t.id),
 });
 /** Words that belong to the EV incident only. */
-const EV_WORDS = /charger|\bmeter\b|OCPP|FW-[ABC]|INC-0412|ENG-4471|RB-05|idle fee|unplug|firmware|\bsites?\b/i;
+const EV_WORDS =
+  /\bNOC\b|field service|host accounts|charger|\bmeter\b|OCPP|FW-[ABC]|INC-0412|ENG-4471|RB-05|idle fee|unplug|firmware|\bsites?\b/i;
 /** The first EV word in a text, so a failure names it. */
 const evWord = (text: string) => EV_WORDS.exec(text)?.[0] ?? null;
 
@@ -42,7 +43,10 @@ describe("the SaaS incident's numbers come from the lab and the pack's synthetic
         expect(lab.windows[w][arm].endpoints).toBe(RESULTS[arm].endpoints);
       }
     expect(lab.settings.days).toBe(RESULTS.windowDays);
-    expect(lab.storyComparison).toEqual([]);
+    // The lab compares every story metric with its own run (F09: the copy used to be stale, with an empty list).
+    expect(lab.storyComparison).toHaveLength(28);
+    expect(lab.storyComparison.filter((c) => !c.matches)).toEqual([]);
+    expect(SAAS_INCIDENT.verification.differences).toEqual([]);
   });
 
   it("the log excerpts the prompts quote are the lab's own, unchanged", () => {
@@ -164,6 +168,7 @@ describe("the SaaS walkthrough", () => {
         ["../src/desk/handoff/HandoffTab", "HandoffTab"],
         ["../src/desk/queue/QueueTab", "QueueTab"],
         ["../src/desk/kb/KnowledgeBaseTab", "KnowledgeBaseTab"],
+        ["../src/desk/coverage/CoverageTab", "CoverageTab"],
         ["../src/desk/scorecard/ScorecardTab", "ScorecardTab"],
       ].map(async ([path, name]) => (await load(path!))[name!] as Component),
     );

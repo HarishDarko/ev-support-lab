@@ -3,6 +3,7 @@
 import { describe, it, expect } from "vitest";
 import { STEPS, type TriageModelResult, type ClassifyModel } from "../functions/_lib/steps";
 import { ruleClassify, ruleTriage } from "../functions/_lib/rules";
+import { quoted, ungroundedNumbers } from "../functions/_lib/checks";
 import { TICKETS, NEW_TICKET_EXAMPLE } from "../shared/synthetic";
 
 const t = (id: string) => {
@@ -244,5 +245,67 @@ describe("8. the energy-negation set", () => {
     const a = cls(x + tail);
     const b = ruleClassify(x + tail, article);
     expect(!a.data.escalate && !b.escalate, JSON.stringify([a.data.why, b.why])).toBe(true);
+  });
+});
+
+describe("guardrail bypasses from the external review (F08)", () => {
+  // The prompt says "under 15 words" and lists 1200 and 3000, so 15, 1200 and 3000 are grounded.
+  const prompt = "Each bullet under 15 words. The fleet had 1200 sessions and 3,000 drivers.";
+
+  it("reads comma-grouped numbers as one number, so an invented one is flagged", () => {
+    expect(ungroundedNumbers({ cost: "about $2,000" }, prompt)).toEqual(["2,000"]);
+    expect(ungroundedNumbers({ cost: "a $15,000 refund" }, prompt)).toEqual(["15,000"]);
+    expect(ungroundedNumbers({ n: "4,500.75 kWh" }, prompt)).toEqual(["4,500.75"]);
+  });
+
+  it("matches a grouped number to the same number in the input, with or without commas", () => {
+    expect(ungroundedNumbers({ n: "1,200 sessions" }, prompt)).toEqual([]);
+    expect(ungroundedNumbers({ n: "3000 drivers" }, prompt)).toEqual([]);
+    expect(ungroundedNumbers({ n: "3,000 drivers" }, prompt)).toEqual([]);
+  });
+
+  it("never reads 1,200 as 200", () => {
+    expect(ungroundedNumbers({ n: "1,200" }, "nothing here")).toEqual(["1,200"]);
+    expect(ungroundedNumbers({ n: "1,200" }, "200")).toEqual(["1,200"]);
+  });
+
+  it("does not join a list of status codes or a numeric array into one number", () => {
+    // Review probes: "500,503" and [120,450].
+    expect(ungroundedNumbers({ codes: "HTTP 500,503 from the endpoint" }, "errors 500 and 503")).toEqual([]);
+    expect(ungroundedNumbers({ waits: [120, 450] }, "waited 120 s, then 450 s")).toEqual([]);
+    expect(ungroundedNumbers({ waits: "[120,450]" }, "waited 120 s, then 450 s")).toEqual([]);
+    // The input's own list grounds each of its parts.
+    expect(ungroundedNumbers({ n: "450 seconds" }, '{"waits":[120,450]}')).toEqual([]);
+    // Still a number when nothing grounds the parts: 500 and 503 are not in this input.
+    expect(ungroundedNumbers({ codes: "500,503" }, "nothing here")).toEqual(["500,503"]);
+    // And a real thousands number with a 3-digit first group still matches its plain form.
+    expect(ungroundedNumbers({ n: "100,000 sessions" }, "100000 sessions")).toEqual([]);
+  });
+
+  it("reads a comma as a thousands separator only in a valid group pattern", () => {
+    expect(ungroundedNumbers({ n: "1,2345" }, "2345")).toEqual([]);
+    expect(ungroundedNumbers({ n: "12,3456" }, "12 and 3456")).toEqual([]);
+    expect(ungroundedNumbers({ n: "1,200,3" }, "1200")).toEqual(["200"]);
+    expect(ungroundedNumbers({ n: "1,234,567" }, "nothing")).toEqual(["1,234,567"]);
+  });
+
+  it("keeps lists of small numbers and ids apart", () => {
+    expect(ungroundedNumbers({ n: "steps 1,2,3 and T-2040,T-2041" }, "T-2040 T-2041")).toEqual([]);
+  });
+
+  const source = "Driver says the session still showed charging two hours after they unplugged the car.";
+  it("refuses a quote made of single letters between ellipses", () => {
+    expect(quoted("e...t...a...o...i...n", source)).toBe(false);
+    expect(quoted("d…s…t…h", source)).toBe(false);
+  });
+
+  it("refuses more than three pieces, or a piece under four characters", () => {
+    expect(quoted("Driver says ... the session ... still showed ... charging", source)).toBe(false);
+    expect(quoted("Driver says ... two ... unplugged the car", source)).toBe(false);
+  });
+
+  it("still accepts an honest shortened quote", () => {
+    expect(quoted("Driver says ... two hours after they unplugged", source)).toBe(true);
+    expect(quoted("the session still showed ... unplugged the car", source)).toBe(true);
   });
 });

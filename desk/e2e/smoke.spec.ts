@@ -87,6 +87,24 @@ test("no horizontal scroll at 390 px", async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
+test("on a phone, a tapped ticket opens the queue on that ticket, and the triage beat offers a live run", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openFromChooser(page, "/");
+  // The q2 beat's desk tab is Coverage; a tapped ticket still opens the queue, on that ticket, as on desktop.
+  const q2 = page.locator('section.phone-beat[aria-labelledby="claim-q2"]');
+  await q2.getByRole("button", { name: "T-2054", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "The desk" });
+  await expect(dialog.getByRole("tab", { name: "Queue", exact: true })).toHaveAttribute("aria-selected", "true");
+  await expect(dialog.getByTestId("inspector-text")).toContainText("Elevated 5xx");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+
+  const t1 = page.locator('section.phone-beat[aria-labelledby="claim-t1"]');
+  await expect(t1.getByRole("button", { name: "Run it live" })).toBeVisible();
+});
+
 test("the two reading pages open from the top strip, pass axe, and the stage nav returns to the walkthrough", async ({
   page,
 }) => {

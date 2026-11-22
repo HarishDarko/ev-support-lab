@@ -13,6 +13,7 @@ on:
       - "settings.gradle.kts"
       - "desk/src/data/experiment.json"
       - ".github/workflows/lab.yml"
+      - ".github/scripts/regression-must-fail.sh"
   pull_request:
     paths:
       - "lab/**"
@@ -21,6 +22,7 @@ on:
       - "settings.gradle.kts"
       - "desk/src/data/experiment.json"
       - ".github/workflows/lab.yml"
+      - ".github/scripts/regression-must-fail.sh"
 
 concurrency:
   group: lab-${{ github.ref }}
@@ -44,31 +46,18 @@ jobs:
       # Docker is available on the runner, so Testcontainers starts PostgreSQL itself.
       - name: Tests, including the experiment
         run: ./gradlew :lab:test --console=plain
-      # With the fix off the regression test must fail on its assertions. A Gradle or Docker error, or a filter that
-      # matches no test, must not count as that failure, so the step reads the test report instead of the exit code.
+      # With the fix off the regression test must fail, and fail in the right way: exactly these tests, each on an
+      # assertion (org.opentest4j.AssertionFailedError), none errored or skipped. A Gradle or Docker error, a filter that
+      # matches no test, one test passing, or a crash in place of an assertion fails this step. The step reads the test
+      # report instead of the exit code (.github/scripts/regression-must-fail.sh).
       - name: The regression test fails without the fix
         run: |
-          report=lab/build/test-results/test/TEST-dev.evlab.transaction.StuckSessionRegressionTest.xml
           rm -rf lab/build/test-results/test
           set +e
           ./gradlew :lab:test --tests '*StuckSessionRegressionTest' -Dlab.fix.enabled=false --console=plain
           set -e
-          if [ ! -f "$report" ]; then
-            echo "::error::No report for StuckSessionRegressionTest: the test did not run with the fix off." >&2
-            exit 1
-          fi
-          attr() { grep -o "$1=\"[0-9]*\"" "$report" | head -n 1 | tr -dc '0-9'; }
-          tests=$(attr tests); failures=$(attr failures); errors=$(attr errors)
-          echo "With the fix off: tests=$tests failures=$failures errors=$errors"
-          if [ "${tests:-0}" -eq 0 ] || [ "${failures:-0}" -eq 0 ] || [ "${errors:-0}" -ne 0 ]; then
-            echo "::error::StuckSessionRegressionTest must fail on its assertions with the fix off (failures above 0, errors 0)." >&2
-            exit 1
-          fi
-          # Gradle reports every exception as a failure, so also check each failure is an assertion, not a crash.
-          types=$(grep -E '^\s*<failure ' "$report" | grep -oE ' type="[^"]*"' | sed 's/ type="//; s/"$//')
-          other=$(printf '%s\n' "$types" | grep -vE '^(org\.opentest4j\.AssertionFailedError|java\.lang\.AssertionError|org\.assertj\.core\.error\..+)?$' || true)
-          echo "Failure types: $(printf '%s ' $types)"
-          if [ -n "$other" ]; then
-            echo "::error::With the fix off the test failed for another reason: $other" >&2
-            exit 1
-          fi
+          bash .github/scripts/regression-must-fail.sh \
+            lab/build/test-results/test/TEST-dev.evlab.transaction.StuckSessionRegressionTest.xml \
+            org.opentest4j.AssertionFailedError \
+            late_ended_is_applied_and_closes_the_session_with_a_confirmed_invoice \
+            lost_ended_is_reconciled_provisionally_at_the_last_meter_value

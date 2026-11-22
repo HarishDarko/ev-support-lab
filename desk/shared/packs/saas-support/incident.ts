@@ -140,7 +140,7 @@ export const INCIDENT = {
     ref: CHANGE_REF,
     shippedDay: 5,
     summary:
-      "The webhook worker refreshes an endpoint's token once, for every delivery thread: the others wait for that refresh and use its token. It refreshes 5 minutes before expiry, minus a fixed per-endpoint jitter of up to 60 seconds, so the refresh does not land on the hourly burst. After a 401 a delivery retries once, after the shared refresh. A 429 from the customer's token endpoint makes deliveries wait for Retry-After instead of failing, so it does not count toward the pause. A revoked client and HTTP errors from the endpoint still count.",
+      "The webhook worker refreshes an endpoint's token once, for every delivery thread: the others wait for that refresh and use its result, the token or the failure, instead of asking again. It refreshes 5 minutes before expiry, minus a fixed per-endpoint jitter of up to 60 seconds, so the refresh does not land on the hourly burst. After a 401 a delivery retries once, after the shared refresh. A 429 from the customer's token endpoint makes deliveries wait for Retry-After instead of failing, and nobody asks again before then, so it does not count toward the pause. A revoked client and HTTP errors from the endpoint still count, but only those since the endpoint was last resumed.",
     rollout:
       "Behind a per-workspace flag on 10 canary workspaces with OAuth endpoints; 10 control workspaces stay on the old behaviour. The lab's experiment runs both arms over 14 days of scripted traffic.",
   },

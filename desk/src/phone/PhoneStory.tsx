@@ -1,5 +1,5 @@
 import { LayoutGroup } from "motion/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { STAGES } from "../stages";
 import { BEATS, type Beat, type Facts } from "../story/beats";
 import type { StoryData } from "../story/data";
@@ -13,6 +13,10 @@ interface Props {
   onApprove: () => void;
   onSend: () => void;
   onDesk: (beat: Beat) => void;
+  /** A ticket id tapped on the board: opens the desk's queue on that ticket, as on desktop. */
+  onOpenTicket: (id: string) => void;
+  /** The live-run control, shown with the triage beat (t1) as on desktop. */
+  runControl?: ReactNode;
   /** Reports the stage in view, so the top strip can follow the reader. */
   onStageInView: (stageIndex: number) => void;
   /** A stage the reader asked for from the top strip; scrolled into view when it changes. */
@@ -24,7 +28,17 @@ interface Props {
  * Nothing waits on scroll position to become visible.
  * Each section has its own layout group so the shared ids that animate on desktop stay separate here.
  */
-export function PhoneStory({ data, f, onApprove, onSend, onDesk, onStageInView, jumpTo }: Props) {
+export function PhoneStory({
+  data,
+  f,
+  onApprove,
+  onSend,
+  onDesk,
+  onOpenTicket,
+  runControl,
+  onStageInView,
+  jumpTo,
+}: Props) {
   const root = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -83,9 +97,10 @@ export function PhoneStory({ data, f, onApprove, onSend, onDesk, onStageInView, 
             {beat.action === "send" && (
               <PhoneAction done={f.sent} onClick={onSend} label="Approve and send" doneLabel="Sent · simulated" />
             )}
+            {beat.id === "t1" && runControl}
             <div className="phone-board">
               <LayoutGroup id={beat.id}>
-                <Focus beat={beat.id} data={data} f={f} onOpenTicket={() => onDesk(beat)} />
+                <Focus beat={beat.id} data={data} f={f} onOpenTicket={onOpenTicket} />
               </LayoutGroup>
             </div>
             <p className="phone-desk">

@@ -20,14 +20,18 @@ export function normalize(text: unknown): string {
 }
 
 // True when the quote appears in the source text, ignoring case and spacing.
-// A quote shortened with an ellipsis passes only if every piece appears in the source, in order.
+// A quote shortened with an ellipsis passes only if every piece appears in the source, in order. It may have at most
+// three pieces of at least four characters each, so a string of single letters split by ellipses is not a quote.
+export const MAX_QUOTE_PIECES = 3;
+export const MIN_QUOTE_PIECE = 4;
 export function quoted(quote: unknown, source: unknown): boolean {
   const src = normalize(source);
   const pieces = normalize(quote)
     .split(/\.\.\.|…/)
     .map((p) => p.replace(/^["'.,\s]+|["'.,\s]+$/g, ""))
     .filter(Boolean);
-  if (!pieces.length || pieces.join("").length < 6) return false;
+  if (!pieces.length || pieces.length > MAX_QUOTE_PIECES || pieces.join("").length < 6) return false;
+  if (pieces.length > 1 && pieces.some((p) => p.length < MIN_QUOTE_PIECE)) return false;
   let from = 0;
   for (const piece of pieces) {
     const at = src.indexOf(piece, from);
@@ -57,14 +61,51 @@ export const mentions = (text: unknown, terms: string[]): boolean =>
   terms.length === 0 || terms.some((t) => normalize(text).includes(t));
 
 // Numbers of 4 or more, or with decimals, that appear in the output but nowhere in the input.
+// A comma counts as a thousands separator only inside a valid group pattern: 1 to 3 digits, then groups of exactly 3,
+// not part of a longer run of digits and commas. So "1,200" and "$15,000" are one number each (compared without their
+// commas, never read as "1" and "200"), while "1,2,3" or "1,2345" are separate numbers. A token whose first group
+// also has 3 digits ("500,503", "120,450") can be a short list as well as a number, so either reading grounds it.
+// The output is read value by value, so a list of numbers ([120, 450]) is never joined into one.
+const NUMBER = /(?<![\d,])\d{1,3}(?:,\d{3})+(?:\.\d+)?(?!\d|,\d)|\d+(?:\.\d+)?/g;
+interface NumberToken {
+  raw: string;
+  joined: string;
+  /** The comma-separated parts, when the token could also be a list of 3-digit numbers. */
+  parts: string[] | null;
+}
+function numberTokens(text: string): NumberToken[] {
+  return (text.match(NUMBER) ?? []).map((raw) => {
+    const parts = raw.split(",");
+    const list = parts.length > 1 && parts[0]!.length === 3 && !raw.includes(".");
+    return { raw, joined: raw.replace(/,/g, ""), parts: list ? parts : null };
+  });
+}
+/** Every key, string and number in a value, one per line, so separate values never run together. */
+function textOf(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (Array.isArray(value)) return value.map(textOf).join("\n");
+  if (typeof value === "object")
+    return Object.entries(value as Record<string, unknown>)
+      .map(([k, v]) => k + "\n" + textOf(v))
+      .join("\n");
+  // Model output is untrusted: whatever arrives is read as text.
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
+  return String(value);
+}
 export function ungroundedNumbers(output: unknown, input: unknown): string[] {
-  const found = (text: unknown) => new Set(String(text).match(/\d+(?:\.\d+)?/g) ?? []);
-  const allowed = found(input);
-  const out: string[] = [];
-  for (const n of found(JSON.stringify(output))) {
-    if ((Number(n) >= 4 || n.includes(".")) && !allowed.has(n)) out.push(n);
+  const counts = (n: string) => Number(n) >= 4 || n.includes(".");
+  const allowed = new Set<string>();
+  for (const t of numberTokens(textOf(input))) {
+    allowed.add(t.joined);
+    for (const part of t.parts ?? []) allowed.add(part);
   }
-  return out;
+  const out = new Map<string, string>();
+  for (const t of numberTokens(textOf(output))) {
+    if (!counts(t.joined) || allowed.has(t.joined) || out.has(t.joined)) continue;
+    if (t.parts?.every((part) => !counts(part) || allowed.has(part))) continue;
+    out.set(t.joined, t.raw);
+  }
+  return [...out.values()];
 }
 
 export const check = (name: string, passed: boolean, detail = ""): Check => ({ name, passed, detail });

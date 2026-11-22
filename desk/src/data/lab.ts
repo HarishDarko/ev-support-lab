@@ -44,6 +44,7 @@ const edgeCases: TestRun = {
     ["duplicate-ended", "applied once, charged once"],
     ["queued-messages", "waits, then the Ended closes it"],
     ["very-late-ended", "adjusts once, no second charge"],
+    ["late Updated", "more energy noted on the invoice, not billed again"],
     ["out-of-order", "applied in sequence, not arrival order"],
   ],
 };
@@ -56,11 +57,11 @@ export const LAB = {
   rules: [
     {
       name: "Ask before closing",
-      text: "On reconnect, send GetTransactionStatus. While messages are queued or the charger says ongoing, keep it open.",
+      text: "On reconnect, send GetTransactionStatus. While messages are queued or the charger says ongoing, keep it open. An answer the backend cannot use is logged as its own kind (call_result_failed), the connection stays up, and it counts as no answer.",
     },
     {
       name: "Apply a late Ended once",
-      text: "Key every event on the station, transactionId and seqNo. A duplicate is acknowledged and ignored.",
+      text: "Key every event on the station, transactionId and seqNo. A duplicate is acknowledged and ignored. A late Updated with more energy after a provisional close is noted on the invoice for review, not billed again.",
     },
     {
       name: "Close provisionally only on a clear answer",

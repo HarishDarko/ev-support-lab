@@ -82,7 +82,10 @@ export function queueSteps<C extends string, T extends PackTicket, H extends Pac
       },
     }),
     ids(input: StepInput): string[] {
-      const ids: string[] = Array.isArray(input?.ids) ? (input.ids as string[]).filter((id) => ticketIds.has(id)) : [];
+      // Each known id once: a repeated id would be one ticket in the prompt but several rows in the answer.
+      const ids: string[] = Array.isArray(input?.ids)
+        ? [...new Set((input.ids as unknown[]).filter((id): id is string => ticketIds.has(id as string)))]
+        : [];
       if (!ids.length || ids.length > 10) throw new StepError("Send 1–10 known ticket ids.", 400);
       return ids;
     },

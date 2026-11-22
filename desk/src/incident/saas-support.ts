@@ -10,6 +10,9 @@ import type { Facts } from "../story/beats";
 import { list } from "../story/words";
 import type { Incident, IncidentLog, LogFlag, LogLine } from "./types";
 
+/** One metric of the lab's run against the story's expected value, as the lab writes it. */
+type Comparison = { metric: string; expected: number; computed: number; matches: boolean };
+
 const before = lab.windows.before;
 const after = lab.windows.after;
 const days = -I.firstSeenDay;
@@ -231,7 +234,7 @@ export const SAAS_INCIDENT: Incident = {
       cells: [String(a.endpoints), String(b.storms), String(a.storms), `${n(b.tokenRequests)} / ${n(a.tokenRequests)}`],
     })),
     note: `A storm is more than ${lab.settings.stormThreshold} token requests for one endpoint in one minute. On the canary, pauses went from ${before.canary.pauses} to ${after.canary.pauses}; the one left was the scripted 503 outage, which should pause. The control went from ${before.control.pauses} to ${after.control.pauses}.`,
-    differences: lab.storyComparison,
+    differences: (lab.storyComparison as readonly Comparison[]).filter((c) => !c.matches),
     checksTitle: "Correctness on the canary endpoints",
     checks: [
       ["Events in the after window", n(after.canary.events)],
@@ -310,6 +313,10 @@ export const SAAS_INCIDENT: Incident = {
       sync: {
         title: "Status monitor sync",
         text: "Alerts and repeat offenders from the night: which accounts, which endpoints, which ones were paused before. During the day the status monitor reaches this shift directly, with an agreed time to acknowledge.",
+      },
+      coverage: {
+        label: "Status monitor",
+        detail: "Watches the product around the clock and escalates to security, billing ops and customer success.",
       },
     },
     notes: {

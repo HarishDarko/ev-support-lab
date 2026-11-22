@@ -245,6 +245,8 @@ export interface IndustryPages {
     lede: string;
     /** The 08:30 sync with that team. */
     sync: { title: string; text: string };
+    /** Its row on the 24-hour coverage strip (board and Coverage tab): a short label, and who it escalates to. */
+    coverage: { label: string; detail: string };
   };
   notes: {
     kicker: string;

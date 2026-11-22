@@ -1,5 +1,6 @@
 // The 24-hour Eastern-time coverage strip. The hours come from the synthetic data (META) and the brief; the
-// overlap and the evening are computed from them, not typed in.
+// overlap and the evening are computed from them, not typed in. The hours are the same in every industry; the team
+// that watches around the clock is the industry's own (the incident's pages.monitor.coverage).
 import { META } from "../../data/synthetic";
 
 const DAY = 24 * 60;
@@ -55,10 +56,16 @@ export interface Band {
   segments: [number, number][];
 }
 
+/** The team that watches around the clock in EV charging, the default industry. */
+export const EV_FRONT_LINE = {
+  label: "NOC, levels 1 and 2",
+  detail: "Watches alerts around the clock and escalates to customer care, field service and host accounts.",
+} as const;
+
 /** The shift is 07:00 to 15:30 ET (brief); it starts at META.shiftStart. */
 const SHIFT_HOURS = 8.5;
 
-export function coverageBands(): Band[] {
+export function coverageBands(frontLine: { label: string; detail: string } = EV_FRONT_LINE): Band[] {
   const shift: Interval = { start: minutes(META.shiftStart), end: minutes(META.shiftStart) + SHIFT_HOURS * 60 };
   const [indiaFrom = "", indiaTo = ""] = META.indiaShiftET.replace(/\s*ET$/, "").split("–");
   const india: Interval = { start: minutes(indiaFrom), end: minutes(indiaTo) };
@@ -70,8 +77,8 @@ export function coverageBands(): Band[] {
   return [
     {
       id: "noc",
-      label: "NOC, levels 1 and 2",
-      detail: "Watches alerts around the clock and escalates to customer care, field service and host accounts.",
+      label: frontLine.label,
+      detail: frontLine.detail,
       range: "24/7",
       segments: [[0, DAY]],
     },
