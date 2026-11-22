@@ -30,8 +30,9 @@ public class TokenCache {
      *
      * @param attempt how many shared refreshes of the endpoint had finished, this one included
      * @param retryAt for a 429, when the identity provider allows the next request; null otherwise
+     * @param tokenThen the endpoint's stored token when the refresh failed; a different one since makes it stale
      */
-    private record Failure(Answer answer, long attempt, Instant retryAt) {}
+    private record Failure(Answer answer, long attempt, Instant retryAt, Token tokenThen) {}
 
     private final TokenClient client;
     private final Clock clock;
@@ -68,7 +69,8 @@ public class TokenCache {
      * Fix: refresh unless another caller already did it while this one waited for the lock. A caller that waited
      * gets the other caller's result, a new token or a failure, so a refused or unreachable identity provider is
      * asked once for all of them. After a 429 every caller gets that 429, with the seconds left, until Retry-After
-     * has passed.
+     * has passed; after that the next caller asks again, even one that waited for the refresh that got the 429. A
+     * failure is forgotten once a token has been stored since it, by either path.
      *
      * @param seen the token the caller found too old or was refused with (null if it had none)
      */
@@ -82,8 +84,14 @@ public class TokenCache {
                 return new Answer(200, current, 0, null);
             }
             Failure last = failures.get(endpoint.id());
-            if (last != null && (last.attempt() > doneBefore
-                    || (last.retryAt() != null && clock.instant().isBefore(last.retryAt())))) {
+            if (last != null && !Objects.equals(last.tokenThen(), current)) {
+                failures.remove(endpoint.id());
+                last = null;
+            }
+            boolean share = last != null && (last.retryAt() != null
+                    ? clock.instant().isBefore(last.retryAt())
+                    : last.attempt() > doneBefore);
+            if (share) {
                 return shared(last);
             }
             Answer answer = refreshOwn(endpoint);
@@ -94,13 +102,13 @@ public class TokenCache {
                 Instant retryAt = answer.status() == 429
                         ? clock.instant().plusSeconds(Math.max(1, answer.retryAfterSeconds()))
                         : null;
-                failures.put(endpoint.id(), new Failure(answer, attempt, retryAt));
+                failures.put(endpoint.id(), new Failure(answer, attempt, retryAt, tokens.get(endpoint.id())));
             }
             return answer;
         }
     }
 
-    /** A failure handed to a caller that did not ask: for a 429, Retry-After counts down from now. */
+    /** A failure handed to a caller that did not ask: for a 429, the seconds of Retry-After still left. */
     private Answer shared(Failure f) {
         if (f.retryAt() == null) {
             return f.answer();

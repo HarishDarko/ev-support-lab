@@ -35,7 +35,9 @@ public sealed interface OcppFrame {
         } catch (RuntimeException e) {
             throw new OcppProtocolException(OcppErrorCode.RpcFrameworkError, "frame is not valid JSON");
         }
-        if (!root.isArray() || root.size() < 3 || !root.get(0).isNumber() || !root.get(1).isString()) {
+        // The message type is a whole number: 2.5 or 2.0 is a malformed frame, not a CALL.
+        if (!root.isArray() || root.size() < 3 || !root.get(0).isIntegralNumber() || !root.get(0).canConvertToInt()
+                || !root.get(1).isString()) {
             throw new OcppProtocolException(OcppErrorCode.RpcFrameworkError, "frame is not an OCPP-J array");
         }
         String id = root.get(1).asString();
@@ -47,9 +49,16 @@ public sealed interface OcppFrame {
                 yield new Call(id, root.get(2).asString(), root.get(3));
             }
             case CALL_RESULT -> new CallResult(id, root.get(2));
-            case CALL_ERROR -> new CallError(id, root.get(2).asString(),
-                    root.size() > 3 ? root.get(3).asString() : "",
-                    root.size() > 4 ? root.get(4) : JsonNodeFactory.instance.objectNode());
+            case CALL_ERROR -> {
+                // The error code and description are text. Anything else is refused as a malformed frame here:
+                // asString() on an object or a list would throw an exception the gateway does not expect.
+                if (!root.get(2).isString() || (root.size() > 3 && !root.get(3).isString())) {
+                    throw new OcppProtocolException(OcppErrorCode.RpcFrameworkError, "malformed CALLERROR", id);
+                }
+                yield new CallError(id, root.get(2).asString(),
+                        root.size() > 3 ? root.get(3).asString() : "",
+                        root.size() > 4 ? root.get(4) : JsonNodeFactory.instance.objectNode());
+            }
             default -> throw new OcppProtocolException(OcppErrorCode.MessageTypeNotSupported,
                     "unknown message type", id);
         };

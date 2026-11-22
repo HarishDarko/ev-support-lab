@@ -21,6 +21,8 @@ Support's runbook RB-14 (test delivery, then replay) works every time, because b
 
 **The pause rule** counts failed attempts in the last 60 minutes, and only those since the endpoint was last resumed: a replay starts the count again. Every request to an identity provider or an endpoint gives up after `lab.http.request-timeout` (10 s) and counts as unreachable.
 
+"Since the endpoint was last resumed" compares timestamps, and a failure at the very instant of the resume counts as after it. That is on purpose: the replay's own attempts share the resume's instant and must count. A failure from before the replay can tie with it only if both happen on the same clock tick. With the shipped inputs that never happens: the replay runs at 08:30 (`replayMinute` in `src/main/resources/experiment/inputs.json`) and the failures that pause an endpoint come on the hour. If you set `replayMinute` to 0, a pause and its replay can share an instant, and the count after the replay may include failures from before it. To make the rule exact for any inputs, record the last attempt id at each resume and count only attempts after it.
+
 ## Requirements
 
 Java 25 is provisioned by Gradle (toolchain + foojay resolver); any JDK 17+ runs the wrapper. Docker is needed for the tests and the experiment (Testcontainers starts PostgreSQL 17). Spring Boot 4.1.1, Gradle 9.8.1, Flyway, Spring JDBC. Run everything from the repository root.

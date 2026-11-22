@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -66,6 +67,29 @@ class OcppGatewayCallAnswerTest {
 
         gateway.onText(connection, "[3,\"" + id + "\",{\"messagesInQueue\":false}]");
         assertThat(seen).isEmpty();
+    }
+
+    @Test
+    void a_malformed_CALLERROR_or_message_type_is_answered_as_a_framework_error_and_the_connection_stays_open()
+            throws Exception {
+        connection.call("GetTransactionStatus", Map.of("transactionId", "TX-3"), payload -> { });
+        String id = sentUniqueId();
+
+        for (String frame : List.of("[4,\"" + id + "\",{},\"x\"]", "[4,\"" + id + "\",\"E\",{}]",
+                "[2.5,\"" + id + "\",\"Heartbeat\",{}]")) {
+            assertThatCode(() -> gateway.onText(connection, frame)).as(frame).doesNotThrowAnyException();
+        }
+
+        ArgumentCaptor<TextMessage> sent = ArgumentCaptor.forClass(TextMessage.class);
+        verify(session, times(4)).sendMessage(sent.capture());
+        for (TextMessage reply : sent.getAllValues().subList(1, 4)) {
+            assertThat(OcppFrame.parse(reply.getPayload())).isInstanceOfSatisfying(OcppFrame.CallError.class,
+                    e -> assertThat(e.errorCode()).isEqualTo("RpcFrameworkError"));
+        }
+        verify(session, never()).close();
+        verify(session, never()).close(any());
+        // A malformed CALLERROR is not an answer: the CALL stays pending until a real one, or the sweeper.
+        assertThat(connection.pendingCalls()).isEqualTo(1);
     }
 
     @Test

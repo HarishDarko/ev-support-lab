@@ -112,6 +112,10 @@ public class OcppGateway {
         try {
             frame = OcppFrame.parse(text);
         } catch (OcppProtocolException e) {
+            // A frame the gateway cannot read is logged as its own kind, answered with a CALLERROR, and the
+            // websocket stays open.
+            log.warn("event=frame_rejected station={} uniqueId={} code={} reason={}", connection.stationId(),
+                    e.uniqueId(), e.code(), e.getMessage());
             connection.send(new OcppFrame.CallError(e.uniqueId(), e.code().name(), e.getMessage(),
                     OcppJson.MAPPER.createObjectNode()));
             return;
