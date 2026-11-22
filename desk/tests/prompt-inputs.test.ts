@@ -250,3 +250,27 @@ describe("F22: duplicate triage ids, and the article title", () => {
     expect(data).toMatchObject({ matches_known_pattern: false, matched_article: "none" });
   });
 });
+
+describe("classify cites only ids that exist", () => {
+  const model = (why: string) => ({
+    component: PACKS["ev-charging"].components[0],
+    severity: "S2",
+    matches_known_pattern: false,
+    matched_article: "none",
+    suggested_action: "A person reviews it.",
+    escalate: false,
+    why,
+  });
+  const steps = [
+    ...PACK_IDS.map((id) => [id, INCIDENT_STEPS[id].classify] as const),
+    ["short chain", shortChainSteps(PACKS["saas-support"] as unknown as Pack).classify] as const,
+  ];
+  it.each(steps)("%s: an invented id is a validation error, a real one is kept", (_id, step) => {
+    const input = { text: "A new ticket.", article: { title: "A" } };
+    expect(() => step.validate(model("Same as T-9999 and RB-99."), input)).toThrow(
+      "Referenced unknown ids: T-9999, RB-99",
+    );
+    const real = PACKS[_id === "short chain" ? "saas-support" : _id].tickets[0]!.id;
+    expect(step.validate(model(`Like ${real}.`), input).data.why).toBe(`Like ${real}.`);
+  });
+});
