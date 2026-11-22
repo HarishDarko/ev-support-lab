@@ -60,18 +60,50 @@ export const exceptionNamesIn = (exceptions: Record<string, RunbookExceptionRule
 export const mentions = (text: unknown, terms: string[]): boolean =>
   terms.length === 0 || terms.some((t) => normalize(text).includes(t));
 
-// Numbers of 4 or more, or with decimals, that appear in the output but nowhere in the input. A comma-grouped number
-// ("1,200", "$15,000") is one number, compared without its commas, so "1,200" in the output matches "1200" or "1,200"
-// in the input and is never read as "1" and "200".
-const NUMBER = /\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
+// Numbers of 4 or more, or with decimals, that appear in the output but nowhere in the input.
+// A comma counts as a thousands separator only inside a valid group pattern: 1 to 3 digits, then groups of exactly 3,
+// not part of a longer run of digits and commas. So "1,200" and "$15,000" are one number each (compared without their
+// commas, never read as "1" and "200"), while "1,2,3" or "1,2345" are separate numbers. A token whose first group
+// also has 3 digits ("500,503", "120,450") can be a short list as well as a number, so either reading grounds it.
+// The output is read value by value, so a list of numbers ([120, 450]) is never joined into one.
+const NUMBER = /(?<![\d,])\d{1,3}(?:,\d{3})+(?:\.\d+)?(?!\d|,\d)|\d+(?:\.\d+)?/g;
+interface NumberToken {
+  raw: string;
+  joined: string;
+  /** The comma-separated parts, when the token could also be a list of 3-digit numbers. */
+  parts: string[] | null;
+}
+function numberTokens(text: string): NumberToken[] {
+  return (text.match(NUMBER) ?? []).map((raw) => {
+    const parts = raw.split(",");
+    const list = parts.length > 1 && parts[0]!.length === 3 && !raw.includes(".");
+    return { raw, joined: raw.replace(/,/g, ""), parts: list ? parts : null };
+  });
+}
+/** Every key, string and number in a value, one per line, so separate values never run together. */
+function textOf(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (Array.isArray(value)) return value.map(textOf).join("\n");
+  if (typeof value === "object")
+    return Object.entries(value as Record<string, unknown>)
+      .map(([k, v]) => k + "\n" + textOf(v))
+      .join("\n");
+  // Model output is untrusted: whatever arrives is read as text.
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
+  return String(value);
+}
 export function ungroundedNumbers(output: unknown, input: unknown): string[] {
-  const numbers = (text: unknown) => String(text).match(NUMBER) ?? [];
-  const plain = (n: string) => n.replace(/,/g, "");
-  const allowed = new Set(numbers(input).map(plain));
+  const counts = (n: string) => Number(n) >= 4 || n.includes(".");
+  const allowed = new Set<string>();
+  for (const t of numberTokens(textOf(input))) {
+    allowed.add(t.joined);
+    for (const part of t.parts ?? []) allowed.add(part);
+  }
   const out = new Map<string, string>();
-  for (const n of numbers(JSON.stringify(output))) {
-    const key = plain(n);
-    if ((Number(key) >= 4 || key.includes(".")) && !allowed.has(key) && !out.has(key)) out.set(key, n);
+  for (const t of numberTokens(textOf(output))) {
+    if (!counts(t.joined) || allowed.has(t.joined) || out.has(t.joined)) continue;
+    if (t.parts?.every((part) => !counts(part) || allowed.has(part))) continue;
+    out.set(t.joined, t.raw);
   }
   return [...out.values()];
 }

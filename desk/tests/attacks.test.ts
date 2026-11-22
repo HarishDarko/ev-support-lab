@@ -269,6 +269,26 @@ describe("guardrail bypasses from the external review (F08)", () => {
     expect(ungroundedNumbers({ n: "1,200" }, "200")).toEqual(["1,200"]);
   });
 
+  it("does not join a list of status codes or a numeric array into one number", () => {
+    // Review probes: "500,503" and [120,450].
+    expect(ungroundedNumbers({ codes: "HTTP 500,503 from the endpoint" }, "errors 500 and 503")).toEqual([]);
+    expect(ungroundedNumbers({ waits: [120, 450] }, "waited 120 s, then 450 s")).toEqual([]);
+    expect(ungroundedNumbers({ waits: "[120,450]" }, "waited 120 s, then 450 s")).toEqual([]);
+    // The input's own list grounds each of its parts.
+    expect(ungroundedNumbers({ n: "450 seconds" }, '{"waits":[120,450]}')).toEqual([]);
+    // Still a number when nothing grounds the parts: 500 and 503 are not in this input.
+    expect(ungroundedNumbers({ codes: "500,503" }, "nothing here")).toEqual(["500,503"]);
+    // And a real thousands number with a 3-digit first group still matches its plain form.
+    expect(ungroundedNumbers({ n: "100,000 sessions" }, "100000 sessions")).toEqual([]);
+  });
+
+  it("reads a comma as a thousands separator only in a valid group pattern", () => {
+    expect(ungroundedNumbers({ n: "1,2345" }, "2345")).toEqual([]);
+    expect(ungroundedNumbers({ n: "12,3456" }, "12 and 3456")).toEqual([]);
+    expect(ungroundedNumbers({ n: "1,200,3" }, "1200")).toEqual(["200"]);
+    expect(ungroundedNumbers({ n: "1,234,567" }, "nothing")).toEqual(["1,234,567"]);
+  });
+
   it("keeps lists of small numbers and ids apart", () => {
     expect(ungroundedNumbers({ n: "steps 1,2,3 and T-2040,T-2041" }, "T-2040 T-2041")).toEqual([]);
   });
