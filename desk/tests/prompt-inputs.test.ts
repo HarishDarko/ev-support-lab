@@ -5,12 +5,19 @@
 import { describe, it, expect } from "vitest";
 import { onRequestPost } from "../functions/api/[step]";
 import { StepError } from "../functions/_lib/errors";
+import { ValidationError, quoted } from "../functions/_lib/checks";
 import {
   ARTICLE,
   ARTICLE_STEPS_MAX,
   FENCE_MAX,
+  EVIDENCE_MIN,
   HANDOFF_EVIDENCE_MAX,
+  QUOTE_MAX,
   SHIFT_SUMMARY,
+  SHIFT_SUMMARY_MAX,
+  PERSON_SUMMARY_MIN,
+  fitShiftSummary,
+  moreNeedAPerson,
   TRIAGE_SUMMARY_MAX,
   fencedJson,
   fit,
@@ -39,7 +46,7 @@ import evRun from "../src/data/recorded-run.json";
 import saasRun from "../src/data/recorded-run.saas-support.json";
 import shopRun from "../src/data/recorded-run.e-commerce.json";
 import { recordedRun } from "../src/run/recorded";
-import { indexTriage, shiftSummary } from "../src/run/selectors";
+import { indexTriage, lanesOf, shiftSummary } from "../src/run/selectors";
 import { EV_INCIDENT } from "../src/incident/ev-charging";
 import { SAAS_INCIDENT } from "../src/incident/saas-support";
 import { SHOP_INCIDENT } from "../src/incident/e-commerce";
@@ -523,4 +530,187 @@ describe("fit counts the cap as JSON, and the short chain's related ids (review 
       expect(() => steps.classify.build({ text: pack.tickets[0]!.text, article: k })).not.toThrow();
     });
   }
+});
+
+describe("fit keeps the evidence it verified, and every step's output fits the next (third review)", () => {
+  const QUOTE_AND_BACKSLASH = '"' + String.fromCharCode(92);
+  const escaped = (n: number) => QUOTE_AND_BACKSLASH.repeat(Math.ceil(n / 2)).slice(0, n);
+  type Evidence = { point: string; source: string; quote: string };
+  const investigation = (evidence: Evidence[]) => ({
+    symptom: escaped(800),
+    impact: Array.from({ length: 6 }, () => escaped(300)),
+    evidence,
+    hypotheses: Array.from({ length: 4 }, () => ({
+      statement: escaped(500),
+      status: "leading hypothesis",
+      supports: Array.from({ length: 4 }, () => escaped(300)),
+      against_or_gaps: Array.from({ length: 4 }, () => escaped(300)),
+    })),
+    ruled_out: Array.from({ length: 8 }, () => escaped(300)),
+    open_questions: Array.from({ length: 6 }, () => escaped(300)),
+  });
+  /** The rules version's quotes that are found in the source they cite, each with a long point. */
+  const verifiedEvidence = (id: IncidentPackId): Evidence[] => {
+    const sources: Record<string, string> = INCIDENT_SOURCES[id];
+    return fallbacks[id]
+      .ruleInvestigate()
+      .evidence.filter((e) => quoted(e.quote, sources[e.source]))
+      .map((e) => ({ point: escaped(400), source: e.source, quote: e.quote }));
+  };
+
+  for (const id of PACK_IDS) {
+    it(`${id}: evidence points go before other texts are cut, and every verified quote kept stays whole`, () => {
+      const steps = stepsFor(id as "ev-charging");
+      // Two copies of each verified quote: up to eight points, each with a 400-character point.
+      const evidence = [...verifiedEvidence(id), ...verifiedEvidence(id)].slice(0, 8);
+      const n = evidence.length;
+      expect(n).toBeGreaterThanOrEqual(4);
+      const { data, checks } = steps.investigate.validate(investigation(evidence), {}, "");
+      expect(JSON.stringify(data).length).toBeLessThanOrEqual(FENCE_MAX);
+      // Every other list is down to one item, so the evidence goes down to its minimum before any text is cut.
+      expect(data.evidence).toHaveLength(EVIDENCE_MIN);
+      expect(data.evidence.map((e) => e.quote)).toEqual(evidence.slice(0, EVIDENCE_MIN).map((e) => e.quote));
+      expect(data.evidence.every((e) => e.quote_verified)).toBe(true);
+      expect(data.symptom.length).toBeGreaterThan(100);
+      expect(data.hypotheses[0]!.statement.length).toBeGreaterThan(100);
+      expect(checks[0]).toMatchObject({
+        passed: true,
+        detail: `${n} of ${n}; ${n - EVIDENCE_MIN} left out to fit the next step`,
+      });
+      expect(() => steps.handoff.build({ investigation: data })).not.toThrow();
+    });
+
+    it(`${id}: an investigation that already fits keeps every evidence point`, () => {
+      const steps = stepsFor(id as "ev-charging");
+      const evidence = [...verifiedEvidence(id), ...verifiedEvidence(id)].slice(0, 8);
+      const answer = { ...investigation(evidence), symptom: "Short.", impact: ["One."], hypotheses: [], ruled_out: [] };
+      const { data, checks } = steps.investigate.validate({ ...answer, open_questions: [] }, {}, "");
+      expect(data.evidence.map((e) => e.quote)).toEqual(evidence.map((e) => e.quote));
+      expect(checks[0]!.detail).toBe(`${evidence.length} of ${evidence.length}`);
+    });
+
+    it(`${id}: a quote too long to pass on whole is not kept, and fewer than two is the rules version`, () => {
+      const steps = stepsFor(id as "ev-charging");
+      const sources: Record<string, string> = INCIDENT_SOURCES[id];
+      const [name, source] = Object.entries(sources).sort((a, b) => b[1].length - a[1].length)[0]!;
+      const long = source.slice(0, QUOTE_MAX + 40).trim();
+      expect(long.length).toBeGreaterThan(QUOTE_MAX);
+      expect(quoted(long, source)).toBe(true);
+      const [first, second] = verifiedEvidence(id);
+      const tooLong = { point: "A long quote.", source: name, quote: long };
+      const { data, checks } = steps.investigate.validate(investigation([first!, tooLong, second!]), {}, "");
+      expect(data.evidence.map((e) => e.quote)).toEqual([first!.quote, second!.quote]);
+      expect(checks[0]).toMatchObject({ passed: false, detail: "2 of 3, the rest removed" });
+      expect(() => steps.investigate.validate(investigation([first!, tooLong]), {}, "")).toThrow(ValidationError);
+    });
+
+    it(`${id}: an investigation that cannot fit with its quotes whole fails validation`, () => {
+      const steps = stepsFor(id as "ev-charging");
+      // A key the field does not name is never trimmed, so this one cannot be made to fit.
+      const answer = { ...investigation(verifiedEvidence(id)), extra: "x".repeat(FENCE_MAX) };
+      expect(() => steps.investigate.validate(answer, {}, "")).toThrow(ValidationError);
+    });
+
+    it(`${id}: an article with a blank title is refused at the kb step, not on the new-ticket check`, () => {
+      const steps = stepsFor(id as "ev-charging");
+      for (const title of ["", "   "])
+        expect(() => steps.kb.validate({ ...fallbacks[id].ruleKb(), title }, {}, "")).toThrow(ValidationError);
+      expect(() => steps.kb.validate(fallbacks[id].ruleKb(), {}, "")).not.toThrow();
+    });
+
+    it(`${id}: a queue where every ticket needs a person still fits the shift note`, () => {
+      const [desk, incident] = desks[id];
+      const results = desk.tickets.map((t) => ({
+        id: t.id,
+        action: "needs_human",
+        summary: escaped(TRIAGE_SUMMARY_MAX),
+      }));
+      const batch = { data: { results }, trace: { source: "ai", checks: [] }, ms: 1 } as unknown as Parameters<
+        typeof indexTriage
+      >[0][number];
+      const index = indexTriage([batch], desk);
+      const summary = shiftSummary(index, "Title", undefined, incident, desk);
+      expect(JSON.stringify(summary).length).toBeLessThanOrEqual(SHIFT_SUMMARY_MAX);
+      // Every ticket that needs a person is still listed, by id: the summaries were shortened instead.
+      const person = lanesOf(index, desk).person;
+      expect(person.length).toBeGreaterThan(0);
+      expect(summary.needs_a_person.map((e) => e.split(": ")[0])).toEqual(person);
+      for (const e of summary.needs_a_person) expect(e.length).toBeGreaterThan(PERSON_SUMMARY_MIN);
+      expect(() => stepsFor(id as "ev-charging").shiftnote.build({ summary })).not.toThrow();
+    });
+  }
+
+  it("a shift summary that cannot list every ticket says how many it left out", () => {
+    const needs = Array.from({ length: 60 }, (_, i) => `T-${1000 + i}: ${escaped(TRIAGE_SUMMARY_MAX)}`);
+    const summary = fitShiftSummary({ open_at_start: 60, needs_a_person: needs }, 3000);
+    expect(JSON.stringify(summary).length).toBeLessThanOrEqual(3000);
+    const listed = summary.needs_a_person.slice(0, -1);
+    const more = summary.needs_a_person.at(-1)!;
+    expect(more).toBe(moreNeedAPerson(60 - listed.length));
+    expect(listed.map((e) => e.split(": ")[0])).toEqual(needs.slice(0, listed.length).map((e) => e.split(": ")[0]));
+    // A summary that fits is unchanged.
+    const small = { open_at_start: 2, needs_a_person: ["T-1: Short.", "T-2: Short."] };
+    expect(fitShiftSummary(small)).toEqual(small);
+  });
+
+  it("fit trims the held list last, and never below its minimum", () => {
+    const field = record({ a: list(text(100), 50), held: list(text(100), 50) });
+    const value = {
+      a: Array.from({ length: 40 }, () => "a".repeat(90)),
+      held: Array.from({ length: 6 }, () => "h".repeat(90)),
+    };
+    const roomy = fit(value, field, [], 1500, { key: "held", min: EVIDENCE_MIN });
+    expect(roomy.held).toEqual(value.held);
+    expect(JSON.stringify(roomy).length).toBeLessThanOrEqual(1500);
+    // The held list goes down to its minimum before any text is cut.
+    const two = fit(value, field, [], 300, { key: "held", min: EVIDENCE_MIN });
+    expect(two.a).toEqual([value.a[0]]);
+    expect(two.held).toEqual(value.held.slice(0, EVIDENCE_MIN));
+    const tight = fit(value, field, [], 150, { key: "held", min: EVIDENCE_MIN });
+    expect(tight.held.length).toBe(EVIDENCE_MIN);
+    expect(JSON.stringify(tight).length).toBeLessThanOrEqual(150);
+  });
+
+  it("the short chain's rules article fits the new-ticket check, its runbook kept", () => {
+    const tickets = Array.from({ length: 40 }, (_, i) => ({ id: `T-${4000 + i}`, text: "Order stuck in Pending." }));
+    const history = Array.from({ length: 40 }, (_, i) => ({ id: `H-${100 + i}`, text: "Order stuck." }));
+    const pack = {
+      id: "many-ids",
+      name: "Many ids",
+      components: ["orders", "question"],
+      defaultComponent: "question",
+      runbooks: [{ id: "RB-21", title: "Release a hold", scope: "Order stuck" }],
+      tickets,
+      history,
+      extraIds: [],
+      rules: [
+        { re: /stuck/i, component: "orders", severity: "S3", action: "close_with_runbook", runbook: "RB-21", why: "x" },
+      ],
+      componentTerms: { orders: ["order"], question: [] },
+      runbookTerms: {},
+      runbookFits: {},
+      runbookExceptions: {},
+      prompts: {
+        system: "S",
+        severityGuide: "SEV",
+        componentGuide: "C",
+        actionGuide: "A",
+        ticketLine: (t: { id: string }) => t.id,
+        historyLine: (h: { id: string }) => h.id,
+      },
+    } as unknown as Pack;
+    const steps = shortChainSteps(pack);
+    const pattern = {
+      name: "Stuck orders",
+      ticket_ids: tickets.map((t) => t.id),
+      history_ids: history.map((h) => h.id),
+    };
+    const article = steps.kb.fallback({ pattern });
+    expect(article.related).toHaveLength(60);
+    expect(article.related[0]).toBe("RB-21");
+    expect(new Set(article.related).size).toBe(60);
+    expect(() => pick(article, ARTICLE, "article")).not.toThrow();
+    expect(() => steps.classify.build({ text: "Order stuck.", article })).not.toThrow();
+    expect(() => steps.kb.validate({ ...article, title: " " }, { pattern }, "")).toThrow(ValidationError);
+  });
 });

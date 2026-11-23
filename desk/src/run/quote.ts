@@ -1,6 +1,7 @@
 // Finding the quoted words in a ticket so they can be highlighted in place.
 // The server accepts a quote ignoring case, spacing, curly quotes, dashes and arrows, and a quote shortened with an
-// ellipsis only if every piece appears in order. This does the same search, but returns positions.
+// ellipsis only if every piece appears in order. This does the same search, but returns positions. Like the server,
+// it drops quote marks, straight or curly, around each piece.
 
 export interface Span {
   start: number;
@@ -32,7 +33,7 @@ export function quoteSpans(text: string, quote: string | null | undefined): Span
   if (!quote) return [];
   const pieces = quote
     .split(/\.\.\.|…/)
-    .map((p) => p.replace(/^["'.,\s]+|["'.,\s]+$/g, ""))
+    .map((p) => p.replace(/^["'“”‘’.,\s]+|["'“”‘’.,\s]+$/g, ""))
     .filter(Boolean);
   const spans: Span[] = [];
   let from = 0;

@@ -5,7 +5,10 @@ import dev.evlab.transaction.TxEvent;
 import java.util.Locale;
 import tools.jackson.databind.JsonNode;
 
-/** One-line summaries of frames for the gateway log. Summaries, not payload dumps. */
+/**
+ * One-line summaries of frames for the gateway log. Summaries, not payload dumps. A payload that cannot be read is
+ * summarised as "(unreadable payload)", never an exception, since the summary is written before the frame is checked.
+ */
 final class FrameSummary {
 
     private FrameSummary() {}
@@ -19,7 +22,8 @@ final class FrameSummary {
                 case "Heartbeat" -> "";
                 default -> "";
             };
-        } catch (OcppProtocolException e) {
+        } catch (RuntimeException e) {
+            // A malformed frame is answered by the gateway with a CALLERROR. Its trace line must never be what fails.
             return "(unreadable payload)";
         }
     }

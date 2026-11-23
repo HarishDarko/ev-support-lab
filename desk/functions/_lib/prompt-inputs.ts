@@ -3,8 +3,10 @@
 // each value is reduced to the fields that step can really produce. Every field has a type, a length cap for text and
 // an item cap for lists; any other field is dropped, and a value of the wrong type or over a cap is refused with a
 // 400. What is left goes into the prompt inside a triple-quote fence, marked as data. Neutral: no industry content.
+import { ValidationError, check } from "./checks";
 import { StepError, clip } from "./errors";
 import { SEVERITIES } from "./kit";
+import type { Check } from "./types";
 
 export type Field =
   | { kind: "text"; max: number; values?: readonly string[] }
@@ -85,19 +87,56 @@ export const FENCE_MAX = 6000;
  * already fixed those. Then, while the whole value is still over the size cap, the longest list loses its last item.
  * Every list keeps at least one item, and the `keep` values (the fixed texts a step adds) are never removed. The cap
  * counts the value as JSON, where a quote or a backslash takes two characters, so a value can be within every
- * character cap and still too long with every list down to one item: then the longest text, as JSON, is cut until
- * the whole value fits.
+ * character cap and still too long with every list down to one item: then the longest texts are cut to one common
+ * length, the longest that lets the whole value fit, so the cut is shared and no single text is cut to nothing while
+ * others stay whole.
+ *
+ * `last` names a list of the top-level object whose items go after every other list's: while any other list can lose
+ * an item, it is left whole. Then it loses its last items, down to `min`, before any text is cut, so a short value
+ * keeps its whole texts rather than every item. Its own texts are cut last. The result can still be over the cap; a
+ * caller that must fit checks.
  */
-export function fit<T>(value: T, field: Field, keep: readonly unknown[] = [], max = FENCE_MAX): T {
+export function fit<T>(value: T, field: Field, keep: readonly unknown[] = [], max = FENCE_MAX, last?: Last): T {
   const out = fitField(structuredClone(value), field);
   const over = () => JSON.stringify(out).length - max;
-  while (over() > 0 && dropOne(out, keep)) {
+  const held = last && field.kind === "object" ? (out as Record<string, unknown>)[last.key] : undefined;
+  const heldField = last && field.kind === "object" ? field.fields[last.key] : undefined;
+  const inHeld = new Set(nodesIn(held));
+  while (over() > 0 && dropOne(out, keep, inHeld)) {
     /* one item at a time, from the longest list */
   }
-  while (over() > 0 && cutOne(out, field, keep, over())) {
-    /* the longest text, by what is still over */
-  }
+  if (last && Array.isArray(held))
+    while (over() > 0 && held.length > last.min && dropLast(held, keep)) {
+      /* the held list's last items, down to its minimum */
+    }
+  if (over() > 0) cutToFit(textsIn(out, field), keep, inHeld, over);
+  if (over() > 0 && last && Array.isArray(held) && heldField) cutToFit(textsIn(held, heldField), keep, new Set(), over);
   return out;
+}
+
+/** The list `fit` trims last, and the fewest items it keeps. */
+export interface Last {
+  key: string;
+  min: number;
+}
+
+/** Every list and object in a value, the value included. */
+function nodesIn(value: unknown, found: object[] = []): object[] {
+  if (value && typeof value === "object") {
+    found.push(value);
+    for (const v of Object.values(value)) nodesIn(v, found);
+  }
+  return found;
+}
+
+/** Removes a list's last item that may go. False when none can. */
+function dropLast(list: unknown[], keep: readonly unknown[]): boolean {
+  for (let i = list.length - 1; i >= 0; i -= 1)
+    if (!keep.includes(list[i])) {
+      list.splice(i, 1);
+      return true;
+    }
+  return false;
 }
 
 interface TextAt {
@@ -123,20 +162,24 @@ function textsIn(value: unknown, field: Field, found: TextAt[] = []): TextAt[] {
   return found;
 }
 
-/** Cuts the longest text, as JSON, by at least `excess` characters of JSON. False when no text can be cut. */
-function cutOne(value: unknown, field: Field, keep: readonly unknown[], excess: number): boolean {
-  const read = ({ holder, key }: TextAt) => (holder as Record<string | number, string>)[key]!;
-  const size = (t: TextAt) => JSON.stringify(read(t)).length;
-  const texts = textsIn(value, field).filter((t) => read(t).length > 1 && !keep.includes(read(t)));
-  const longest = texts.sort((a, b) => size(b) - size(a))[0];
-  if (!longest) return false;
-  const text = read(longest);
-  // Each character removed takes at least one character off the JSON; the ellipsis adds one back.
-  (longest.holder as Record<string | number, string>)[longest.key] = clipText(
-    text,
-    Math.max(1, text.length - excess - 1),
-  );
-  return true;
+/**
+ * Cuts the texts, except those held in `skip` and the `keep` values, to one common length: the longest that brings
+ * `over` to zero, or one character (an ellipsis) when none does. Texts already shorter are left as they are.
+ */
+function cutToFit(texts: TextAt[], keep: readonly unknown[], skip: ReadonlySet<object>, over: () => number): void {
+  const holder = ({ holder }: TextAt) => holder as Record<string | number, string>;
+  const cuttable = texts.filter((t) => !skip.has(t.holder) && !keep.includes(holder(t)[t.key]));
+  const whole = cuttable.map((t) => holder(t)[t.key]!);
+  const cutTo = (length: number) =>
+    cuttable.forEach((t, i) => (holder(t)[t.key] = clipText(whole[i]!, Math.max(1, length))));
+  let [low, high] = [1, Math.max(1, ...whole.map((w) => w.length))];
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    cutTo(mid);
+    if (over() <= 0) low = mid;
+    else high = mid - 1;
+  }
+  cutTo(low);
 }
 
 function fitField<T>(value: T, field: Field): T {
@@ -166,30 +209,35 @@ function listsIn(value: unknown, found: unknown[][] = []): unknown[][] {
   return found;
 }
 
-/** Removes the last item that may go from the longest list that has more than one item. False when none can. */
-function dropOne(value: unknown, keep: readonly unknown[]): boolean {
+/**
+ * Removes the last item that may go from the longest list that has more than one item. Lists held in `skip` are left
+ * alone. False when none can.
+ */
+function dropOne(value: unknown, keep: readonly unknown[], skip: ReadonlySet<object> = new Set()): boolean {
   const size = (v: unknown) => JSON.stringify(v).length;
-  const lists = listsIn(value).filter((l) => l.length > 1 && l.some((x) => !keep.includes(x)));
+  const lists = listsIn(value).filter((l) => !skip.has(l) && l.length > 1 && l.some((x) => !keep.includes(x)));
   const longest = lists.sort((a, b) => size(b) - size(a))[0];
-  if (!longest) return false;
-  for (let i = longest.length - 1; i >= 0; i -= 1)
-    if (!keep.includes(longest[i])) {
-      longest.splice(i, 1);
-      break;
-    }
-  return true;
+  return longest ? dropLast(longest, keep) : false;
 }
 
 // The caps are about two to four times the longest value the recorded runs and the rules give for that field
 // (tests/prompt-inputs.test.ts checks every pack's recorded run and rules output against them), so a real run always
 // fits and a crafted body cannot fill the prompt.
 
+/** The longest evidence quote an investigation may carry. A longer one is not kept, since cutting it would change it. */
+export const QUOTE_MAX = 300;
+/** The fewest verified quotes an investigation may have. */
+export const EVIDENCE_MIN = 2;
+
 /** An investigation, as the investigate step writes it. `sources` are the pack's named evidence sources. */
 export const investigationField = (sources: readonly string[]): Field =>
   record({
     symptom: text(800),
     impact: list(text(300), 6),
-    evidence: list(record({ point: text(400), source: text(80, sources), quote: text(300), quote_verified: flag }), 8),
+    evidence: list(
+      record({ point: text(400), source: text(80, sources), quote: text(QUOTE_MAX), quote_verified: flag }),
+      8,
+    ),
     hypotheses: list(
       record({
         statement: text(500),
@@ -238,6 +286,13 @@ export const ARTICLE = record({
   related: list(text(20), ARTICLE_RELATED_MAX),
 });
 
+/** The size cap on the fenced shift summary, as JSON. */
+export const SHIFT_SUMMARY_MAX = 8000;
+/** The shortest a ticket's summary in the shift summary is cut to before any ticket is left out. */
+export const PERSON_SUMMARY_MIN = 40;
+/** The last item of `needs_a_person` when some tickets had to be left out, so the note says how many. */
+export const moreNeedAPerson = (n: number) => `+${n} more need a person`;
+
 /** The shift summary the desk sends to the shift note (src/run/selectors.ts, shiftSummary). */
 export const SHIFT_SUMMARY = record({
   open_at_start: num,
@@ -273,4 +328,82 @@ export const CORRECTED = {
 export function articleTitle(input: { article?: unknown } | null | undefined): string {
   const title = (input?.article as { title?: unknown } | null | undefined)?.title;
   return typeof title === "string" && title.trim() ? title : "";
+}
+
+interface Evidence {
+  quote: string;
+  quote_verified?: boolean;
+}
+
+/**
+ * The investigate step's evidence check, then the investigation fitted for the next step without breaking it: only
+ * quotes found in the source they cite are kept, each marked verified, and fewer than `EVIDENCE_MIN` is a
+ * `ValidationError`, so the rules version is used. The fit trims the other fields first and never cuts a verified
+ * quote; it may leave out evidence points, down to the minimum. If the investigation still does not fit, that is a
+ * `ValidationError` too, rather than a quote cut short and still marked verified. Changes `data` in place.
+ */
+export function verifyEvidence<E extends Evidence>(
+  data: { evidence: E[] },
+  field: Field,
+  found: (e: E) => boolean,
+): Check {
+  const total = data.evidence.length;
+  const kept = data.evidence.filter((e) => typeof e.quote === "string" && e.quote.length <= QUOTE_MAX && found(e));
+  if (kept.length < EVIDENCE_MIN)
+    throw new ValidationError(`Only ${kept.length} of ${total} evidence quotes found in the source they cite`);
+  data.evidence = kept.map((e) => ({ ...e, quote_verified: true }));
+  const fitted = fit(
+    data,
+    field,
+    kept.map((e) => e.quote),
+    FENCE_MAX,
+    { key: "evidence", min: EVIDENCE_MIN },
+  );
+  if (JSON.stringify(fitted).length > FENCE_MAX)
+    throw new ValidationError("The investigation does not fit the next step with its verified quotes whole");
+  Object.assign(data, fitted);
+  const left = data.evidence.length;
+  return check(
+    "Each quote found in the source it cites",
+    kept.length === total,
+    `${kept.length} of ${total}${kept.length < total ? ", the rest removed" : ""}${
+      left < kept.length ? `; ${kept.length - left} left out to fit the next step` : ""
+    }`,
+  );
+}
+
+/**
+ * A shift summary cut to the shift note's size cap without losing a ticket that needs a person unnoticed. Each
+ * `needs_a_person` entry ("<id>: <summary>") keeps its id; first every summary is cut to the same length, no shorter
+ * than `PERSON_SUMMARY_MIN`. Only if that is not enough are the last tickets left out, and the list then ends with
+ * "+N more need a person". Anything else over its cap is cut as `fit` cuts it.
+ */
+export function fitShiftSummary<T extends { needs_a_person?: string[] }>(summary: T, max = SHIFT_SUMMARY_MAX): T {
+  const out = fit(summary, SHIFT_SUMMARY, [], Number.POSITIVE_INFINITY);
+  const all = out.needs_a_person;
+  if (!all?.length || JSON.stringify(out).length <= max) return out;
+  const parts = all.map((entry) => {
+    const at = entry.indexOf(": ");
+    return at < 0 ? { id: "", summary: entry } : { id: entry.slice(0, at + 2), summary: entry.slice(at + 2) };
+  });
+  const longest = Math.max(...parts.map((p) => p.summary.length));
+  const fits = (n: number, length: number) => {
+    const kept = parts.slice(0, n).map((p) => p.id + clipText(p.summary, Math.max(1, length)));
+    out.needs_a_person = n < parts.length ? [...kept, moreNeedAPerson(parts.length - n)] : kept;
+    return JSON.stringify(out).length <= max;
+  };
+  for (let n = parts.length; n >= 0; n -= 1) {
+    if (!fits(n, PERSON_SUMMARY_MIN)) continue;
+    // The longest summary length that still fits, for every ticket kept.
+    let [low, high] = [PERSON_SUMMARY_MIN, Math.max(PERSON_SUMMARY_MIN, longest)];
+    while (low < high) {
+      const mid = Math.ceil((low + high) / 2);
+      if (fits(n, mid)) low = mid;
+      else high = mid - 1;
+    }
+    fits(n, low);
+    break;
+  }
+  // A summary still over the cap has other lists that are too long; they go before any ticket that needs a person.
+  return fit(out, SHIFT_SUMMARY, [], max, { key: "needs_a_person", min: out.needs_a_person?.length ?? 0 });
 }

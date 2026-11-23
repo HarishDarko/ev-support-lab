@@ -104,6 +104,31 @@ class DeliveryEdgeCasesTest extends AbstractLabIT {
     }
 
     @Test
+    void failuresAtTheInstantOfAResumeButFromBeforeItDoNotCount() {
+        store.addWorkspace("ws-tie", "Tie", null);
+        store.addEndpoint(new Endpoint("ep-tie", "ws-tie", "http://127.0.0.1:9/unused", "hmac", null, null));
+        int[] seq = {0};
+        Runnable fail = () -> {
+            String id = "evt-tie-" + (++seq[0]);
+            store.addEvent(id, "ep-tie", clock.instant());
+            health.failed("ep-tie", id, "HTTP 503");
+        };
+        for (int i = 0; i < 15; i++) {
+            fail.run();
+        }
+        assertThat(health.paused("ep-tie")).isTrue();
+
+        // The replay resumes the endpoint on the same clock tick as the failures that paused it.
+        store.resume("ep-tie", clock.instant());
+        for (int i = 0; i < 14; i++) {
+            fail.run();
+        }
+        assertThat(health.paused("ep-tie")).as("14 failures since the resume, at the same instant").isFalse();
+        fail.run();
+        assertThat(health.paused("ep-tie")).as("15 failures since the resume").isTrue();
+    }
+
+    @Test
     void aWorkspaceWithTheFlagOffKeepsTheOldPath() {
         Outcome o = play("burst-at-expiry", false);
         assertThat(o.pauses()).isEqualTo(1);
