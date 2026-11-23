@@ -15,6 +15,9 @@ import {
   QUOTE_MAX,
   SHIFT_SUMMARY,
   SHIFT_SUMMARY_MAX,
+  PERSON_SUMMARY_MIN,
+  fitShiftSummary,
+  moreNeedAPerson,
   TRIAGE_SUMMARY_MAX,
   fencedJson,
   fit,
@@ -43,7 +46,7 @@ import evRun from "../src/data/recorded-run.json";
 import saasRun from "../src/data/recorded-run.saas-support.json";
 import shopRun from "../src/data/recorded-run.e-commerce.json";
 import { recordedRun } from "../src/run/recorded";
-import { indexTriage, shiftSummary } from "../src/run/selectors";
+import { indexTriage, lanesOf, shiftSummary } from "../src/run/selectors";
 import { EV_INCIDENT } from "../src/incident/ev-charging";
 import { SAAS_INCIDENT } from "../src/incident/saas-support";
 import { SHOP_INCIDENT } from "../src/incident/e-commerce";
@@ -556,18 +559,34 @@ describe("fit keeps the evidence it verified, and every step's output fits the n
   };
 
   for (const id of PACK_IDS) {
-    it(`${id}: the other fields are trimmed first, and every verified quote stays whole`, () => {
+    it(`${id}: evidence points go before other texts are cut, and every verified quote kept stays whole`, () => {
       const steps = stepsFor(id as "ev-charging");
       // Two copies of each verified quote: up to eight points, each with a 400-character point.
       const evidence = [...verifiedEvidence(id), ...verifiedEvidence(id)].slice(0, 8);
-      expect(evidence.length).toBeGreaterThanOrEqual(4);
+      const n = evidence.length;
+      expect(n).toBeGreaterThanOrEqual(4);
       const { data, checks } = steps.investigate.validate(investigation(evidence), {}, "");
       expect(JSON.stringify(data).length).toBeLessThanOrEqual(FENCE_MAX);
-      expect(data.evidence).toHaveLength(evidence.length);
-      expect(data.evidence.map((e) => e.quote)).toEqual(evidence.map((e) => e.quote));
+      // Every other list is down to one item, so the evidence goes down to its minimum before any text is cut.
+      expect(data.evidence).toHaveLength(EVIDENCE_MIN);
+      expect(data.evidence.map((e) => e.quote)).toEqual(evidence.slice(0, EVIDENCE_MIN).map((e) => e.quote));
       expect(data.evidence.every((e) => e.quote_verified)).toBe(true);
-      expect(checks[0]).toMatchObject({ passed: true, detail: `${evidence.length} of ${evidence.length}` });
+      expect(data.symptom.length).toBeGreaterThan(100);
+      expect(data.hypotheses[0]!.statement.length).toBeGreaterThan(100);
+      expect(checks[0]).toMatchObject({
+        passed: true,
+        detail: `${n} of ${n}; ${n - EVIDENCE_MIN} left out to fit the next step`,
+      });
       expect(() => steps.handoff.build({ investigation: data })).not.toThrow();
+    });
+
+    it(`${id}: an investigation that already fits keeps every evidence point`, () => {
+      const steps = stepsFor(id as "ev-charging");
+      const evidence = [...verifiedEvidence(id), ...verifiedEvidence(id)].slice(0, 8);
+      const answer = { ...investigation(evidence), symptom: "Short.", impact: ["One."], hypotheses: [], ruled_out: [] };
+      const { data, checks } = steps.investigate.validate({ ...answer, open_questions: [] }, {}, "");
+      expect(data.evidence.map((e) => e.quote)).toEqual(evidence.map((e) => e.quote));
+      expect(checks[0]!.detail).toBe(`${evidence.length} of ${evidence.length}`);
     });
 
     it(`${id}: a quote too long to pass on whole is not kept, and fewer than two is the rules version`, () => {
@@ -609,12 +628,30 @@ describe("fit keeps the evidence it verified, and every step's output fits the n
       const batch = { data: { results }, trace: { source: "ai", checks: [] }, ms: 1 } as unknown as Parameters<
         typeof indexTriage
       >[0][number];
-      const summary = shiftSummary(indexTriage([batch], desk), "Title", undefined, incident, desk);
+      const index = indexTriage([batch], desk);
+      const summary = shiftSummary(index, "Title", undefined, incident, desk);
       expect(JSON.stringify(summary).length).toBeLessThanOrEqual(SHIFT_SUMMARY_MAX);
-      expect(summary.needs_a_person.length).toBeGreaterThan(0);
+      // Every ticket that needs a person is still listed, by id: the summaries were shortened instead.
+      const person = lanesOf(index, desk).person;
+      expect(person.length).toBeGreaterThan(0);
+      expect(summary.needs_a_person.map((e) => e.split(": ")[0])).toEqual(person);
+      for (const e of summary.needs_a_person) expect(e.length).toBeGreaterThan(PERSON_SUMMARY_MIN);
       expect(() => stepsFor(id as "ev-charging").shiftnote.build({ summary })).not.toThrow();
     });
   }
+
+  it("a shift summary that cannot list every ticket says how many it left out", () => {
+    const needs = Array.from({ length: 60 }, (_, i) => `T-${1000 + i}: ${escaped(TRIAGE_SUMMARY_MAX)}`);
+    const summary = fitShiftSummary({ open_at_start: 60, needs_a_person: needs }, 3000);
+    expect(JSON.stringify(summary).length).toBeLessThanOrEqual(3000);
+    const listed = summary.needs_a_person.slice(0, -1);
+    const more = summary.needs_a_person.at(-1)!;
+    expect(more).toBe(moreNeedAPerson(60 - listed.length));
+    expect(listed.map((e) => e.split(": ")[0])).toEqual(needs.slice(0, listed.length).map((e) => e.split(": ")[0]));
+    // A summary that fits is unchanged.
+    const small = { open_at_start: 2, needs_a_person: ["T-1: Short.", "T-2: Short."] };
+    expect(fitShiftSummary(small)).toEqual(small);
+  });
 
   it("fit trims the held list last, and never below its minimum", () => {
     const field = record({ a: list(text(100), 50), held: list(text(100), 50) });
@@ -625,10 +662,10 @@ describe("fit keeps the evidence it verified, and every step's output fits the n
     const roomy = fit(value, field, [], 1500, { key: "held", min: EVIDENCE_MIN });
     expect(roomy.held).toEqual(value.held);
     expect(JSON.stringify(roomy).length).toBeLessThanOrEqual(1500);
-    // Room for three held items once the other list is down to one cut text; then for none of them whole.
-    const three = fit(value, field, [], 300, { key: "held", min: EVIDENCE_MIN });
-    expect(three.a).toEqual(["…"]);
-    expect(three.held).toEqual(value.held.slice(0, 3));
+    // The held list goes down to its minimum before any text is cut.
+    const two = fit(value, field, [], 300, { key: "held", min: EVIDENCE_MIN });
+    expect(two.a).toEqual([value.a[0]]);
+    expect(two.held).toEqual(value.held.slice(0, EVIDENCE_MIN));
     const tight = fit(value, field, [], 150, { key: "held", min: EVIDENCE_MIN });
     expect(tight.held.length).toBe(EVIDENCE_MIN);
     expect(JSON.stringify(tight).length).toBeLessThanOrEqual(150);

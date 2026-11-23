@@ -1,6 +1,6 @@
 // Reads over a Run: one result per ticket with its lane and provenance, lane counts, and the shift summary the
 // end-of-shift note is written from. Pure functions; the React hook only memoises them.
-import { SHIFT_SUMMARY, SHIFT_SUMMARY_MAX, fit } from "../../functions/_lib/prompt-inputs";
+import { fitShiftSummary } from "../../functions/_lib/prompt-inputs";
 import { EV_INCIDENT } from "../incident/ev-charging";
 import type { Incident } from "../incident/types";
 import {
@@ -97,7 +97,7 @@ export function originCounts(index: TicketIndex): { ai: number; rules: number } 
  * The summary the end-of-shift note is written from (same fields as the prototype).
  * `approved` is the number of closures a person approved. The recording assumes the shift approved every
  * closure in the close lane, which is the number the story ends on. It is fitted to the shift note's size cap, so a
- * long queue of tickets for a person is never a 400 there.
+ * long queue of tickets for a person is never a 400 there, and none of them is left out without saying so.
  */
 export function shiftSummary(
   index: TicketIndex,
@@ -124,5 +124,5 @@ export function shiftSummary(
     escalated: { ref: incident.change.ref, title: handoffTitle, workaround: incident.containment.lines },
     kb_article_published: false,
   };
-  return fit(summary, SHIFT_SUMMARY, [], SHIFT_SUMMARY_MAX);
+  return fitShiftSummary(summary);
 }

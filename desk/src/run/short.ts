@@ -5,7 +5,7 @@
 //
 // Every request names its pack. The EV chain (live.ts) is separate.
 // Kept for SD-14: no pack except EV may make paid calls yet (functions/api/[step].ts), so today only tests run this.
-import { SHIFT_SUMMARY, SHIFT_SUMMARY_MAX, fit } from "../../functions/_lib/prompt-inputs";
+import { fitShiftSummary } from "../../functions/_lib/prompt-inputs";
 import { topPattern } from "../../functions/_lib/top-pattern";
 import { BATCH_SIZE, type PostStep } from "./live";
 import type { PatternsData, StepKey, StepResult, TriageData } from "./types";
@@ -70,17 +70,13 @@ export async function runShortChain({ pack, post, onUpdate, signal }: ShortChain
   const triage = await Promise.all(batches.map((ids) => call("triage", { ids })));
   report.results.triage = triage.filter((t): t is StepResult<TriageData> => t !== null);
   const rows = report.results.triage.flatMap((t) => t.data.results);
-  // Fitted to the shift note's size cap, so a long queue of tickets for a person is never a 400 there.
-  const summary = fit(
-    {
-      open_at_start: pack.ticketIds.length,
-      approved_for_closure: rows.filter((r) => r.action === "close_with_runbook").length,
-      needs_a_person: rows.filter((r) => r.action === "needs_human").map((r) => `${r.id}: ${r.summary}`),
-    },
-    SHIFT_SUMMARY,
-    [],
-    SHIFT_SUMMARY_MAX,
-  );
+  // Fitted to the shift note's size cap, so a long queue of tickets for a person is never a 400 there, and none of
+  // them is left out without saying so.
+  const summary = fitShiftSummary({
+    open_at_start: pack.ticketIds.length,
+    approved_for_closure: rows.filter((r) => r.action === "close_with_runbook").length,
+    needs_a_person: rows.filter((r) => r.action === "needs_human").map((r) => `${r.id}: ${r.summary}`),
+  });
 
   async function articleAndCheck(): Promise<void> {
     const patterns = await call("patterns", {
