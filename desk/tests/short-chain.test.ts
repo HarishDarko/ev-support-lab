@@ -4,6 +4,7 @@
 import { describe, it, expect } from "vitest";
 import { shortChainSteps, topPattern } from "../functions/_lib/short-chain";
 import { StepError } from "../functions/_lib/errors";
+import { SHIFT_SUMMARY, SHIFT_SUMMARY_MAX, pick } from "../functions/_lib/prompt-inputs";
 import type { Pack } from "../shared/packs/types";
 import { runShortChain, shortChainCalls } from "../src/run/short";
 import type { StepKey, StepResult } from "../src/run/types";
@@ -239,6 +240,26 @@ describe("runShortChain (the client side, with a fake server)", () => {
       needs_a_person: ["T-4004: T-4004"],
     });
     expect(report).toMatchObject({ answered: 5, total: shortChainCalls(4), failures: [] });
+  });
+
+  it("fits the shift summary to the shift note's cap when many tickets need a person", async () => {
+    const ids = Array.from({ length: 60 }, (_, i) => `T-${5000 + i}`);
+    let summary: unknown;
+    await runShortChain({
+      pack: { id: STUB.id, ticketIds: ids },
+      post: (step, body) => {
+        if (step === "shiftnote") summary = (body as { summary: unknown }).summary;
+        if (step !== "triage") return Promise.resolve(answer(step, body as { ids?: string[] }));
+        const results = (body as { ids: string[] }).ids.map((id) => ({
+          id,
+          action: "needs_human",
+          summary: `"${"x".repeat(198)}"`,
+        }));
+        return Promise.resolve({ ...answer(step, {}), data: { results } });
+      },
+    });
+    expect(JSON.stringify(summary).length).toBeLessThanOrEqual(SHIFT_SUMMARY_MAX);
+    expect(() => pick(summary, SHIFT_SUMMARY, "summary")).not.toThrow();
   });
 
   it("skips the article and the check when no pattern was found, and says why", async () => {

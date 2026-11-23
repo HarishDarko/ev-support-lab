@@ -112,15 +112,15 @@ public class DeliveryStore {
     }
 
     /**
-     * Failed attempts that count toward the pause, after {@code since} and not before the endpoint's latest resume:
-     * a replay starts the count again, so failures from before it never add to the next pause.
+     * Failed attempts that count toward the pause, after {@code since} and recorded after the endpoint's latest
+     * resume: a replay starts the count again, so failures from before it never add to the next pause. "After the
+     * resume" is by attempt id, not time, so a failure that shares the resume's instant is still placed correctly.
      */
     public int failuresSince(String endpointId, Instant since) {
         return jdbc.sql("""
                 select count(*) from delivery_attempt
                 where endpoint_id = ? and outcome = 'failed' and counts_toward_pause and at > ?
-                and at >= coalesce((select max(resumed_at) from endpoint_pause where endpoint_id = ?),
-                                   '-infinity'::timestamptz)""")
+                and id > coalesce((select max(resumed_after_attempt) from endpoint_pause where endpoint_id = ?), 0)""")
                 .params(endpointId, ts(since), endpointId).query(Integer.class).single();
     }
 
@@ -141,8 +141,12 @@ public class DeliveryStore {
                 .params(endpointId, ts(at), reason).update();
     }
 
+    /** Resumes the endpoint, noting the last attempt recorded so far: the pause rule counts only those after it. */
     public void resume(String endpointId, Instant at) {
-        jdbc.sql("update endpoint_pause set resumed_at = ? where endpoint_id = ? and resumed_at is null")
-                .params(ts(at), endpointId).update();
+        jdbc.sql("""
+                update endpoint_pause set resumed_at = ?,
+                    resumed_after_attempt = (select coalesce(max(id), 0) from delivery_attempt where endpoint_id = ?)
+                where endpoint_id = ? and resumed_at is null""")
+                .params(ts(at), endpointId, endpointId).update();
     }
 }

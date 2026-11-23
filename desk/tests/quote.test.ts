@@ -20,6 +20,14 @@ describe("quote highlighting", () => {
     expect(quoteSpans(dash, "00:10-00:14 ET")).toHaveLength(1);
   });
 
+  it("drops curly quote marks around a quote, as the server does", () => {
+    const quote = "“still showed 'Charging' hours”";
+    expect(quoted(quote, text)).toBe(true);
+    const [span] = quoteSpans(text, quote);
+    expect(text.slice(span!.start, span!.end)).toBe("still showed 'Charging' hours");
+    expect(quoteSpans(text, "‘the app still … unplugged at S-014’")).toHaveLength(2);
+  });
+
   it("highlights each piece of a quote shortened with an ellipsis, in order", () => {
     const parts = splitByQuote(text, "the app still ... unplugged at S-014");
     expect(parts.filter((p) => p.quoted).map((p) => p.text)).toEqual(["the app still", "unplugged at S-014"]);
