@@ -431,3 +431,96 @@ describe("F2-02: a step's validated answer always fits the next step's input", (
     expect(value.a).toHaveLength(41);
   });
 });
+
+describe("fit counts the cap as JSON, and the short chain's related ids (review follow-ups)", () => {
+  // The review's probe: every text at its character cap, made of quotes and backslashes, which JSON writes as two
+  // characters each. Before, with every list cut to one item, the investigation was still about 6700 characters of
+  // JSON, a 400 on the handoff step.
+  const QUOTE_AND_BACKSLASH = '"' + String.fromCharCode(92);
+  const escaped = (n: number) => QUOTE_AND_BACKSLASH.repeat(Math.ceil(n / 2)).slice(0, n);
+  const investigation = (evidence: { source: string; quote: string }[]) => ({
+    symptom: escaped(800),
+    impact: Array.from({ length: 6 }, () => escaped(300)),
+    evidence: evidence.map((e) => ({ point: escaped(400), source: e.source, quote: e.quote })),
+    hypotheses: Array.from({ length: 4 }, () => ({
+      statement: escaped(500),
+      status: "leading hypothesis",
+      supports: Array.from({ length: 4 }, () => escaped(300)),
+      against_or_gaps: Array.from({ length: 4 }, () => escaped(300)),
+    })),
+    ruled_out: Array.from({ length: 8 }, () => escaped(300)),
+    open_questions: Array.from({ length: 6 }, () => escaped(300)),
+  });
+
+  for (const id of PACK_IDS) {
+    it(`${id}: an investigation of quotes and backslashes still fits the handoff step`, () => {
+      const steps = stepsFor(id as "ev-charging");
+      const answer = investigation(fallbacks[id].ruleInvestigate().evidence);
+      const inv = steps.investigate.validate(answer, {}, "").data;
+      expect(JSON.stringify(inv).length).toBeLessThanOrEqual(FENCE_MAX);
+      expect(inv.hypotheses[0]!.status).toBe("leading hypothesis");
+      expect(() => steps.handoff.build({ investigation: inv })).not.toThrow();
+    });
+  }
+
+  const handoff = (rule: string) => ({
+    title: escaped(200),
+    severity: "S2",
+    scope: escaped(400),
+    rules_triggered: [rule],
+    reproduction: Array.from({ length: 8 }, () => escaped(500)),
+    evidence_attached: Array.from({ length: 10 }, () => escaped(300)),
+    ruled_out: Array.from({ length: 8 }, () => escaped(300)),
+    workaround_in_place: escaped(500),
+    the_ask: escaped(600),
+    hypothesis_note: escaped(600),
+  });
+
+  for (const id of PACK_IDS) {
+    it(`${id}: a handoff of quotes and backslashes still fits the kb step`, () => {
+      const steps = stepsFor(id as "ev-charging");
+      const rules = fallbacks[id];
+      const h = steps.handoff.validate(handoff(rulesKeys[id][0]!), { investigation: {} }, "").data;
+      expect(JSON.stringify(h).length).toBeLessThanOrEqual(FENCE_MAX);
+      expect(h.evidence_attached[0]).toBe(rules.LAB_TEST_ATTACHMENT);
+      expect(h.hypothesis_note).toBe(rules.HANDOFF_NOTE);
+      expect(() => steps.kb.build({ investigation: {}, handoff: h })).not.toThrow();
+    });
+  }
+
+  it("fit cuts texts once no list can lose an item, keeping the fixed ones and the allowed values", () => {
+    const field = record({ a: text(3000), b: list(text(3000), 4), c: text(10, ["S1"]) });
+    const out = fit({ a: escaped(3000), b: [escaped(3000), "FIXED"], c: "S1" }, field, ["FIXED"], 4000);
+    expect(JSON.stringify(out).length).toBeLessThanOrEqual(4000);
+    expect(out.b).toContain("FIXED");
+    expect(out.c).toBe("S1");
+    expect(() => pick(out, field, "value")).not.toThrow();
+  });
+
+  for (const id of Object.keys(PACKS) as PackId[]) {
+    it(`${id}: the short chain's related ids are each kept once, and a runbook id survives the cap`, () => {
+      const pack = PACKS[id] as unknown as Pack;
+      const steps = shortChainSteps(pack);
+      const pattern = { name: "Recurring tickets", ticket_ids: pack.tickets.slice(0, 3).map((t) => t.id) };
+      const runbook = pack.runbooks.at(-1)!.id;
+      const ticketIds = pack.tickets.map((t) => t.id);
+      const historyIds = pack.history.map((h) => h.id);
+      // Repeats of one id, then every known ticket and history id, then a runbook far past index 60.
+      const related = [...Array.from({ length: 70 }, () => ticketIds[0]!), ...ticketIds, ...historyIds, runbook];
+      const answer = {
+        title: "Recurring tickets",
+        applies_when: ["It happens."],
+        how_to_confirm: ["Check it."],
+        steps: ["Do it."],
+        escalate_if: ["It is something else."],
+        status_note: "Seen before.",
+        related,
+      };
+      const k = steps.kb.validate(answer, { pattern }, "").data;
+      expect(new Set(k.related).size).toBe(k.related.length);
+      expect(k.related.length).toBeLessThanOrEqual(60);
+      expect(k.related).toContain(runbook);
+      expect(() => steps.classify.build({ text: pack.tickets[0]!.text, article: k })).not.toThrow();
+    });
+  }
+});

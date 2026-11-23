@@ -9,21 +9,21 @@ export interface Span {
 
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-// The server reads an arrow and its plain form as the same (functions/_lib/checks.ts, normalize), so this does too.
-// Arrows are matched in the same pass as dashes, so the dash in "->" is never read on its own.
-const ARROWS_AND_DASHES: Record<string, string> = {
-  "->": "(?:->|→)",
-  "→": "(?:->|→)",
-  "<-": "(?:<-|←)",
-  "←": "(?:<-|←)",
-};
+// The server reads an arrow and its plain form as the same (functions/_lib/checks.ts, normalize), and any dash as
+// "-", so "->", an en or em dash followed by ">", and "→" are one arrow there. This does the same. Arrows are matched
+// in the same pass as dashes, so the dash in "->" is never read on its own.
+const DASH = "[-–—]";
+const ARROW_RIGHT = `(?:${DASH}>|→)`;
+const ARROW_LEFT = `(?:<${DASH}|←)`;
+const arrowOrDash = (m: string) =>
+  m === "→" || m.endsWith(">") ? ARROW_RIGHT : m === "←" || m.startsWith("<") ? ARROW_LEFT : DASH;
 
 function patternFor(piece: string): RegExp {
   const source = escapeRegExp(piece)
     .replace(/\s+/g, "\\s+")
     .replace(/['‘’]/g, "['‘’]")
     .replace(/["“”]/g, '["“”]')
-    .replace(/->|→|<-|←|[-–—]/g, (m) => ARROWS_AND_DASHES[m] ?? "[-–—]");
+    .replace(/[-–—]>|→|<[-–—]|←|[-–—]/g, arrowOrDash);
   return new RegExp(source, "i");
 }
 

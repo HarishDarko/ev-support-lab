@@ -83,14 +83,60 @@ export const FENCE_MAX = 6000;
  * each list keeps its first items and each text its first characters, up to its field's caps. Values of another
  * type, texts with a fixed set of values, and keys the field does not name are left as they are: the step's schema
  * already fixed those. Then, while the whole value is still over the size cap, the longest list loses its last item.
- * Every list keeps at least one item, and the `keep` values (the fixed texts a step adds) are never removed.
+ * Every list keeps at least one item, and the `keep` values (the fixed texts a step adds) are never removed. The cap
+ * counts the value as JSON, where a quote or a backslash takes two characters, so a value can be within every
+ * character cap and still too long with every list down to one item: then the longest text, as JSON, is cut until
+ * the whole value fits.
  */
 export function fit<T>(value: T, field: Field, keep: readonly unknown[] = [], max = FENCE_MAX): T {
   const out = fitField(structuredClone(value), field);
-  while (JSON.stringify(out).length > max && dropOne(out, keep)) {
+  const over = () => JSON.stringify(out).length - max;
+  while (over() > 0 && dropOne(out, keep)) {
     /* one item at a time, from the longest list */
   }
+  while (over() > 0 && cutOne(out, field, keep, over())) {
+    /* the longest text, by what is still over */
+  }
   return out;
+}
+
+interface TextAt {
+  holder: Record<string, unknown> | unknown[];
+  key: string | number;
+}
+
+/** Every text in a value that its field lets `fit` cut (not one with a fixed set of values). */
+function textsIn(value: unknown, field: Field, found: TextAt[] = []): TextAt[] {
+  if (field.kind === "list" && Array.isArray(value)) {
+    const of = field.of;
+    if (of.kind === "text") {
+      if (!of.values) value.forEach((v, i) => typeof v === "string" && found.push({ holder: value, key: i }));
+    } else for (const v of value) textsIn(v, of, found);
+  } else if (field.kind === "object" && value && typeof value === "object" && !Array.isArray(value)) {
+    const holder = value as Record<string, unknown>;
+    for (const [key, f] of Object.entries(field.fields)) {
+      if (!Object.hasOwn(holder, key)) continue;
+      if (f.kind !== "text") textsIn(holder[key], f, found);
+      else if (!f.values && typeof holder[key] === "string") found.push({ holder, key });
+    }
+  }
+  return found;
+}
+
+/** Cuts the longest text, as JSON, by at least `excess` characters of JSON. False when no text can be cut. */
+function cutOne(value: unknown, field: Field, keep: readonly unknown[], excess: number): boolean {
+  const read = ({ holder, key }: TextAt) => (holder as Record<string | number, string>)[key]!;
+  const size = (t: TextAt) => JSON.stringify(read(t)).length;
+  const texts = textsIn(value, field).filter((t) => read(t).length > 1 && !keep.includes(read(t)));
+  const longest = texts.sort((a, b) => size(b) - size(a))[0];
+  if (!longest) return false;
+  const text = read(longest);
+  // Each character removed takes at least one character off the JSON; the ellipsis adds one back.
+  (longest.holder as Record<string | number, string>)[longest.key] = clipText(
+    text,
+    Math.max(1, text.length - excess - 1),
+  );
+  return true;
 }
 
 function fitField<T>(value: T, field: Field): T {
