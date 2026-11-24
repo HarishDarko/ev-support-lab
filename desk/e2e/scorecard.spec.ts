@@ -1,5 +1,5 @@
 // The Scorecard says how uncertain 40 tickets are, and which answers in "this run" came from the rules.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { openFromChooser } from "./chooser";
 
 test("the scorecard states the overlapping 95% ranges and the three rules fallbacks", async ({ page }) => {

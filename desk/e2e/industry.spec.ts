@@ -1,6 +1,7 @@
 // SD-11, SD-13 and SD-15: the Industry choice. Three complete industries, each with its full incident walkthrough:
 // EV charging, SaaS support and e-commerce.
-import { test, expect, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { openFromChooser } from "./chooser";
 
 function watchErrors(page: Page): string[] {

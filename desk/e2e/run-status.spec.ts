@@ -1,6 +1,7 @@
 // While "Run it live" runs, both run controls say which step is running and about how long is left.
 // MOCK=1 answers every call from the rules at once, so the investigation call is held back here to see it running.
-import { test, expect, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { openFromChooser } from "./chooser";
 
 /** Holds every /api/investigate answer until `release` is called. */
