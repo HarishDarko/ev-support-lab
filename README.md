@@ -9,7 +9,11 @@ A prototype of Eastern-time production support in three industries: EV charging,
 
 Each lab's CI runs its regression test with the fix turned off and fails if that test passes.
 
-**Live walkthrough:** https://supportdesk.harishdarko.com. It opens on a choice of the three industries. Press → to step through, and D to open the console.
+**Live walkthrough:** https://supportdesk.harishdarko.com. It opens on a choice of the three industries. Press → to step through, and D to open the desk. The public site uses cookieless analytics (PostHog, Cloudflare Web Analytics).
+
+![The live walkthrough's first screen, a choice of three industries: EV charging, SaaS support and e-commerce.](docs/images/01-industry-chooser.png)
+
+*The walkthrough opens on a choice of industry. Each one has its own queue, incident and lab.*
 
 Everything is synthetic. No real company, network, customer or person is described.
 
@@ -35,17 +39,37 @@ Everything is synthetic. No real company, network, customer or person is describ
    - the repeat rule;
    - the meter check before a record-only closure.
 
+![Verification stage for EV charging: on the canary sites stuck sessions went from 5 to 0, on the control sites from 4 to 4.](docs/images/02-ev-charging-canary-vs-control.png)
+
+*The walkthrough's verification stage compares canary sites, with the fix on, against control sites, with it off. It is scripted, synthetic data.*
+
+<img src="docs/images/03-phone-ev-charging-queue.png" alt="The walkthrough's queue stage on a phone, with 40 tickets grouped by who raised them." width="260">
+
+*The walkthrough's first stage, the overnight queue, on a phone.*
+
+![The desk's Queue tab with ticket T-2041 open: the AI's quote was not found in the ticket, so the rules decided, and the repeat rule holds the closure for a person.](docs/images/04-desk-queue-ticket-inspected.png)
+
+*The desk queue with ticket T-2041 open: the AI's quote was not found in the ticket, so the rules decided, and the repeat rule holds the closure for a person.*
+
 ## Start here: SaaS support
 
 1. **The bug, reproduced.** [`TokenStormReproductionTest`](lab-saas/src/test/java/dev/saaslab/delivery/TokenStormReproductionTest.java) passes while the bug exists: a burst of deliveries meets an expired token, each asks for its own, the identity provider answers 429, and the endpoint is paused while it is up. [`TokenStormRegressionTest`](lab-saas/src/test/java/dev/saaslab/delivery/TokenStormRegressionTest.java) passes with the fix on and fails with it off, and CI checks that it fails.
 2. **The edge cases.** [`DeliveryEdgeCasesTest`](lab-saas/src/test/java/dev/saaslab/delivery/DeliveryEdgeCasesTest.java) (a quiet expiry, a rate-limited identity provider, a revoked client, a real outage, an HMAC endpoint, a rotated secret) and [`SingleFlightRefreshIT`](lab-saas/src/test/java/dev/saaslab/delivery/SingleFlightRefreshIT.java) (the shared refresh with real threads).
 3. **The limits:** [`lab-saas/README.md`](lab-saas/README.md) and the site's *Engineering notes* page with SaaS support picked.
 
+![Verification stage for SaaS support: on the canary workspaces token storms went from 9 to 0, on the control workspaces from 8 to 9.](docs/images/05-saas-support-canary-vs-control.png)
+
+*SaaS support, same stage: token storms before and after, canary against control.*
+
 ## Start here: E-commerce
 
 1. **The bug, reproduced.** [`SecondAuthorizationReproductionTest`](lab-ecommerce/src/test/java/dev/shoplab/checkout/SecondAuthorizationReproductionTest.java) passes while the bug exists: a retry after a slow answer gets a new idempotency key, the processor makes a second authorization, and the order is held in Payment pending (or captured twice when the app's retry races). [`SecondAuthorizationRegressionTest`](lab-ecommerce/src/test/java/dev/shoplab/checkout/SecondAuthorizationRegressionTest.java) passes with the fix on and fails with it off, and CI checks that it fails.
 2. **The edge cases.** [`CheckoutEdgeCasesTest`](lab-ecommerce/src/test/java/dev/shoplab/checkout/CheckoutEdgeCasesTest.java) (a fast answer, a shopper who waits, a new card after a decline, a very slow answer, a webhook that never comes, RB-21's release) and [`CaptureSerializationIT`](lab-ecommerce/src/test/java/dev/shoplab/orders/CaptureSerializationIT.java) (the double capture with real threads, and the per-order lock).
 3. **The limits:** [`lab-ecommerce/README.md`](lab-ecommerce/README.md) and the site's *Engineering notes* page with E-commerce picked.
+
+![Evidence stage for e-commerce: a dot plot of the seconds each stuck order's first payment answer took, all after the 8 second timeout.](docs/images/06-ecommerce-slow-payment-answers.png)
+
+*E-commerce evidence: every stuck order's first payment answer came after checkout's 8 s timeout.*
 
 ## Run it
 
