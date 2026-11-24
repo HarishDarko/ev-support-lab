@@ -99,7 +99,7 @@ export function Classifier() {
               <p className="dk-note">{data.why}</p>
             </div>
             {data.confirm && <p className="classify-confirm">{data.confirm}</p>}
-            {fellBack && trace.fallbackReason && (
+            {fellBack && asSentence(trace.fallbackReason) && (
               <p className="dk-note">The live call was not used: {asSentence(trace.fallbackReason)}</p>
             )}
             <ProvenanceNote provenance={provenanceOfStep(checked.answer)} step="classify" />
