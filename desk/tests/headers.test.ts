@@ -1,8 +1,9 @@
 // The Pages _headers file: a Content-Security-Policy that allows the one inline script by its hash, frame
 // protection, nosniff, a referrer policy, and long caching for the hashed files only. Pages does not apply this file
 // to Functions, so the /api answers are checked for their own headers at the end. If the inline theme script in
-// index.html changes, its hash here must change with it, or the browser blocks the script. The one outside origin allowed is Cloudflare
-// Web Analytics: the edge injects its beacon script, which reports page views to its own endpoint.
+// index.html changes, its hash here must change with it, or the browser blocks the script. The outside origins allowed are
+// Cloudflare Web Analytics (its beacon script, which reports page views to its own endpoint) and PostHog's two
+// regions (ingestion and the assets host that serves its recording script), used only when a build has a key.
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -39,6 +40,13 @@ describe("_headers", () => {
 
   const BEACON_SCRIPT = "https://static.cloudflareinsights.com";
   const BEACON_REPORT = "https://cloudflareinsights.com";
+  const POSTHOG_SCRIPT = ["https://us-assets.i.posthog.com", "https://eu-assets.i.posthog.com"];
+  const POSTHOG_CONNECT = [
+    "https://us.i.posthog.com",
+    "https://us-assets.i.posthog.com",
+    "https://eu.i.posthog.com",
+    "https://eu-assets.i.posthog.com",
+  ];
 
   it("allows every inline script in index.html by its hash, no other inline script, and the analytics beacon", () => {
     const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(
@@ -46,12 +54,12 @@ describe("_headers", () => {
     );
     expect(inline).toHaveLength(1);
     const scriptSrc = directive("script-src")!.split(" ").slice(1);
-    expect(scriptSrc).toEqual(["'self'", ...inline, BEACON_SCRIPT]);
+    expect(scriptSrc).toEqual(["'self'", ...inline, BEACON_SCRIPT, ...POSTHOG_SCRIPT]);
     expect(csp).not.toContain("unsafe-eval");
   });
 
-  it("lets the analytics beacon report page views, and nothing else leave the site", () => {
-    expect(directive("connect-src")).toBe(`connect-src 'self' ${BEACON_REPORT}`);
+  it("lets the analytics beacon and PostHog report, and nothing else leave the site", () => {
+    expect(directive("connect-src")).toBe(`connect-src 'self' ${BEACON_REPORT} ${POSTHOG_CONNECT.join(" ")}`);
   });
 
   it("allows no wildcard, scheme-only or unsafe source anywhere", () => {

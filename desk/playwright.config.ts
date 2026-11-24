@@ -15,6 +15,8 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     trace: "retain-on-failure",
+    // Do Not Track on, so a build that has an analytics key still sends nothing from the tests.
+    launchOptions: { args: ["--enable-do-not-track"] },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {

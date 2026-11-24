@@ -28,6 +28,7 @@
     "@fontsource-variable/newsreader": "5.3.0",
     "@fontsource-variable/schibsted-grotesk": "5.3.0",
     "motion": "13.4.1",
+    "posthog-js": "1.447.6",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
