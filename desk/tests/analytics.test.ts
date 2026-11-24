@@ -1,7 +1,8 @@
 // Anonymous analytics: off without a key, cookieless and masked with one, and every event carries only the
 // properties it lists. Plus the Cloudflare Web Analytics tag, which the production build adds to index.html.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanProps, EVENTS, initAnalytics, resetAnalytics, track } from "../src/analytics";
+import { cleanProps, EVENTS, initAnalytics, NO_CAPTURE, resetAnalytics, track } from "../src/analytics";
+import { readFileSync } from "node:fs";
 import { beaconTag, CF_BEACON_TOKEN, cloudflareBeacon } from "../cf-beacon";
 
 const page = (search = "", dnt: string | null = null) => ({
@@ -102,6 +103,59 @@ describe("events carry only allowed properties", () => {
     for (const props of Object.values(EVENTS)) {
       for (const allowed of Object.values(props as Record<string, unknown>)) expect(Array.isArray(allowed)).toBe(true);
     }
+  });
+});
+
+describe("recording config and the internal flag", () => {
+  it("never records canvas, masks inputs, and respects Do Not Track", async () => {
+    const client = fakeClient();
+    await initAnalytics({ env: prod, page: page(), load: () => Promise.resolve(client) });
+    expect((client.init.mock.calls[0] as unknown[])[1]).toMatchObject({
+      session_recording: { maskAllInputs: true, recordCanvas: false },
+      respect_dnt: true,
+      persistence: "memory",
+    });
+  });
+
+  it("tags every event, including the first pageview, when the page was opened with ?internal=1", async () => {
+    const client = fakeClient();
+    const arrival = page("?internal=1");
+    // The address is read before PostHog loads, so a change while it loads does not matter.
+    await initAnalytics({
+      env: prod,
+      page: arrival,
+      load: () => {
+        arrival.location.search = "";
+        return Promise.resolve(client);
+      },
+    });
+    type Event = { properties?: Record<string, unknown> } | null;
+    const beforeSend = ((client.init.mock.calls[0] as unknown[])[1] as { before_send: (e: Event) => Event })
+      .before_send;
+    expect(beforeSend({ properties: { $current_url: "x" } })?.properties).toEqual({
+      $current_url: "x",
+      internal: true,
+    });
+    expect(beforeSend(null)).toBeNull();
+    expect(client.register).toHaveBeenCalledWith({ internal: true });
+  });
+
+  it("leaves events untagged without the flag", async () => {
+    const client = fakeClient();
+    await initAnalytics({ env: prod, page: page("?other=1"), load: () => Promise.resolve(client) });
+    type Event = { properties?: Record<string, unknown> };
+    const beforeSend = ((client.init.mock.calls[0] as unknown[])[1] as { before_send: (e: Event) => Event })
+      .before_send;
+    expect(beforeSend({ properties: { a: 1 } }).properties).toEqual({ a: 1 });
+  });
+});
+
+describe("visitor-typed text stays out of recordings", () => {
+  // The Classifier textarea is masked as an input, but its result can quote what was typed, so it carries the class.
+  it("marks the new-ticket result with ph-no-capture", () => {
+    expect(NO_CAPTURE).toBe("ph-no-capture");
+    const source = readFileSync(new URL("../src/desk/kb/Classifier.tsx", import.meta.url), "utf8");
+    expect(source).toMatch(/className=\{`classify-result \$\{NO_CAPTURE\}`\}/);
   });
 });
 

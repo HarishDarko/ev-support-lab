@@ -9,6 +9,9 @@
 // tokens and addresses have no slot, and anything else a caller passes is dropped before it leaves the page.
 // This file needs no DOM or Vite types, so the unit tests (plain Node) can load it; main.tsx passes in import.meta.env.
 
+/** Put this class on any element that renders text a visitor typed: PostHog leaves it out of session recordings. */
+export const NO_CAPTURE = "ph-no-capture";
+
 type Choice = readonly string[];
 
 const PACKS = ["ev-charging", "saas-support", "e-commerce"] as const;
@@ -88,10 +91,11 @@ export async function initAnalytics(options: InitOptions = {}): Promise<boolean>
   if (doNotTrack(page)) return false;
   const host = (env.VITE_POSTHOG_HOST?.trim() || POSTHOG_HOSTS[0]).replace(/\/+$/, "");
   if (!(POSTHOG_HOSTS as readonly string[]).includes(host)) return false;
+  // Read before the dynamic import, so the flag is the address the visitor arrived on.
+  const internal = new URLSearchParams(page.location.search).get("internal") === "1";
   starting = true;
   try {
     const posthog = await (options.load ?? loadPostHog)();
-    const internal = new URLSearchParams(page.location.search).get("internal") === "1";
     posthog.init(key, {
       api_host: host,
       persistence: "memory",
@@ -103,7 +107,14 @@ export async function initAnalytics(options: InitOptions = {}): Promise<boolean>
       mask_all_text: true,
       mask_all_element_attributes: true,
       disable_session_recording: false,
-      session_recording: { maskAllInputs: true },
+      // Inputs are masked, and visitor-typed text rendered back on the page carries the ph-no-capture class (see
+      // NO_CAPTURE), which keeps it out of recordings. Canvas is never recorded.
+      session_recording: { maskAllInputs: true, recordCanvas: false },
+      // The first pageview goes out before register() has run, so the flag is also added to every event here.
+      before_send: (event: { properties?: Record<string, unknown> } | null) => {
+        if (internal && event) event.properties = { ...event.properties, internal: true };
+        return event;
+      },
       disable_surveys: true,
     });
     if (internal) posthog.register({ internal: true });

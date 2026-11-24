@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import { NO_CAPTURE } from "../../analytics";
 import { blockClass, pillTone } from "../ui/origin";
 import { MAX_TICKET_CHARS, originOf, provenanceOfStep, useRun, type ClassifyModel, type StepResult } from "../../run";
 import { Pill } from "../ui/Pill";
@@ -73,7 +74,7 @@ export function Classifier() {
         {busy && <p className="dk-note">Checking the ticket against the article.</p>}
         {!busy && !current && <p className="dk-note">The text has changed. Check it again to see how it matches.</p>}
         {!busy && current && (
-          <div className="classify-result" data-testid="classify-result">
+          <div className={`classify-result ${NO_CAPTURE}`} data-testid="classify-result">
             <p className="dk-kicker">
               {manual
                 ? "Checked just now"
