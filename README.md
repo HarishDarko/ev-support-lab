@@ -43,13 +43,13 @@ Everything is synthetic. No real company, network, customer or person is describ
 
 *The walkthrough's verification stage compares canary sites, with the fix on, against control sites, with it off. It is scripted, synthetic data.*
 
-![The desk's Queue tab with ticket T-2041 open: the matched words are highlighted and the triage proposal is shown beside the ticket.](docs/images/03-desk-queue-ticket-inspected.png)
+<img src="docs/images/03-phone-ev-charging-queue.png" alt="The walkthrough's queue stage on a phone, with 40 tickets grouped by who raised them." width="260">
 
-*The desk's queue with a ticket inspected. The words the decision rests on are highlighted, and a closure the checks hold back says why.*
+*The walkthrough's first stage, the overnight queue, on a phone.*
 
-<img src="docs/images/06-phone-ev-charging-queue.png" alt="The walkthrough's queue stage on a phone, with 40 tickets grouped by who raised them." width="260">
+![The desk's Queue tab with ticket T-2041 open: the AI's quote was not found in the ticket, so the rules decided, and the repeat rule holds the closure for a person.](docs/images/04-desk-queue-ticket-inspected.png)
 
-*The same walkthrough on a phone.*
+*The desk queue with ticket T-2041 open: the AI's quote was not found in the ticket, so the rules decided, and the repeat rule holds the closure for a person.*
 
 ## Start here: SaaS support
 
@@ -57,7 +57,7 @@ Everything is synthetic. No real company, network, customer or person is describ
 2. **The edge cases.** [`DeliveryEdgeCasesTest`](lab-saas/src/test/java/dev/saaslab/delivery/DeliveryEdgeCasesTest.java) (a quiet expiry, a rate-limited identity provider, a revoked client, a real outage, an HMAC endpoint, a rotated secret) and [`SingleFlightRefreshIT`](lab-saas/src/test/java/dev/saaslab/delivery/SingleFlightRefreshIT.java) (the shared refresh with real threads).
 3. **The limits:** [`lab-saas/README.md`](lab-saas/README.md) and the site's *Engineering notes* page with SaaS support picked.
 
-![Verification stage for SaaS support: on the canary workspaces token storms went from 9 to 0, on the control workspaces from 8 to 9.](docs/images/04-saas-support-canary-vs-control.png)
+![Verification stage for SaaS support: on the canary workspaces token storms went from 9 to 0, on the control workspaces from 8 to 9.](docs/images/05-saas-support-canary-vs-control.png)
 
 *SaaS support, same stage: token storms before and after, canary against control.*
 
@@ -67,7 +67,7 @@ Everything is synthetic. No real company, network, customer or person is describ
 2. **The edge cases.** [`CheckoutEdgeCasesTest`](lab-ecommerce/src/test/java/dev/shoplab/checkout/CheckoutEdgeCasesTest.java) (a fast answer, a shopper who waits, a new card after a decline, a very slow answer, a webhook that never comes, RB-21's release) and [`CaptureSerializationIT`](lab-ecommerce/src/test/java/dev/shoplab/orders/CaptureSerializationIT.java) (the double capture with real threads, and the per-order lock).
 3. **The limits:** [`lab-ecommerce/README.md`](lab-ecommerce/README.md) and the site's *Engineering notes* page with E-commerce picked.
 
-![Evidence stage for e-commerce: a dot plot of the seconds each stuck order's first payment answer took, all after the 8 second timeout.](docs/images/05-ecommerce-slow-payment-answers.png)
+![Evidence stage for e-commerce: a dot plot of the seconds each stuck order's first payment answer took, all after the 8 second timeout.](docs/images/06-ecommerce-slow-payment-answers.png)
 
 *E-commerce evidence: every stuck order's first payment answer came after checkout's 8 s timeout.*
 
