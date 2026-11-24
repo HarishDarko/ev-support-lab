@@ -1,7 +1,8 @@
 // SD-15, e-commerce: the full walkthrough of the second-authorization incident (INC-0539), from the queue to the
 // knowledge base article, on its rules-only recording. Live runs stay off for this industry until its AI recording
 // is reviewed, and the page says so.
-import { test, expect, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 
 function watchErrors(page: Page): string[] {

@@ -4,8 +4,10 @@
 # Inline styles stay allowed because React and Motion set element styles. Fonts may be data: URIs in the CSS.
 # Cloudflare Web Analytics: the edge injects its beacon script (static.cloudflareinsights.com), which reports page
 # views to cloudflareinsights.com. Nothing else outside this site is allowed.
+# PostHog (anonymous, cookieless; loaded only when the build has a key, but this file is not built per key, so both
+# regions are named): its ingestion host (connect-src) and the assets host that serves its recording script.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-gu9VMiqPvF+UoY4j7WQqZ52hDCJFGkwgJgophGuKznE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-gu9VMiqPvF+UoY4j7WQqZ52hDCJFGkwgJgophGuKznE=' https://static.cloudflareinsights.com https://us-assets.i.posthog.com https://eu-assets.i.posthog.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://cloudflareinsights.com https://us.i.posthog.com https://us-assets.i.posthog.com https://eu.i.posthog.com https://eu-assets.i.posthog.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   X-Frame-Options: DENY
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   X-Content-Type-Options: nosniff

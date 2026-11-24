@@ -1,7 +1,8 @@
 // SD-15, SaaS support: the full walkthrough of the token-refresh storm incident (INC-0527), from the queue to the
 // knowledge base article, on its rules-only recording. Live runs stay off for this industry until its AI
 // recording is reviewed, and the page says so.
-import { test, expect, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { openFromChooser } from "./chooser";
 import AxeBuilder from "@axe-core/playwright";
 

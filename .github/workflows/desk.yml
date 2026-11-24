@@ -105,6 +105,12 @@ jobs:
         run: npm test
 
       - name: Build
+        env:
+          # Public PostHog project key and region host, only for the build that main deploys. Empty when the
+          # variables are unset (analytics stay off) and on pull requests. The browser tests report Do Not
+          # Track and stub the analytics hosts (e2e/fixtures.ts), so they never send events.
+          VITE_POSTHOG_KEY: ${{ github.event_name == 'push' && vars.POSTHOG_KEY || '' }}
+          VITE_POSTHOG_HOST: ${{ github.event_name == 'push' && vars.POSTHOG_HOST || '' }}
         run: npm run build
 
       - name: End-to-end tests (MOCK=1, no API key, no spend)

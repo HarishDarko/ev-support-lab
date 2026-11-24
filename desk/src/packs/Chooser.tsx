@@ -38,6 +38,7 @@ export function Chooser({ onPick, deskLink }: { onPick: (id: PackId) => void; de
             </li>
           ))}
         </ul>
+        <p className="page-note">Anonymous, cookieless analytics.</p>
       </article>
     </main>
   );

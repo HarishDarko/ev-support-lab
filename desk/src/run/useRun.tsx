@@ -2,6 +2,7 @@
 // The provider starts from the recorded run, so nothing waits on the network. `runLive()` re-runs the chain in
 // the background and merges answers as they land.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { track } from "../analytics";
 import { useIncident } from "../incident";
 import { classifyTicket } from "./classify";
 import { chainSeconds, runLabel } from "./cost";
@@ -105,6 +106,7 @@ export function RunProvider({ children, initial, post, pack = EV_DESK }: Provide
   const runLive = useCallback(async () => {
     // A pack with no reviewed recording has no live runs; the server refuses them too.
     if (busy.current || !pack.liveRuns) return;
+    track("run_live_requested", { pack: pack.id });
     busy.current = true;
     const abort = new AbortController();
     controller.current = abort;

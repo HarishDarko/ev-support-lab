@@ -19,6 +19,8 @@ import { IndustryProvider, useIndustry, useIndustryChoice } from "./packs/Indust
 import { Chooser } from "./packs/Chooser";
 import { usePackBundle } from "./packs/bundles";
 import { IncidentContext, useIncident } from "./incident";
+import { track } from "./analytics";
+import { STAGES } from "./stages";
 
 const NARROW = "(max-width: 999px)";
 const subscribe = (cb: () => void) => {
@@ -47,6 +49,9 @@ export function App() {
 /** The site opens on the choice of industries, unless the address names one (`?pack=`). */
 function Site() {
   const { id, pick, choose } = useIndustryChoice();
+  useEffect(() => {
+    if (id) track("industry_opened", { pack: id });
+  }, [id]);
   // Picking on the chooser, or going back to it, removes the focused button with its screen, so focus moves to the
   // new screen: the chooser at once, a walkthrough once it has loaded (unless a desk link opens the desk, whose
   // opener takes focus). Switching with the Industry menu leaves focus on the menu.
@@ -161,10 +166,20 @@ function Walkthrough({
     () => ({ checked: new Set(story.decisions.meterChecked), confirm: story.confirmMeter }),
     [story.decisions.meterChecked, story.confirmMeter],
   );
+  const approve = () => {
+    if (f.approvable.length > 0) track("fix_approved");
+    story.approve(f.approvable);
+  };
+  const send = () => {
+    track("reply_sent");
+    story.send();
+  };
   const actionPending = (beat.action === "approve" && !f.approved) || (beat.action === "send" && !f.sent);
 
   const [deskTicket, setDeskTicket] = useState<string | null>(null);
   const openDesk = useCallback((tab: DeskTab, ticket: string | null = null) => {
+    track("desk_opened", { tab });
+    if (ticket) track("ticket_inspected");
     setDeskTicket(ticket);
     setDeskTab(tab);
     setDeskOpen(true);
@@ -186,6 +201,11 @@ function Walkthrough({
 
   // On a phone the stage in view drives the top strip, and the strip scrolls to a stage.
   const [phoneStage, setPhoneStage] = useState(0);
+  const stageNow = narrow ? phoneStage : story.stageIndex;
+  useEffect(() => {
+    const stage = STAGES[stageNow]?.id;
+    if (stage) track("stage_viewed", { stage });
+  }, [stageNow]);
   const [jumpTo, setJumpTo] = useState<{ stageIndex: number; n: number } | null>(null);
   const onPhoneStage = useCallback((i: number) => setPhoneStage(i), []);
   const onStage = (i: number) => {
@@ -194,6 +214,7 @@ function Walkthrough({
     else story.goStage(i);
   };
   const onPage = (p: Page) => {
+    if (p !== "walkthrough") track("page_viewed", { page: p });
     setPage(p);
     window.scrollTo({ top: 0 });
   };
@@ -234,8 +255,8 @@ function Walkthrough({
           <PhoneStory
             data={data}
             f={f}
-            onApprove={() => story.approve(f.approvable)}
-            onSend={story.send}
+            onApprove={approve}
+            onSend={send}
             onDesk={(b) => openDesk(b.desk)}
             onOpenTicket={(id) => openDesk("queue", id)}
             runControl={<RunControl api={runApi} />}
@@ -248,8 +269,8 @@ function Walkthrough({
               beat={beat}
               f={f}
               stageIndex={story.stageIndex}
-              onApprove={() => story.approve(f.approvable)}
-              onSend={story.send}
+              onApprove={approve}
+              onSend={send}
               extra={
                 beat.id === "t1" ? (
                   <RunControl api={runApi} />

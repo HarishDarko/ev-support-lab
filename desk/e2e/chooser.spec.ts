@@ -1,7 +1,8 @@
 // SD-15, equal weight: the site opens on a choice of the three industries, a `?pack=` link goes straight to one,
 // an old link keeps its desk tab once an industry is picked, and each industry's engineering notes describe its
 // own lab. No page says the walkthrough is EV's.
-import { test, expect, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import AxeBuilder from "@axe-core/playwright";
 
 function watchErrors(page: Page): string[] {
