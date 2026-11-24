@@ -1,5 +1,6 @@
 import { CHECK_SCOPE, costText, formatSeconds, formatTokens, useRun, type Provenance, type StepKey } from "../../run";
 import { pillTone } from "./origin";
+import { asSentence } from "./sentence";
 import { Pill } from "./Pill";
 import "./ProvenanceNote.css";
 
@@ -26,10 +27,10 @@ export function ProvenanceNote({ provenance: p, step, title = "How this was prod
         <span className="prov-title">{title}</span>
       </summary>
       <div className="prov-body">
-        {p.fallbackReason && (
+        {asSentence(p.fallbackReason) && (
           <p className="prov-reason">
-            The live result was not used: {p.fallbackReason} These answers come from deterministic rules built from the
-            data.
+            The live result was not used: {asSentence(p.fallbackReason)} These answers come from deterministic rules
+            built from the data.
           </p>
         )}
         <dl className="dk-dl">

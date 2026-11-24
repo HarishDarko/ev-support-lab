@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { blockClass, pillTone } from "../ui/origin";
+import { asSentence } from "../ui/sentence";
 import { useRun, type TicketResult } from "../../run";
 import { Pill } from "../ui/Pill";
 import { ProvenanceNote } from "../ui/ProvenanceNote";
@@ -68,8 +69,8 @@ export function Inspector({ entry }: { entry: TicketResult | undefined }) {
           <p className="dk-note">The quote does not name the label's subject. It was kept and marked weak.</p>
         )}
         {result.source === "rules" && (
-          <p className="dk-note">
-            {result.fallback_reason ?? "The live call was not used."}
+          <p className="dk-note inspector-fallback">
+            {asSentence(result.fallback_reason) || "The live call was not used."}
             {result.rejected_quote ? ` The model quoted "${result.rejected_quote}".` : ""} The deterministic rules
             decided instead.
           </p>
