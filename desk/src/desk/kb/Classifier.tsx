@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { NO_CAPTURE } from "../../analytics";
 import { blockClass, pillTone } from "../ui/origin";
+import { asSentence } from "../ui/sentence";
 import { MAX_TICKET_CHARS, originOf, provenanceOfStep, useRun, type ClassifyModel, type StepResult } from "../../run";
 import { Pill } from "../ui/Pill";
 import { ProvenanceNote } from "../ui/ProvenanceNote";
@@ -99,7 +100,7 @@ export function Classifier() {
             </div>
             {data.confirm && <p className="classify-confirm">{data.confirm}</p>}
             {fellBack && trace.fallbackReason && (
-              <p className="dk-note">The live call was not used: {trace.fallbackReason}</p>
+              <p className="dk-note">The live call was not used: {asSentence(trace.fallbackReason)}</p>
             )}
             <ProvenanceNote provenance={provenanceOfStep(checked.answer)} step="classify" />
           </div>
